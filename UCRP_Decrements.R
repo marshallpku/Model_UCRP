@@ -84,7 +84,7 @@ mortality.ucrp <- data.frame(age = range_age) %>%
 
 
 # compute present values of life annuity(with cola) at each retirement age, using uni-sex mortality with age dependent weights
-mortality.post.ucrp <- expand.grid(age = range_age, age.r = range_age.r) %>% 
+mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max.age) %>% 
   left_join(mortality.ucrp) %>%
   filter(age >= age.r) %>% 
   group_by(age.r) %>%  
@@ -276,12 +276,6 @@ decrement.ucrp %<>%
           # px65T = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxT))), # prob of surviving up to r.max, composite rate
           # p65xm = cumprod(ifelse(age <= r.max, 1, lag(pxm))))            # prob of surviving to x from r.max, mortality only
   )
-
-
-
-
-
-
 
 
 # Final outputs

@@ -30,25 +30,29 @@ library(doParallel)
 library(microbenchmark)
 library(readxl)
 library(stringr)
+source("Functions.R")
 
 
 load("Data/UCRP.inputs1.RData")
 load("Data/UCRP.inputs2.RData")
-
-
-source("Functions.R")
-
-
+load("Data/2015-10-07/retirees.rda") 
 
 
 init.year <- 2015
-nyear <- 40
+nyear <- 30
 max.age <-  120
 
 range_ea <- c(20:74)
-range_age <- 20:120
-range_age.r <- 50:75
+min.ea  <- min(range_ea)
+max.ea <- max(range_ea) 
 
+range_age <- 20:120
+min.age  <- min(range_age)
+max.age  <- max(range_age) 
+
+range_age.r <- 50:75
+r.min  <- min(range_age.r)
+r.max  <- max(range_age.r) 
 
 fasyears <- 3
 cola     <- 0.03
@@ -59,8 +63,7 @@ infl <- 0.03
 r.full <- 60 # age at which vested terms are assumed to retire. 
 r.yos  <- 5
 v.yos  <- 5 
-r.min  <- min(range_age.r)
-r.max  <- max(range_age.r) 
+
 
 
 pct.F.actives <- 0.55
@@ -84,12 +87,32 @@ pct.la <- 1 - pct.ca                                # For those opting for annui
 source("UCRP_Decrements.R")
 
 
+
+# Benefit payment for initial retirees/beneficiaries in year 1.
+# It is assumed that all initial retirees entered the workforce at the age r.min - 1.
+benefit <- retirees %>% 
+           mutate(year       = init.year,
+                  ea         = r.min - 1,
+                  age.r      = age,
+                  start.year = year - (age - ea)) %>% 
+           filter(planname == "AZ-PERS-6.fillin",
+                  age >= r.min) %>% 
+           select(start.year, ea, age, age.r, benefit)
+
+
+
 #*************************************************************************************************************
-#                                Preparation                        #####                  
+#                               1. Preparation                        #####                  
 #*************************************************************************************************************
 # Starts with a simple case with only 2 entry ages: 20 and 74
 
-liab.active <- expand.grid(start.year = 2015 , 
+min.year <- min(init.year - (max.age - (r.max - 1)), init.year - (r.max - 1 - min.ea))
+## Track down to the year that is the smaller one of the two below: 
+# the year a 120-year-old retiree in year 1 entered the workforce at age r.max - 1 (remeber ea = r.max - 1 is assigned to all inital retirees)
+# the year a r.max year old active in year 1 enter the workforce at age min.ea 
+
+
+liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) , 
                            ea = c(20:74), age = range_age) %>%
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
   mutate(year = start.year + age - ea) %>%  # year index in the simulation)
@@ -101,7 +124,8 @@ liab.active <- expand.grid(start.year = 2015 ,
 
   left_join(decrement.ucrp) %>% 
   left_join(bfactor) %>%
-  left_join(mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)) %>% 
+  left_join(mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)) %>%
+#  left_join(benefit) %>% 
   group_by(start.year, ea) %>%
   
   
@@ -145,7 +169,7 @@ liab.active <- expand.grid(start.year = 2015 ,
 
 
 #*************************************************************************************************************
-#                          AL and NC of life annuity for actives                                         #####                  
+#                        2.1  AL and NC of life annuity for actives                                         #####                  
 #*************************************************************************************************************
 
 # Calculate normal costs and liabilities of retirement benefits with multiple retirement ages  
@@ -179,69 +203,74 @@ liab.active %<>%
   ALx.EAN.CP.la   = PVFBx.la - PVFNC.EAN.CP.la
   ) 
 
+#*************************************************************************************************************
+#                       2.2   AL and benefit for retirees with life annuity                        #####                  
+#*************************************************************************************************************
+
+# Calculate AL and benefit payment for retirees having retired at different ages.
+liab.retiree <- rbind(
+  # grids for initial retirees in year 1
+    # To simplified the calculation, it is assmed that all initial retirees/beneficiaries entered the workforce at age r.min - 1 and 
+    # retiree right in year 1. This assumption will cause the retirement age and yos of some of the retirees not compatible with the eligiblility rules,
+    # but this is not an issue since the main goal is to generate the correct cashflow and liablity for the initial retirees/beneficiaries.
+  expand.grid(ea         = r.min - 1,
+              age.r      = benefit$age, # This ensures that year of retirement is year 1.
+              start.year = init.year - (benefit$age - (r.min - 1)),
+              age        = range_age[range_age >= r.min]) %>%
+    filter(age >= ea + 1 - start.year),
+
+  # grids for who retire after year 1.
+  expand.grid(ea         = range_ea[range_ea < r.max],
+              age.r      = r.min:r.max,
+              start.year = (init.year + 1 - (r.max - min(range_ea))):(init.year + nyear - 1),
+              age        = range_age[range_age >=r.min]) %>%
+    filter(age   >= ea,
+           age.r >= ea,
+           age   >= age.r,
+           start.year + (age.r - ea) >= init.year + 1, # retire after year 2
+           start.year + age - ea     >= init.year + 1)
+) %>%
+  data.table(key = "start.year,ea,age.r,age")
+ 
+
+liab.retiree <- liab.retiree[!duplicated(liab.retiree %>% select(start.year, ea, age, age.r ))]
+ 
+ 
+liab.retiree <- merge(liab.retiree,
+                      select(liab.active, start.year, ea, age, Bx.la, COLA.scale, gx.la) %>% data.table(key = "ea,age,start.year"),
+                      all.x = TRUE, by = c("ea", "age","start.year")) %>%
+                arrange(start.year, ea, age.r) %>% 
+                as.data.frame %>% 
+                left_join(select(mortality.post.ucrp, age, age.r, ax.r.W.ret = ax.r.W)) %>%  #  load present value of annuity for all retirement ages, ax.r.W in liab.active cannot be used anymore. 
+                left_join(benefit)
+
+
+liab.retiree %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire == 65) %>%
+  # filter(ea == 54) %>%
+  group_by(start.year, ea, age.r) %>%
+  mutate(
+    year   = start.year + age - ea,
+    year.r = start.year + age.r - ea,
+    Bx.la  = ifelse(is.na(Bx.la), 0, Bx.la),
+    B.la   = ifelse(year.r <= init.year,
+                    benefit[year == init.year] * COLA.scale / COLA.scale[year == init.year],                     # Benefits for initial retirees
+                    Bx.la[age == age.r] * COLA.scale / COLA.scale[age == age.r]),                # Benefits for retirees after year 1
+    ALx.la = B.la * ax.r.W.ret                                                                       # Liability for remaining retirement benefits, PV of all future benefit adjusted with COLA
+
+  ) %>% ungroup %>%
+  # select(start.year, year, ea, age, year.retire, age.retire,  B.r, ALx.r)# , ax, Bx, COLA.scale, gx.r)
+  filter(year %in% seq(init.year, len = nyear) ) %>%
+  select(year, ea, age, year.r, age.r, start.year, B.la, ALx.la) %>% 
+  arrange(age.r, start.year, ea, age)
+
+
+# Spot check
+liab.retiree %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.frame()
+
+
 
 #*************************************************************************************************************
-#                          AL and benefit for retirees with life annuity                        #####                  
-#*************************************************************************************************************
-
-
-
-# # Calculate AL and benefit payment for retirees having retired at different ages. 
-# liab.retiree <- rbind(
-#   # grids for initial retirees in year 1
-#   expand.grid(ea         = r.min - 1,
-#               age.retire = .benefit$age, # This ensures that year of retirement is year 1. 
-#               #age.retire = r.min,
-#               start.year = 1 - (.benefit$age - (r.min - 1)),
-#               age        = range_age[range_age >= r.min]) %>%
-#     # mutate(year.retire = start.year + age.retire - ea) %>%  
-#     filter(age >= ea + 1 - start.year),  
-#   
-#   # grids for who retire after year 1.
-#   expand.grid(ea         = range_ea[range_ea < r.max],
-#               age.retire = r.min:r.max,
-#               start.year = (2 - (r.max - min(range_ea))):nyear,
-#               age        = range_age[range_age >=r.min]) %>%
-#     # mutate(year.retire = start.year + age.retire - ea) %>%   
-#     filter(age >= ea, 
-#            age.retire >= ea,
-#            age >= age.retire,
-#            start.year + (age.retire - ea) >= 2, # retire after year 2
-#            start.year + age - ea >= 2) 
-# ) %>%
-#   data.table(key = "start.year,ea,age.retire,age") 
-# 
-# liab.retiree <- liab.retiree[!duplicated(liab.retiree %>% select(start.year, ea, age, age.retire ))]
-# 
-# 
-# liab.retiree <- merge(liab.retiree,
-#                       select(liab.active, start.year, year, ea, age, Bx, ax, ax.r, COLA.scale, benefit, gx.r) %>% data.table(key = "ea,age,start.year"), 
-#                       all.x = TRUE, by = c("ea", "age","start.year")) %>% 
-#   arrange(start.year, ea, age.retire)
-# 
-# 
-# !!!!!load present value of annuity for all retirement ages, ax.r.W cannot be used anymore.  
-#
-# liab.retiree %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire == 65) %>% 
-#   # filter(ea == 54) %>% 
-#   group_by(start.year, ea, age.retire) %>%  
-#   mutate(
-#     year.retire = start.year + age.retire - ea,
-#     Bx = ifelse(is.na(Bx), 0, Bx),
-#     B.r   = ifelse(year.retire < 2,
-#                    benefit[year == 1] * COLA.scale / COLA.scale[year == 1],                          # Benefits for initial retirees
-#                    (gx.r * Bx)[age == age.retire] * COLA.scale / COLA.scale[age == age.retire]),
-#     ALx.r = B.r * ax.r  # Liability for remaining retirement benefits.
-#     
-#   ) %>% ungroup %>% 
-#   # select(start.year, year, ea, age, year.retire, age.retire,  B.r, ALx.r)# , ax, Bx, COLA.scale, gx.r)
-#   select(year, ea, age, year.retire,  B.r, ALx.r)
-# 
-
-
-
-#*************************************************************************************************************
-#                          AL and NC of LSC for actives                                         #####                  
+#                       3.1   AL and NC of LSC for actives                                         #####                  
 #*************************************************************************************************************
 
  liab.active %<>%   
@@ -275,7 +304,7 @@ liab.active %<>%
 
 
 #*************************************************************************************************************
-#                              LSC payments                                                              #####                  
+#                          3.2 LSC payments                                                              #####                  
 #************************************************************************************************************* 
  B.LSC <- liab.active %>% select(start.year, year, ea, age, yos, Bx.LSC) %>% filter(age %in% r.min:r.max)
 
@@ -284,7 +313,7 @@ liab.active %<>%
 
 
 #*************************************************************************************************************
-#                          AL and NC of deferred benefits for actives                        #####
+#                         4.1 AL and NC of deferred benefits for actives                        #####
 #*************************************************************************************************************
 
 # Calculate normal costs and liabilities of deferred retirement benefits
@@ -307,9 +336,6 @@ liab.active %<>%
          TCx.v   = ifelse(ea < r.full, Bx.v * qxt * lead(px_r.full_m) * v^(r.full - age) * ax.r.W[age == r.full], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.full.
          PVFBx.v = ifelse(ea < r.full, c(get_PVFB(pxT[age < r.full], v, TCx.v[age < r.full]), rep(0, max.age - r.full + 1)), 0),  # To be compatible with the cases where workers enter after age r.min, r.max is used instead of r.min, which is used in textbook formula(winklevoss p115).
 
-         #        TCx.v = Bx.v * qxt.a * lead(pxRm) * v^(r.max - age) * ax[age == r.max],  # term cost of vested termination benefits
-         #        PVFBx.v = c(get_PVFB(pxT[age < r.max], v, TCx.v[age < r.max]), rep(0, max.age - r.max + 1)),  # To be compatible with the cases where workers enter after age r.min, r.max is used instead of r.min, which is used in textbook formula(winklevoss p115).
-
          # # NC and AL of PUC
          # TCx.vPUC = TCx.v / (age - min(age)),
          # NCx.PUC.v = c(get_NC.UC(pxT[age <= r.max],  v, TCx.vPUC[age <= r.max]), rep(0, max.age - r.max)),
@@ -325,22 +351,21 @@ liab.active %<>%
   ) %>%
   ungroup %>% select(start.year, year, ea, age, everything())
   
-
 # x <- liab.active %>% filter(start.year == 1, ea == 20)
 
 
 
-
-
 # #*************************************************************************************************************
-# #                          AL for vested terminatede members                        #####                  
+# #                       4.2 AL for vested terminatede members                        #####                  
 # #*************************************************************************************************************
 # 
 # Calculate AL and benefit payment for vested terms terminating at different ages.
 # Merge by using data.table: does not save much time, but time consumpton seems more stable than dplyr. The time consuming part is the mutate step.
-liab.term <- expand.grid(start.year = 2015, # (1 - (r.max - 1 - min.age)):nyear, 
-                         ea = range_ea[range_ea < r.full], age = range_age, age.term = range_age[range_age < r.full]) %>% # start year no longer needs to start from -89 if we import initial benefit data.
-  filter(start.year + max.age - ea >= 2015, 
+liab.term <- expand.grid(start.year = (init.year - (r.full - 1 - min.age)):(init.year + nyear - 1), # 2015
+                         ea = range_ea[range_ea < r.full], 
+                         age = range_age, 
+                         age.term = range_age[range_age < r.full]) %>% 
+  filter(start.year + max.age - ea >= init.year, 
          age >= ea, age.term >= ea,
          age >= age.term) %>% # drop redundant combinations of start.year and ea.
   data.table(key = "ea,age,start.year,age.term") 
@@ -352,7 +377,6 @@ liab.term <- merge(liab.term,
              left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, ax.r.W.term = ax.r.W))   # load present value of annuity for retirement age r.full
 
 liab.term %<>% as.data.frame %>%
-  # arrange(start.year, ea, age.term, age) %>% # Very slow. Uncomment it only when we want to examine liab.term.
   group_by(start.year, ea, age.term) %>%
   mutate(year.term = year[age == age.term],
 
@@ -365,11 +389,14 @@ liab.term %<>% as.data.frame %>%
   # select(#-start.year, -age.term,
   #        -Bx.v, -ax.r.W, -COLA.scale, -pxRm) %>%
 
-  # select(-age.term, -Bx.v, -ax, -COLA.scale, -pxRm) %>%
-#  filter(year %in% seq(init.year, len = nyear) ) %>% 
-  arrange(age.term, ea, age)
+  select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm) %>%
+  filter(year %in% seq(init.year, len = nyear) ) 
 
+
+# %>% arrange(age.term, ea, age)
 # # liab.term[c("B.v", "ALx.v")] <- colwise(na2zero)(liab.term[c("B.v", "ALx.v")])
-# 
+
+
+
 
 
