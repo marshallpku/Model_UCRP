@@ -1,67 +1,4 @@
 
-# # rm(list = ls())
-# # gc()
-# 
-# library(knitr)
-# library(data.table)
-# library(gdata) # read.xls
-# library(plyr)
-# library(dplyr)
-# library(ggplot2)
-# library(magrittr)
-# library(tidyr) # gather, spread
-# library(foreach)
-# library(doParallel)
-# library(microbenchmark)
-# library(readxl)
-# library(stringr)
-# 
-# 
-# load("Data/UCRP.inputs1.RData")
-# load("Data/UCRP.inputs2.RData")
-# 
-# source("Functions.R")
-
-
-# init.year <- 2015
-# max.age <-  120
-# 
-# range_ea <- c(20:74)
-# range_age <- 20:120
-# range_age.r <- 50:75
-# 
-
-
-# 
-# fasyears <- 3
-# cola     <- 0.03
-# i <- 0.0725
-# 
-# r.full <- 60 # age at which vested terms are assumed to retire. 
-# r.yos  <- 5   
-# r.min  <- min(range_age.r)
-# r.max  <- max(range_age.r) 
-# 
-# 
-# pct.F.actives <- 0.55
-# pct.M.actives <- 1 - pct.F.actives
-# 
-# pct.F.LSC <- 0.6
-# pct.M.LSC <- 1 - pct.F.LSC
-# 
-# pct.fac.actives.t76 <- 0.5
-# pct.stf.actives.t76 <- 1 - pct.fac.actives.t76 
-# pct.fac.actives.t13 <- 0.5
-# pct.stf.actives.t13 <- 1 - pct.fac.actives.t13 
-# pct.fac.actives.tm13 <- 0.5
-# pct.stf.actives.tm13 <- 1 - pct.fac.actives.t13 
-# 
-# 
-# 
-# pct.ca <- 0.8 * pct.F.actives + 0.6 * pct.M.actives
-# pct.la <- 1 - pct.ca
-
-
 
 #*************************************************************************************************************
 #                                Prepare mortality tables for UCRP                        #####                  
@@ -282,8 +219,6 @@ decrement.ucrp %<>%
 
 #1. decrement.ucrp
 #2. mortality.post.ucrp
-
-
 
 
 

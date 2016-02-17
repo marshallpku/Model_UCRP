@@ -14,91 +14,6 @@
 # All calculations can be done in liab.active.   
 
 
-rm(list = ls())
-gc()
-
-library(knitr)
-library(data.table)
-library(gdata) # read.xls
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(magrittr)
-library(tidyr) # gather, spread
-library(foreach)
-library(doParallel)
-library(microbenchmark)
-library(readxl)
-library(stringr)
-source("Functions.R")
-
-
-load("Data/UCRP.inputs1.RData")
-load("Data/UCRP.inputs2.RData")
-load("Data/2015-10-07/retirees.rda") 
-
-
-init.year <- 2015
-nyear <- 30
-max.age <-  120
-
-range_ea <- c(20:74)
-min.ea  <- min(range_ea)
-max.ea <- max(range_ea) 
-
-range_age <- 20:120
-min.age  <- min(range_age)
-max.age  <- max(range_age) 
-
-range_age.r <- 50:75
-r.min  <- min(range_age.r)
-r.max  <- max(range_age.r) 
-
-fasyears <- 3
-cola     <- 0.03
-i <- 0.0725
-v <- 1/(1 + i)
-infl <- 0.03
-
-r.full <- 60 # age at which vested terms are assumed to retire. 
-r.yos  <- 5
-v.yos  <- 5 
-
-
-
-pct.F.actives <- 0.55
-pct.M.actives <- 1 - pct.F.actives
-
-pct.F.LSC <- 0.6
-pct.M.LSC <- 1 - pct.F.LSC
-
-pct.fac.actives.t76 <- 0.5
-pct.stf.actives.t76 <- 1 - pct.fac.actives.t76 
-pct.fac.actives.t13 <- 0.5
-pct.stf.actives.t13 <- 1 - pct.fac.actives.t13 
-pct.fac.actives.tm13 <- 0.5
-pct.stf.actives.tm13 <- 1 - pct.fac.actives.t13  
-
-
-pct.ca <- 0.8 * pct.F.actives + 0.6 * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
-pct.la <- 1 - pct.ca                                # For those opting for annuit rather than LSC, the % of choosing life annuity (100% for 2013 and modified 2013 tier)
-
-
-source("UCRP_Decrements.R")
-
-
-
-# Benefit payment for initial retirees/beneficiaries in year 1.
-# It is assumed that all initial retirees entered the workforce at the age r.min - 1.
-benefit <- retirees %>% 
-           mutate(year       = init.year,
-                  ea         = r.min - 1,
-                  age.r      = age,
-                  start.year = year - (age - ea)) %>% 
-           filter(planname == "AZ-PERS-6.fillin",
-                  age >= r.min) %>% 
-           select(start.year, ea, age, age.r, benefit)
-
 
 
 #*************************************************************************************************************
@@ -164,7 +79,6 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
     ayx = c(get_tla2(pxT[age <= r.max], i), rep(0, max.age - r.max)),                     # need to make up the length of the vector up to age max.age
     ayxs= c(get_tla2(pxT[age <= r.max], i,  sx[age <= r.max]), rep(0, max.age - r.max))   # need to make up the length of the vector up to age max.age
   )
-
 
 
 
@@ -355,10 +269,10 @@ liab.active %<>%
 
 
 
-# #*************************************************************************************************************
-# #                       4.2 AL for vested terminatede members                        #####                  
-# #*************************************************************************************************************
-# 
+#*************************************************************************************************************
+#                       4.2 AL for vested terminatede members                        #####
+#*************************************************************************************************************
+
 # Calculate AL and benefit payment for vested terms terminating at different ages.
 # Merge by using data.table: does not save much time, but time consumpton seems more stable than dplyr. The time consuming part is the mutate step.
 liab.term <- expand.grid(start.year = (init.year - (r.full - 1 - min.age)):(init.year + nyear - 1), # 2015
@@ -393,8 +307,43 @@ liab.term %<>% as.data.frame %>%
   filter(year %in% seq(init.year, len = nyear) ) 
 
 
-# %>% arrange(age.term, ea, age)
-# # liab.term[c("B.v", "ALx.v")] <- colwise(na2zero)(liab.term[c("B.v", "ALx.v")])
+
+
+
+#*************************************************************************************************************
+#                 # Choosing AL and NC variables corresponding to the chosen acturial methed             #####
+#*************************************************************************************************************
+
+
+ALx.la.method   <- paste0("ALx.", actuarial_method, ".la")
+NCx.la.method   <- paste0("NCx.", actuarial_method, ".la")
+
+ALx.v.method <- paste0("ALx.", actuarial_method, ".v")
+NCx.v.method <- paste0("NCx.", actuarial_method, ".v")
+
+ALx.LSC.method <- paste0("ALx.", actuarial_method, ".LSC")
+NCx.LSC.method <- paste0("NCx.", actuarial_method, ".LSC")
+
+
+
+var.names <- c("sx", ALx.la.method, NCx.la.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.la")
+liab.active %<>% 
+  filter(year %in% seq(init.year, len = nyear)) %>%
+  select(year, ea, age, one_of(var.names)) %>%
+  rename_("ALx.la"  = ALx.la.method,  "NCx.la"   = NCx.la.method, 
+          "ALx.v"   = ALx.v.method,   "NCx.v"    = NCx.v.method,
+          "ALx.LSC" = ALx.LSC.method, "NCx.LSC"  = NCx.LSC.method) # Note that dplyr::rename_ is used. 
+
+
+
+## Final outputs
+  # liab.active
+  # liab.retiree
+  # liab.term
+  # B.LSC
+
+
+
 
 
 
