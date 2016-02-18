@@ -26,8 +26,8 @@
 #  (5)Dead       (dim = 3) We do not really need an array for dead, what's needed is only the total number of dead.  
 
 # Run the section below when developing new features.   
-#   .init_pop         = init_pop
-#   .entrants_dist    = entrants_dist
+   .init_pop         = init_pop
+   .entrants_dist    = entrants_dist
 #   .paramlist        = paramlist
 #   .Global_paramlist = Global_paramlist
 # #   
@@ -78,12 +78,9 @@ newDisb.act <- numeric(nyear)
 # Note on initial retirees: It is assumed that all initial retirees entered the workforce at age 54 and retireed in year 1. 
 # Altough this may produce yos greater than r.max - ea.min, it is irrelevant to the calculation since we do not care about initial retirees' yos.  
 # 
-# wf_active[, , 1]     <- .init_pop$actives 
-# wf_retired[, , 1, 1] <- .init_pop$retirees
+wf_active[, , 1]  <- .init_pop$actives 
+wf_la[, , 1, 1]   <- .init_pop$retirees
 # 
-
-
-
 
 
 #*************************************************************************************************************
@@ -118,14 +115,18 @@ make_dmat <- function(qx, df = decrement_wf) {
 p_active2term    <- make_dmat("qxt")
 p_active2disb    <- make_dmat("qxd")
 p_active2dead    <- make_dmat("qxm.pre")
-p_active2la      <- make_dmat("qxr.la")
+p_active2retired <- make_dmat("qxr")      # This include all three types of retirement: LSC, contingent annuity, and life annuity.
+p_active2la <- make_dmat("qxr.la")   # Prob of retiring as a life annuitant.
+
+
+
 
 # Where do the terminated go
 p_term2dead    <- make_dmat("qxm.pre") # need to modify later
 
 
 # Where do the disabled go
-p_disb2dead      <- make_dmat("qxm.pre") #need to modify later.
+p_disb2dead    <- make_dmat("qxm.pre") #need to modify later.
 
 
 
@@ -219,7 +220,9 @@ for (j in 1:(nyear - 1)){
   active2term    <- wf_active[, , j] * p_active2term  # This will join wf_term[, , j + 1, j], note that workers who terminate in year j won't join the terminated group until j+1. 
   active2disb    <- wf_active[, , j] * p_active2disb
   active2dead    <- wf_active[, , j] * p_active2dead
-  active2la      <- wf_active[, , j] * p_active2la    # This will join wf_retired[, , j + 1, j + 1].
+  active2retired <- wf_active[, , j] * p_active2retired    # This will be used to calculate the number of actives leaving the workforce
+  active2la      <- wf_active[, , j] * p_active2la          # This will join wf_la[, , j + 1, j + 1].
+  
   
   # Where do the terminated_vested go
   term2dead  <- wf_term[, , j, ] * as.vector(p_term2dead)           # a 3D array, each slice(3rd dim) contains the # of death in a termination age group
@@ -233,7 +236,7 @@ for (j in 1:(nyear - 1)){
   
   
   # Total inflow and outflow for each status
-  out_active   <- active2term + active2disb + active2la + active2dead 
+  out_active   <- active2term + active2disb + active2retired + active2dead 
   new_entrants <- calc_entrants(wf_active[, , j], wf_active[, , j] - out_active, wf_growth, dist = .entrants_dist, no.entrants = no_entrance) # new entrants
   
   out_term <- term2dead    # This is a 3D array 
@@ -242,10 +245,10 @@ for (j in 1:(nyear - 1)){
   out_disb <- disb2dead
   in_disb  <- active2disb
   
-  out_la <- la2dead   # This is a 3D array (ea x age x year.retire)
-  in_la  <- active2la # This is a matrix
+  out_la <- la2dead        # This is a 3D array (ea x age x year.retire)
+  in_la  <- active2la      # This is a matrix
   
-  in_dead <- active2dead + 
+  in_dead <- active2dead +                                        # In UCRP model, since life annuitants are only part of the total retirees, in_dead does not reflect the total number of death. 
     apply(term2dead, c(1,2), sum) + apply(la2dead, c(1,2), sum) + # get a matirix of ea x age by summing over year.term/year.retiree
     disb2dead 
   
@@ -271,7 +274,6 @@ for (j in 1:(nyear - 1)){
 
 
 
-
 #*************************************************************************************************************
 #                                     Transform Demographic Data to Data Frames   ####
 #*************************************************************************************************************
@@ -286,7 +288,7 @@ wf_active <- adply(wf_active, 3, function(x) {df = as.data.frame(x); df$ea = as.
 
 
 wf_la <- data.frame(expand.grid(ea = range_ea, age = range_age, year = init.year:(init.year + nyear - 1), year.r = init.year:(init.year + nyear - 1)),
-                         number.r = as.vector(wf_la)) %>% 
+                         number.la = as.vector(wf_la)) %>% 
          filter(age >= ea)
 
 
@@ -301,11 +303,73 @@ term_reduced <- wf_term %>% group_by(year, age) %>% summarise(number.v = sum(num
 
 
 
+#*************************************************************************************************************
+#                                     Number of members opting for LSC and contingent annuity   ####
+#*************************************************************************************************************
+
+
+
+
+
+wf_LSC.ca <- wf_active %>% left_join(decrement_wf %>% select(age, ea, qxr.LSC, qxr.ca)) %>% 
+             mutate(new_LSC = number.a * qxr.LSC,
+                    new_ca  = number.a * qxr.ca,
+                    year = year + 1,
+                    age  = age + 1)
+
+
 
 
 
 
 # Final outputs
-# pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_retired, dead = wf_dead)
+pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dead = wf_dead, LSC.ca = wf_LSC.ca)
+
+
+
+
+
+
+
+
+# Spot check the results
+wf_active %>% group_by(year) %>% summarise(n = sum(number.a)) %>% mutate(x = n == 1000) %>% data.frame # OK
+wf_active %>% filter(year == 2025) %>% spread(age, number.a)
+
+
+wf_la %>% group_by(year) %>% summarise(n = sum(number.la)) %>% data.frame  
+
+wf_la %>% filter(year.r == 2016, year == 2018, age==65) %>% mutate(number.la_next = number.la * 0.9945992) %>% 
+  left_join(wf_la %>% filter(year.r == 2016, year == 2019, age==66) %>% select(year.r, ea, number.la_true = number.la)) %>% 
+  mutate(diff = number.la_true - number.la_next) # looks ok.
+
+mortality.post.ucrp %>% filter(age.r == 63)
+
+
+
+
+# check retirement
+wf_active %>% filter(year == 2020, ea == 30) %>% select(-year) %>% 
+left_join(wf_la     %>% filter(year == 2021, year.r == 2021, ea == 30)) %>% 
+left_join(wf_LSC.ca %>% filter(year == 2021, ea == 30) %>% select(year, ea, age, new_LSC, new_ca)) %>% 
+left_join(decrement_wf %>% filter(ea == 30) %>% select(ea, age, qxr, qxr.la, qxr.ca, qxr.LSC)) %>% 
+filter(age >= 49 & age <=75) %>% 
+mutate(diff.la = lag(number.a *qxr.la) - number.la,
+       diff.ca = lag(number.a *qxr.ca) - new_ca,
+       diff.LSC= lag(number.a *qxr.LSC) - new_LSC,
+       diff.r  = lag(number.a *qxr) - (new_ca + new_LSC + number.la))
+  # looks ok.
+
+
+
+
+
+
+
+
+
+
+
+
 
 

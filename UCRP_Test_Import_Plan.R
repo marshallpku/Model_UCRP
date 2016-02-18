@@ -3,6 +3,10 @@
 
 
 
+# Use AZ-PERS data as place holder
+load("Data/PlanDataMain.RData")
+
+benefit
 
 
 
@@ -17,3 +21,10 @@ benefit <- retirees %>%
   filter(planname == "AZ-PERS-6.fillin",
          age >= r.min) %>% 
   select(start.year, ea, age, age.r, benefit)
+
+
+
+# init_pop$actives %>% sum
+# init_pop$retirees
+
+

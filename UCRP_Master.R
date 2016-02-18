@@ -63,7 +63,7 @@ actuarial_method <- "EAN.CP"
 
 wf_growth <- 0
 no_entrance <- "F"
-.entrants_dist <- rep(1/length(range_ea), length(range_ea))
+entrants_dist <- rep(1/length(range_ea), length(range_ea))
 
 pct.F.actives <- 0.55
 pct.M.actives <- 1 - pct.F.actives
@@ -94,8 +94,10 @@ source("UCRP_Decrements.R")
 
 # Chnange variable names for 1976 tier
 decrement.ucrp %<>% rename(pxT = pxT.t76,
-                           qxr.la = qxr.la.t76,
-                           qxr.LSC  = qxr.LSC.t76)
+                           qxr.la   = qxr.la.t76,
+                           qxr.ca   = qxr.ca.t76,
+                           qxr.LSC  = qxr.LSC.t76,
+                           qxr      = qxr.t76)
 bfactor %<>% rename(bfactor = bf.non13)
 
 
@@ -111,7 +113,7 @@ source("UCRP_Test_Import_Plan.R")
 #*********************************************************************************************************
 # 2. Demographics ####
 #*********************************************************************************************************
-source("UCRP_Test_Demographics.R")
+#source("UCRP_Test_Demographics.R")
 gc()
 
 
