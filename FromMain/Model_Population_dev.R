@@ -7,8 +7,6 @@ get_Population <- function(.init_pop = init_pop,
                            .paramlist    = paramlist,
                            .Global_paramlist = Global_paramlist){
 
-## Issues
- # growth of workforce(controlled by growth rate or pre-defined path of growth.)
 
 ## Inputs
  # - range_ea:         all possible entry ages  

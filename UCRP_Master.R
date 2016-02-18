@@ -24,6 +24,12 @@ load("Data/UCRP.inputs2.RData")
 load("Data/2015-10-07/retirees.rda") 
 
 
+
+
+#*********************************************************************************************************
+# 0. Parameters   ####
+#*********************************************************************************************************
+
 init.year <- 2015
 nyear <- 30
 max.age <-  120
@@ -55,6 +61,10 @@ v.yos  <- 5
 actuarial_method <- "EAN.CP"
 
 
+wf_growth <- 0
+no_entrance <- "F"
+.entrants_dist <- rep(1/length(range_ea), length(range_ea))
+
 pct.F.actives <- 0.55
 pct.M.actives <- 1 - pct.F.actives
 
@@ -77,21 +87,40 @@ pct.la <- 1 - pct.ca                                # For those opting for annui
 
 
 
-# Benefit payment for initial retirees/beneficiaries in year 1.
-# It is assumed that all initial retirees entered the workforce at the age r.min - 1.
-benefit <- retirees %>% 
-  mutate(year       = init.year,
-         ea         = r.min - 1,
-         age.r      = age,
-         start.year = year - (age - ea)) %>% 
-  filter(planname == "AZ-PERS-6.fillin",
-         age >= r.min) %>% 
-  select(start.year, ea, age, age.r, benefit)
-
-
+#*********************************************************************************************************
+# 1.1 Importing Decrement tables and Calculating Probabilities ####
+#*********************************************************************************************************
 source("UCRP_Decrements.R")
-source("UCRP_Test_IndivLiab.R")
 
+# Chnange variable names for 1976 tier
+decrement.ucrp %<>% rename(pxT = pxT.t76,
+                           qxr.la = qxr.la.t76,
+                           qxr.LSC  = qxr.LSC.t76)
+bfactor %<>% rename(bfactor = bf.non13)
+
+
+
+
+#*********************************************************************************************************
+# 1.2 Import Salary table and initial retirement benefit table ####
+#*********************************************************************************************************
+source("UCRP_Test_Import_Plan.R")
+
+
+
+#*********************************************************************************************************
+# 2. Demographics ####
+#*********************************************************************************************************
+source("UCRP_Test_Demographics.R")
+gc()
+
+
+
+#*********************************************************************************************************
+# 3. Individual actuarial liabilities, normal costs and benenfits ####
+#*********************************************************************************************************
+# source("UCRP_Test_IndivLiab.R")
+gc()
 
 
 

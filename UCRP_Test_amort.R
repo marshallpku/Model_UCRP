@@ -14,7 +14,6 @@
 # - Implication for modeling: find the latest year when the plan had a surplus)
 
 
-
 ## Amortization after 7/1/2015 AV(including 2014-15 plan year)
 #
 # - Any initial UAAL (after a period of surplus) or change  in UAAL due to gains/losses(including contribution gains/losses) is amortized 
@@ -50,7 +49,7 @@ df <- data.frame(year = 2015:2064) %>%
          AA = ifelse(year == 2015, init.AA, 0),
          UAAL  = AA - AL,
          EUAAL = 0,
-         i.r   = c(rep(0.06,5), rep(0.15,10),rep(0.00,35)),
+         i.r   = c(rep(0.06,5), rep(0.15,10),rep(0.0725,35)),
          Basis = 0,
          SC    = 0,
          switch = "")
@@ -100,8 +99,6 @@ for (j in 1:nrow(df)){
   df$SC[j] <- sum(SC_amort[,j])
   
 }
-  
-
   
 
 SC_amort

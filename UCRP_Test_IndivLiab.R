@@ -44,11 +44,11 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
   group_by(start.year, ea) %>%
   
   
-  # Chnange variable names for 1976 tier
-  rename(pxT = pxT.t76,
-         qxr.la = qxr.la.t76,
-         qxr.LSC  = qxr.LSC.t76,
-         bfactor = bf.non13) %>% 
+  # # Chnange variable names for 1976 tier
+  # rename(pxT = pxT.t76,
+  #        qxr.la = qxr.la.t76,
+  #        qxr.LSC  = qxr.LSC.t76,
+  #        bfactor = bf.non13) %>% 
   
   # Calculate salary and benefits
   mutate(
