@@ -83,19 +83,19 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
 
 
 #*************************************************************************************************************
-#                        2.1  AL and NC of life annuity for actives                                         #####                  
+#                        2.1  AL and NC of life annuity and contingent annuity for active                #####                  
 #*************************************************************************************************************
 
 # Calculate normal costs and liabilities of retirement benefits with multiple retirement ages  
 liab.active %<>%   
-  mutate( gx.la = ifelse(yos < r.yos, 0,  
+  mutate( gx.laca = ifelse(yos < r.yos, 0,  
                         ifelse(age > r.full, 1, ifelse(age %in% r.min:r.full, 1, 0))),         # eligibility rule 1
-          gx.la = ifelse(start.year >= 1989, gx.la, ifelse(age >= 62, 1, gx.la)),              # eligibility rule 2
+          gx.laca = ifelse(start.year >= 1989, gx.laca, ifelse(age >= 62, 1, gx.laca)),              # eligibility rule 2
   
-  Bx.la  = gx.la * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
-  TCx.la = lead(Bx.la) * qxr.la  * lead(ax.r.W) * v,  # term cost of retirement at the internal retirement age x (start to claim benefit at age x + 1)
+  Bx.laca  = gx.laca * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
+  TCx.laca = lead(Bx.laca) * (qxr.la + qxr.ca)  * lead(ax.r.W) * v,  # term cost of retirement at the internal retirement age x (start to claim benefit at age x + 1)
   # TCx.r = Bx.r * qxr.a * ax,
-  PVFBx.la  = c(get_PVFB(pxT[age <= r.max], v, TCx.la[age <= r.max]), rep(0, max.age - r.max)),
+  PVFBx.laca  = c(get_PVFB(pxT[age <= r.max], v, TCx.laca[age <= r.max]), rep(0, max.age - r.max)),
   
   ## NC and AL of UC
   # TCx.r1 = gx.r * qxe * ax,  # term cost of $1's benefit
@@ -108,13 +108,13 @@ liab.active %<>%
   # ALx.PUC = c(get_AL.PUC(pxT[age <= r.max], v, TCx.rPUC[age <= r.max]), rep(0, max.age - r.max)),
   
   # NC and AL of EAN.CD
-  NCx.EAN.CD.la = ifelse(age < r.max, PVFBx.la[age == min(age)]/ayx[age == r.max], 0),
-  ALx.EAN.CD.la = PVFBx.la - NCx.EAN.CD.la * axR,
+  NCx.EAN.CD.laca = ifelse(age < r.max, PVFBx.laca[age == min(age)]/ayx[age == r.max], 0),
+  ALx.EAN.CD.laca = PVFBx.laca - NCx.EAN.CD.laca * axR,
   
   # NC and AL of EAN.CP
-  NCx.EAN.CP.la   = ifelse(age < r.max, sx * PVFBx.la[age == min(age)]/(sx[age == min(age)] * ayxs[age == r.max]), 0),
-  PVFNC.EAN.CP.la = NCx.EAN.CP.la * axRs,
-  ALx.EAN.CP.la   = PVFBx.la - PVFNC.EAN.CP.la
+  NCx.EAN.CP.laca   = ifelse(age < r.max, sx * PVFBx.laca[age == min(age)]/(sx[age == min(age)] * ayxs[age == r.max]), 0),
+  PVFNC.EAN.CP.laca = NCx.EAN.CP.laca * axRs,
+  ALx.EAN.CP.laca   = PVFBx.laca - PVFNC.EAN.CP.laca
   ) 
 
 #*************************************************************************************************************
@@ -122,7 +122,7 @@ liab.active %<>%
 #*************************************************************************************************************
 
 # Calculate AL and benefit payment for retirees having retired at different ages.
-liab.retiree <- rbind(
+liab.la <- rbind(
   # grids for initial retirees in year 1
     # To simplified the calculation, it is assmed that all initial retirees/beneficiaries entered the workforce at age r.min - 1 and 
     # retiree right in year 1. This assumption will cause the retirement age and yos of some of the retirees not compatible with the eligiblility rules,
@@ -147,11 +147,11 @@ liab.retiree <- rbind(
   data.table(key = "start.year,ea,age.r,age")
  
 
-liab.retiree <- liab.retiree[!duplicated(liab.retiree %>% select(start.year, ea, age, age.r ))]
+liab.la <- liab.la[!duplicated(liab.la %>% select(start.year, ea, age, age.r ))]
  
  
-liab.retiree <- merge(liab.retiree,
-                      select(liab.active, start.year, ea, age, Bx.la, COLA.scale, gx.la) %>% data.table(key = "ea,age,start.year"),
+liab.la <- merge(liab.la,
+                      select(liab.active, start.year, ea, age, Bx.laca, COLA.scale, gx.laca) %>% data.table(key = "ea,age,start.year"),
                       all.x = TRUE, by = c("ea", "age","start.year")) %>%
                 arrange(start.year, ea, age.r) %>% 
                 as.data.frame %>% 
@@ -159,16 +159,16 @@ liab.retiree <- merge(liab.retiree,
                 left_join(benefit)
 
 
-liab.retiree %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire == 65) %>%
+liab.la %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire == 65) %>%
   # filter(ea == 54) %>%
   group_by(start.year, ea, age.r) %>%
   mutate(
     year   = start.year + age - ea,
     year.r = start.year + age.r - ea,
-    Bx.la  = ifelse(is.na(Bx.la), 0, Bx.la),
+    Bx.laca  = ifelse(is.na(Bx.laca), 0, Bx.laca),
     B.la   = ifelse(year.r <= init.year,
                     benefit[year == init.year] * COLA.scale / COLA.scale[year == init.year],                     # Benefits for initial retirees
-                    Bx.la[age == age.r] * COLA.scale / COLA.scale[age == age.r]),                # Benefits for retirees after year 1
+                    Bx.laca[age == age.r] * COLA.scale / COLA.scale[age == age.r]),                # Benefits for retirees after year 1
     ALx.la = B.la * ax.r.W.ret                                                                       # Liability for remaining retirement benefits, PV of all future benefit adjusted with COLA
 
   ) %>% ungroup %>%
@@ -179,7 +179,7 @@ liab.retiree %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.r
 
 
 # Spot check
-liab.retiree %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.frame()
+liab.la %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.frame()
 
 
 
@@ -191,7 +191,7 @@ liab.retiree %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.f
   mutate( 
           # gx.la also applies to LSC 
           
-          Bx.LSC  = gx.la * Bx * ax.r.W,  # This is the LSC amount if the employee CLAIMs at age x, not internally retire at age x. 
+          Bx.LSC  = gx.laca * Bx * ax.r.W,  # This is the LSC amount if the employee CLAIMs at age x, not internally retire at age x. 
           TCx.LSC = lead(Bx.LSC) * qxr.LSC  * v,  # term cost of retirement at the internal retirement age x (start to claim benefit at age x + 1)
           PVFBx.LSC  = c(get_PVFB(pxT[age <= r.max], v, TCx.LSC[age <= r.max]), rep(0, max.age - r.max)),
           
@@ -221,8 +221,6 @@ liab.retiree %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.f
 #                          3.2 LSC payments                                                              #####                  
 #************************************************************************************************************* 
  B.LSC <- liab.active %>% select(start.year, year, ea, age, yos, Bx.LSC) %>% filter(age %in% r.min:r.max)
-
-
 
 
 
@@ -315,8 +313,8 @@ liab.term %<>% as.data.frame %>%
 #*************************************************************************************************************
 
 
-ALx.la.method   <- paste0("ALx.", actuarial_method, ".la")
-NCx.la.method   <- paste0("NCx.", actuarial_method, ".la")
+ALx.laca.method   <- paste0("ALx.", actuarial_method, ".laca")
+NCx.laca.method   <- paste0("NCx.", actuarial_method, ".laca")
 
 ALx.v.method <- paste0("ALx.", actuarial_method, ".v")
 NCx.v.method <- paste0("NCx.", actuarial_method, ".v")
@@ -326,11 +324,11 @@ NCx.LSC.method <- paste0("NCx.", actuarial_method, ".LSC")
 
 
 
-var.names <- c("sx", ALx.la.method, NCx.la.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.la")
+var.names <- c("sx", ALx.laca.method, NCx.laca.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.laca")
 liab.active %<>% 
   filter(year %in% seq(init.year, len = nyear)) %>%
   select(year, ea, age, one_of(var.names)) %>%
-  rename_("ALx.la"  = ALx.la.method,  "NCx.la"   = NCx.la.method, 
+  rename_("ALx.laca"  = ALx.laca.method,  "NCx.laca"   = NCx.laca.method, 
           "ALx.v"   = ALx.v.method,   "NCx.v"    = NCx.v.method,
           "ALx.LSC" = ALx.LSC.method, "NCx.LSC"  = NCx.LSC.method) # Note that dplyr::rename_ is used. 
 
@@ -338,11 +336,11 @@ liab.active %<>%
 
 ## Final outputs
   # liab.active
-  # liab.retiree
+  # liab.la
   # liab.term
   # B.LSC
 
-
+liab <- list(active = liab.active, la = liab.la, term = liab.term)
 
 
 

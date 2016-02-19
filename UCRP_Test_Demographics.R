@@ -329,36 +329,35 @@ pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dea
 
 
 
+# # Spot check the results
+# wf_active %>% group_by(year) %>% summarise(n = sum(number.a)) %>% mutate(x = n == 1000) %>% data.frame # OK
+# wf_active %>% filter(year == 2025) %>% spread(age, number.a)
+# 
+# 
+# wf_la %>% group_by(year) %>% summarise(n = sum(number.la)) %>% data.frame  
+# 
+# wf_la %>% filter(year.r == 2016, year == 2018, age==65) %>% mutate(number.la_next = number.la * 0.9945992) %>% 
+#   left_join(wf_la %>% filter(year.r == 2016, year == 2019, age==66) %>% select(year.r, ea, number.la_true = number.la)) %>% 
+#   mutate(diff = number.la_true - number.la_next) # looks ok.
+# 
+# mortality.post.ucrp %>% filter(age.r == 63)
+# 
+# 
+# 
+# 
+# # check retirement
+# wf_active %>% filter(year == 2020, ea == 30) %>% select(-year) %>% 
+# left_join(wf_la     %>% filter(year == 2021, year.r == 2021, ea == 30)) %>% 
+# left_join(wf_LSC.ca %>% filter(year == 2021, ea == 30) %>% select(year, ea, age, new_LSC, new_ca)) %>% 
+# left_join(decrement_wf %>% filter(ea == 30) %>% select(ea, age, qxr, qxr.la, qxr.ca, qxr.LSC)) %>% 
+# filter(age >= 49 & age <=75) %>% 
+# mutate(diff.la = lag(number.a *qxr.la) - number.la,
+#        diff.ca = lag(number.a *qxr.ca) - new_ca,
+#        diff.LSC= lag(number.a *qxr.LSC) - new_LSC,
+#        diff.r  = lag(number.a *qxr) - (new_ca + new_LSC + number.la))
+#   # looks ok.
+#
 
-
-
-# Spot check the results
-wf_active %>% group_by(year) %>% summarise(n = sum(number.a)) %>% mutate(x = n == 1000) %>% data.frame # OK
-wf_active %>% filter(year == 2025) %>% spread(age, number.a)
-
-
-wf_la %>% group_by(year) %>% summarise(n = sum(number.la)) %>% data.frame  
-
-wf_la %>% filter(year.r == 2016, year == 2018, age==65) %>% mutate(number.la_next = number.la * 0.9945992) %>% 
-  left_join(wf_la %>% filter(year.r == 2016, year == 2019, age==66) %>% select(year.r, ea, number.la_true = number.la)) %>% 
-  mutate(diff = number.la_true - number.la_next) # looks ok.
-
-mortality.post.ucrp %>% filter(age.r == 63)
-
-
-
-
-# check retirement
-wf_active %>% filter(year == 2020, ea == 30) %>% select(-year) %>% 
-left_join(wf_la     %>% filter(year == 2021, year.r == 2021, ea == 30)) %>% 
-left_join(wf_LSC.ca %>% filter(year == 2021, ea == 30) %>% select(year, ea, age, new_LSC, new_ca)) %>% 
-left_join(decrement_wf %>% filter(ea == 30) %>% select(ea, age, qxr, qxr.la, qxr.ca, qxr.LSC)) %>% 
-filter(age >= 49 & age <=75) %>% 
-mutate(diff.la = lag(number.a *qxr.la) - number.la,
-       diff.ca = lag(number.a *qxr.ca) - new_ca,
-       diff.LSC= lag(number.a *qxr.LSC) - new_LSC,
-       diff.r  = lag(number.a *qxr) - (new_ca + new_LSC + number.la))
-  # looks ok.
 
 
 
