@@ -47,22 +47,22 @@ mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max
 
 # mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)
 
+
+
+
+
+
+
                               
 disbrates.ucrp <- disbrates %>%  mutate(qxd = qxd.M * pct.M.actives + qxd.F * pct.F.actives)
 
 termrates.ucrp <- termrates %>% mutate(qxt = qxt_faculty)
-
-
 
 retrates.ucrp  <- retrates %>% mutate(qxr.t76  = qxr.t76.fac * pct.fac.actives.t76 + qxr.t76.stf * pct.stf.actives.t76,
                                       qxr.t13  = qxr.t13.fac * pct.fac.actives.t13 + qxr.t13.stf * pct.stf.actives.t13,
                                       qxr.tm13 = qxr.t13.fac * pct.fac.actives.tm13 + qxr.tm13.stf * pct.stf.actives.tm13) %>% # assume Tier 2013 and Tier modified 2013 have the same faculty retirement rates.
              
                   select(age, qxr.t76, qxr.t13, qxr.tm13) 
-
-
-
-
 
 
 #*************************************************************************************************************
@@ -157,41 +157,6 @@ decrement.ucrp %<>% group_by(ea) %>%
 
 
 
-# ## define decrements for status and calculte survival probabilities. 
-# decrement.ucrp %<>% 
-#   # For active(".a"). 
-#   mutate(qxt.a   = ifelse(age >= r.max, 0, qxt),       # qxt.p         * (1 - qxd.p/2) * (1 - qxm.p/2),
-#          qxd.a   = ifelse(age >= r.max, 0, qxd),       # (1 - qxt.p/2) * qxd.p         * (1 - qxm.p/2),
-#          qxm.a   = ifelse(age >= r.max, 0, qxm.pre),   # (1 - qxt.p/2) * (1 - qxd.p/2) * qxm.p, 
-#          
-#          qxr.t76.a      = qxr.t76,                             
-#          qxr.LSC.t76.a  = qxr.LSC.t76,
-#          qxr.la.t76.a   = qxr.la.t76,
-#          qxr.ca.t76.a   = qxr.ca.t76,
-#          
-#          qxr.t13.a      = qxr.t13,                              
-#          qxr.LSC.t13.a  = qxr.LSC.t13,
-#          qxr.la.t13.a   = qxr.la.t13,
-#          qxr.ca.t13.a   = qxr.ca.t13,
-#          
-#          qxr.tm13.a      = qxr.tm13,                                
-#          qxr.LSC.tm13.a  = qxr.LSC.tm13,
-#          qxr.la.tm13.a   = qxr.la.tm13,
-#          qxr.ca.tm13.a   = qxr.ca.tm13
-#   ) %>%
-#   
-#   
-#   
-#   # For terminated(".t"), target status are dead and retired.
-#   # Terminated workers will never enter the status of "retired". Rather, they will begin to receive pension benefits 
-#   # when reaching age r.max, but still with the status "terminated". So now we do not need qxr.t
-#   mutate(qxm.t   = qxm.pre) #%>%
-#   
-#   # For disabled(".d"), target status are dead. Note that we need to use the mortality for disabled 
-#   # Note the difference from the flows 3Darray.R. Disabled can not become retired here. 
-#   # mutate(qxm.d = qxmd ) %>%
-  
-
 ######!!!! need to construct retirement age dependent mortality for life annuitants.
   # For retired(".r"), the only target status is "dead". Note that in practice retirement mortality may differ from the regular mortality.
   #mutate(qxm.la.r   = qxm.r) 
@@ -212,7 +177,11 @@ decrement.ucrp %<>%
           
           # px65T = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxT))), # prob of surviving up to r.max, composite rate
           # p65xm = cumprod(ifelse(age <= r.max, 1, lag(pxm))))            # prob of surviving to x from r.max, mortality only
-  )
+  ) %>% 
+  sapply(function(x){x[is.na(x)] <- 0; return(x)}) %>% data.frame # just for safety
+
+
+
 
 
 # Final outputs

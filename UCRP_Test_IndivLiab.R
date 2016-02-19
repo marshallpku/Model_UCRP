@@ -167,9 +167,9 @@ liab.la %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire
     year.r = start.year + age.r - ea,
     Bx.laca  = ifelse(is.na(Bx.laca), 0, Bx.laca),
     B.la   = ifelse(year.r <= init.year,
-                    benefit[year == init.year] * COLA.scale / COLA.scale[year == init.year],                     # Benefits for initial retirees
-                    Bx.laca[age == age.r] * COLA.scale / COLA.scale[age == age.r]),                # Benefits for retirees after year 1
-    ALx.la = B.la * ax.r.W.ret                                                                       # Liability for remaining retirement benefits, PV of all future benefit adjusted with COLA
+                    benefit[year == init.year] * COLA.scale / COLA.scale[year == init.year],      # Benefits for initial retirees
+                    Bx.laca[age == age.r] * COLA.scale / COLA.scale[age == age.r]),               # Benefits for retirees after year 1
+    ALx.la = B.la * ax.r.W.ret                                                                    # Liability for remaining retirement benefits, PV of all future benefit adjusted with COLA
 
   ) %>% ungroup %>%
   # select(start.year, year, ea, age, year.retire, age.retire,  B.r, ALx.r)# , ax, Bx, COLA.scale, gx.r)

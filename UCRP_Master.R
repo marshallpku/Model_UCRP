@@ -50,7 +50,7 @@ r.max  <- max(range_age.r)
 
 fasyears <- 3
 cola     <- 0.03
-i <- 0.0725
+i <- 0.075
 v <- 1/(1 + i)
 infl <- 0.03
 
@@ -84,7 +84,7 @@ pct.stf.actives.tm13 <- 1 - pct.fac.actives.t13
 pct.ca <- 0.8 * pct.F.actives + 0.6 * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
 pct.la <- 1 - pct.ca                                # For those opting for annuit rather than LSC, the % of choosing life annuity (100% for 2013 and modified 2013 tier)
 
-
+factor.ca <- 0.25
 
 
 
