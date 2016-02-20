@@ -38,7 +38,7 @@
            NCx.laca.tot = NCx.laca * number.a,
            NCx.LSC.tot  = NCx.LSC  * number.a,
            NCx.v.tot    = NCx.v    * number.a,
-           NCx.av.tot   = NCx.laca.tot + NCx.LSC + NCx.v.tot,
+           NCx.av.tot   = NCx.laca.tot + NCx.LSC.tot + NCx.v.tot,
            
            PR.tot  = sx * number.a,
            
@@ -99,7 +99,8 @@
     mutate(B.LSC.sum = new_LSC * Bx.LSC) %>% 
     group_by(year) %>% 
     summarise(B.LSC.sum = sum(B.LSC.sum),
-              n.LSC     = sum(new_LSC))
+              n.LSC     = sum(new_LSC)) %>% 
+    as.matrix
   
   
   
@@ -153,13 +154,14 @@
             summarise(liab.ca.sum = sum(liab.ca.sum, na.rm = TRUE),
                       B.ca.sum    = sum(B.ca.sum, na.rm = TRUE),
                       n.R1        = sum(n.R1, na.rm = TRUE),
-                      n.R0S1      = sum(n.R0S1, na.rm = TRUE))
+                      n.R0S1      = sum(n.R0S1, na.rm = TRUE)) %>% 
+            as.matrix
   
 
-  
-  LSC.agg %>% data.frame
-  ca.agg %>% data.frame
-  active.agg %>% data.frame
+  # 
+  # LSC.agg %>% data.frame
+  # ca.agg %>% data.frame
+  # active.agg %>% data.frame
   
   #return(
   AggLiab <-  list(active = active.agg, 

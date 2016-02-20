@@ -33,6 +33,7 @@ load("Data/2015-10-07/retirees.rda")
 runname <- "UCRP"
 nsim    <- 10
 devMode <- FALSE
+ncore      <- 4 
 
 init.year <- 2015
 nyear <- 30
@@ -55,7 +56,8 @@ cola     <- 0.03
 i <- 0.075
 v <- 1/(1 + i)
 infl <- 0.03
-
+m  <- 15 
+s.year <- 10
 
 r.full <- 60 # age at which vested terms are assumed to retire. 
 r.yos  <- 5
@@ -83,7 +85,9 @@ pct.fac.actives.tm13 <- 0.5
 pct.stf.actives.tm13 <- 1 - pct.fac.actives.t13  
 
 
-pct.ca <- 0.8 * pct.F.actives + 0.6 * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
+pct.ca.F <-  0.8
+pct.ca.M <-  0.6
+pct.ca <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
 pct.la <- 1 - pct.ca                                # For those opting for annuit rather than LSC, the % of choosing life annuity (100% for 2013 and modified 2013 tier)
 
 factor.ca <- 0.25
@@ -93,6 +97,27 @@ seed <- 1234
 ir.mean <- 0.0725
 ir.sd   <- 0.12
 
+
+init_MA <- "AL"
+init_EAA <- "MA"
+smooth_method <- "method1"
+salgrowth_amort <- 0
+amort_method <- "cd"
+amort_type <- "closed"
+nonNegC <- "FALSE"
+EEC_fixed <- "TRUE"
+ConPolicy <- "ADC"
+EEC_rate <- 0.05
+
+
+
+#
+
+LSCrates %<>% mutate(qxLSC.act = 0)
+pct.ca.F  <- 0 # 0.8
+pct.ca.M  <- 0 # 0.6
+
+# termrates %<>% mutate(qxt_faculty = 0) 
 
 
 #*********************************************************************************************************
@@ -156,10 +181,11 @@ gc()
 #*********************************************************************************************************
 # 6.  Simulation ####
 #*********************************************************************************************************
-#source("Model_Sim_dev.R")
+source("UCRP_Test_Sim.R")
 
 
 
+penSim_results %>% filter(sim == -1) %>% select(year, FR) %>% data.frame
 
 
 
