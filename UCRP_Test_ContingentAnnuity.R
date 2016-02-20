@@ -269,19 +269,20 @@ df.all <-   select(df.M, age.r, age, B.ca.sum.M = B.ca.sum, B.R1.sum.M = B.R1.su
   left_join(select(df.F, age.r, age, B.ca.sum.F = B.ca.sum, B.R1.sum.F = B.R1.sum, B.R0S1.sum.F = B.R0S1.sum, 
                    liab.ca.sum.F = liab.ca.sum, liab.R1S1.sum.F = liab.R1S1.sum, liab.R1S0.sum.F = liab.R1S0.sum, liab.R0S1.sum.F = liab.R0S1.sum,
                    n.R1S1.F = n.R1S1, n.R1S0.F = n.R1S0, n.R0S1.F = n.R0S1)) %>% 
-  mutate(
-    liab.ca.sum   = pct.F.actives * liab.ca.sum.F   + pct.M.actives * liab.ca.sum.M,
-    liab.R1S1.sum = pct.F.actives * liab.R1S1.sum.F + pct.M.actives * liab.R1S1.sum.M,
-    liab.R1S0.sum = pct.F.actives * liab.R1S0.sum.F + pct.M.actives * liab.R1S0.sum.M,
-    liab.R0S1.sum = pct.F.actives * liab.R0S1.sum.F + pct.M.actives * liab.R0S1.sum.M,
+  mutate( # ".1" indicates that the values are for 1 initial individual with $1 of initial benefit.  
+    liab.ca.sum.1   = pct.F.actives * liab.ca.sum.F   + pct.M.actives * liab.ca.sum.M,
+    liab.R1S1.sum.1 = pct.F.actives * liab.R1S1.sum.F + pct.M.actives * liab.R1S1.sum.M,
+    liab.R1S0.sum.1 = pct.F.actives * liab.R1S0.sum.F + pct.M.actives * liab.R1S0.sum.M,
+    liab.R0S1.sum.1 = pct.F.actives * liab.R0S1.sum.F + pct.M.actives * liab.R0S1.sum.M,
     
-    B.ca.sum   = pct.F.actives * B.ca.sum.F   + pct.M.actives * B.ca.sum.M,
-    B.R1.sum   = pct.F.actives * B.R1.sum.F   + pct.M.actives * B.R1.sum.M,
-    B.R0S1.sum = pct.F.actives * B.R0S1.sum.F + pct.M.actives * B.R0S1.sum.M,
+    B.ca.sum.1   = pct.F.actives * B.ca.sum.F   + pct.M.actives * B.ca.sum.M,
+    B.R1.sum.1   = pct.F.actives * B.R1.sum.F   + pct.M.actives * B.R1.sum.M,
+    B.R0S1.sum.1 = pct.F.actives * B.R0S1.sum.F + pct.M.actives * B.R0S1.sum.M,
     
-    n.R1S1   = pct.F.actives * n.R1S1.F + pct.M.actives * n.R1S1.M,
-    n.R1S0   = pct.F.actives * n.R1S0.F + pct.M.actives * n.R1S0.M,
-    n.R0S1   = pct.F.actives * n.R0S1.F + pct.M.actives * n.R0S1.M
+    n.R1S1.1   = pct.F.actives * n.R1S1.F + pct.M.actives * n.R1S1.M,
+    n.R1S0.1   = pct.F.actives * n.R1S0.F + pct.M.actives * n.R1S0.M,
+    n.R0S1.1   = pct.F.actives * n.R0S1.F + pct.M.actives * n.R0S1.M,
+    n.ca.1     = n.R1S1.1 + n.R1S0.1 + n.R0S1.1
   )
 
 
@@ -291,9 +292,9 @@ df.all <-   select(df.M, age.r, age, B.ca.sum.M = B.ca.sum, B.R1.sum.M = B.R1.su
 #*********************************************************************************************************
 
 
-df.output <- df.all %>% select(age.r, age, liab.ca.sum, liab.R1S1.sum, liab.R1S0.sum, liab.R0S1.sum,
-                                           B.ca.sum, B.R1.sum, B.R0S1.sum,
-                                           n.R1S1, n.R1S0, n.R0S1)
+liab.ca <- df.all %>% select(age.r, age, liab.ca.sum.1, liab.R1S1.sum.1, liab.R1S0.sum.1, liab.R0S1.sum.1,
+                                           B.ca.sum.1, B.R1.sum.1, B.R0S1.sum.1,
+                                           n.R1S1.1, n.R1S0.1, n.R0S1.1, n.ca.1)
 
 # For any given simulation year, the entire series of total liabilities and benefit payments for the members who retire in that year can be 
 # obtained by multiplying the their initial retirement benefit with the B.tot and liab.tot of the corresponding retirement ages(age.r). Likewise,

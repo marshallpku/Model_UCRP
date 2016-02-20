@@ -89,6 +89,18 @@
   
   
   
+  #*************************************************************************************************************
+  #                                 ## Total LSC amounts                                                  ####
+  #*************************************************************************************************************  
+  LSC.agg <- expand.grid(year = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea) %>% 
+    filter(age.r > ea) %>% 
+    left_join(B.LSC %>% select(year, ea, age.r = age, Bx.LSC)) %>% 
+    left_join(pop$LSC.ca %>% select(year, ea, age.r = age, new_LSC)) %>% 
+    mutate(B.LSC.sum = new_LSC * Bx.LSC) %>% 
+    group_by(year) %>% 
+    summarise(B.LSC.sum = sum(B.LSC.sum),
+              n.LSC     = sum(new_LSC))
+  
   
   
   #*************************************************************************************************************
@@ -113,7 +125,7 @@
     group_by(year) %>% 
     summarise(ALx.v.sum   = sum(ALx.v.tot, na.rm = TRUE),
               B.v.sum     = sum(B.v.tot  , na.rm = TRUE),
-              nterms      = sum(number.v  , na.rm = TRUE)) %>% 
+              nterms      = sum(number.v , na.rm = TRUE)) %>% 
     # mutate(runname = runname) %>% 
     as.matrix
  
@@ -122,19 +134,39 @@
   #                                 ## Liabilities and benefits for contingent annuitants and survivors   ####
   #*************************************************************************************************************  
   
-  
-  
-  
-  #*************************************************************************************************************
-  #                                 ## Total LSC amounts                                                  ####
-  #*************************************************************************************************************  
+  ca.agg <- expand.grid(year.r = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea, age = range_age) %>% 
+            mutate(year = year.r + age - age.r) %>% 
+             filter(age >= ea,
+                   age >= age.r,
+                   age.r > ea,
+                   year <= max(year.r)) %>%
+
+            left_join(liab$active %>% filter(age %in% range_age.r) %>% select(year, ea, age.r = age, Bx.laca)) %>% 
+            left_join(pop$LSC.ca %>% select(year, ea, age.r = age, new_ca)) %>% 
+            left_join(liab.ca) %>% 
+            mutate(new_ca = na2zero(new_ca),
+                   liab.ca.sum = new_ca * Bx.laca * liab.ca.sum.1,
+                   B.ca.sum    = new_ca * Bx.laca * B.ca.sum.1,
+                   n.R1        = new_ca * (n.R1S0.1 + n.R1S1.1), # Total number of living contingent annuitants
+                   n.R0S1      = new_ca * n.R0S1.1) %>%            # Total number of survivors
+            group_by(year) %>% 
+            summarise(liab.ca.sum = sum(liab.ca.sum, na.rm = TRUE),
+                      B.ca.sum    = sum(B.ca.sum, na.rm = TRUE),
+                      n.R1        = sum(n.R1, na.rm = TRUE),
+                      n.R0S1      = sum(n.R0S1, na.rm = TRUE))
   
 
   
+  LSC.agg %>% data.frame
+  ca.agg %>% data.frame
+  active.agg %>% data.frame
+  
   #return(
   AggLiab <-  list(active = active.agg, 
-              la     = la.agg,  
-              term   = term.agg) 
+                   la     = la.agg,
+                   ca     = ca.agg, 
+                   term   = term.agg,
+                   LSC    = LSC.agg)
               
               # ind_active  = if(paramlist$save.indiv) .liab$active  else "Not saved", 
               # ind_retiree = if(paramlist$save.indiv) .liab$retiree else "Not saved",

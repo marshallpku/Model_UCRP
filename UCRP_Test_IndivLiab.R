@@ -324,7 +324,7 @@ NCx.LSC.method <- paste0("NCx.", actuarial_method, ".LSC")
 
 
 
-var.names <- c("sx", ALx.laca.method, NCx.laca.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.laca")
+var.names <- c("sx", ALx.laca.method, NCx.laca.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.laca", "Bx.laca")
 liab.active %<>% 
   filter(year %in% seq(init.year, len = nyear)) %>%
   select(year, ea, age, one_of(var.names)) %>%
