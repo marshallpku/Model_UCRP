@@ -36,7 +36,7 @@ devMode <- FALSE
 ncore      <- 4 
 
 init.year <- 2015
-nyear <- 30
+nyear <- 80
 max.age <-  120
 
 range_ea <- c(20:74)
