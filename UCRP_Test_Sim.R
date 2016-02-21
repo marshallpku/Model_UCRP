@@ -132,9 +132,8 @@
   penSim0$AL.la    <- .AggLiab$la[, "ALx.la.sum"]
   penSim0$AL.ca    <- .AggLiab$ca[, "liab.ca.sum"]
   penSim0$AL.term  <- .AggLiab$term[, "ALx.v.sum"]
-  penSim0$AL.LSC   <- .AggLiab$LSC[, "ALx.LSC.sum"]
 
-  penSim0$AL      <- with(penSim0, AL.act + AL.la + AL.ca +  AL.term + AL.LSC)
+  penSim0$AL      <- with(penSim0, AL.act + AL.la + AL.ca +  AL.term)
   
   
   # NC(j)
@@ -148,8 +147,7 @@
   penSim0$B.la    <- .AggLiab$la[, "B.la.sum"]
   penSim0$B.ca    <- .AggLiab$ca[, "B.ca.sum"]
   penSim0$B.v     <- .AggLiab$term[, "B.v.sum"]
-  penSim0$B.LSC   <- .AggLiab$LSC[, "B.LSC.sum"]
-  penSim0$B       <- with(penSim0, B.la + B.ca + B.v + B.LSC)
+  penSim0$B       <- with(penSim0, B.la + B.ca + B.v)
   
   # PR(j)
   penSim0$PR <- .AggLiab$active[, "PR.sum"]
@@ -160,7 +158,6 @@
   penSim0$n.ca.R1   <- .AggLiab$ca[, "n.R1"]
   penSim0$n.ca.R0S1 <- .AggLiab$ca[, "n.R0S1"]
   penSim0$nterms    <- .AggLiab$term[, "nterms"]
-  penSim0$n.LSC     <- .AggLiab$LSC[, "n.LSC"]
   
   cl <- makeCluster(ncore) 
   registerDoParallel(cl)

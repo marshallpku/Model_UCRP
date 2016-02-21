@@ -91,8 +91,7 @@ liab.active %<>%
   mutate( gx.laca = ifelse(yos < r.yos, 0,  
                         ifelse(age > r.full, 1, ifelse(age %in% r.min:r.full, 1, 0))),         # eligibility rule 1
           gx.laca = ifelse(start.year >= 1989, gx.laca, ifelse(age >= 62, 1, gx.laca)),              # eligibility rule 2
-          gx.LSC  = gx.laca,
-          #gx.laca = 0,
+  
   Bx.laca  = gx.laca * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
   TCx.laca = lead(Bx.laca) * (qxr.la + qxr.ca)  * lead(ax.r.W) * v,  # term cost of retirement at the internal retirement age x (start to claim benefit at age x + 1)
   # TCx.r = Bx.r * qxr.a * ax,
@@ -191,9 +190,8 @@ liab.la %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.frame(
  liab.active %<>%   
   mutate( 
           # gx.la also applies to LSC 
-          #gx.LSC  = gx.laca,
           
-          Bx.LSC  = gx.LSC * Bx * ax.LSC,         # This is the LSC amount if the employee CLAIMs at age x, not internally retire at age x. 
+          Bx.LSC  = gx.laca * Bx * ax.r.W,  # This is the LSC amount if the employee CLAIMs at age x, not internally retire at age x. 
           TCx.LSC = lead(Bx.LSC) * qxr.LSC  * v,  # term cost of retirement at the internal retirement age x (start to claim benefit at age x + 1)
           PVFBx.LSC  = c(get_PVFB(pxT[age <= r.max], v, TCx.LSC[age <= r.max]), rep(0, max.age - r.max)),
           
@@ -222,9 +220,7 @@ liab.la %>% filter(start.year == 2016, ea == 49, age.r == 60) %>% as.data.frame(
 #*************************************************************************************************************
 #                          3.2 LSC payments                                                              #####                  
 #************************************************************************************************************* 
- liab.LSC <- liab.active %>% select(start.year, year, ea, age, yos, Bx.LSC) %>% 
-          mutate(ALx.LSC = Bx.LSC) %>% 
-          filter(age %in% r.min:r.max)
+ B.LSC <- liab.active %>% select(start.year, year, ea, age, yos, Bx.LSC) %>% filter(age %in% r.min:r.max)
 
 
 
@@ -328,7 +324,7 @@ NCx.LSC.method <- paste0("NCx.", actuarial_method, ".LSC")
 
 
 
-var.names <- c("sx", ALx.laca.method, NCx.laca.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.laca", "Bx.laca", "Bx.LSC")
+var.names <- c("sx", ALx.laca.method, NCx.laca.method, ALx.v.method, NCx.v.method, ALx.LSC.method, NCx.LSC.method, "PVFBx.laca", "Bx.laca")
 liab.active %<>% 
   filter(year %in% seq(init.year, len = nyear)) %>%
   select(year, ea, age, one_of(var.names)) %>%
@@ -344,7 +340,7 @@ liab.active %<>%
   # liab.term
   # B.LSC
 
-liab <- list(active = liab.active, la = liab.la, term = liab.term, liab.LSC = liab.LSC)
+liab <- list(active = liab.active, la = liab.la, term = liab.term)
 
 
 

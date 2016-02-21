@@ -64,8 +64,6 @@
       as.matrix # extracting elements from matrices is much faster than from data.frame
   
   
-
-  
   #*************************************************************************************************************
   #                                     ## Liabilities and benefits for retirees   ####
   #*************************************************************************************************************
@@ -96,14 +94,12 @@
   #*************************************************************************************************************  
   LSC.agg <- expand.grid(year = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea) %>% 
     filter(age.r > ea) %>% 
-    left_join(.liab$liab.LSC %>% select(year, ea, age.r = age, Bx.LSC, ALx.LSC)) %>% 
+    left_join(B.LSC %>% select(year, ea, age.r = age, Bx.LSC)) %>% 
     left_join(pop$LSC.ca %>% select(year, ea, age.r = age, new_LSC)) %>% 
-    mutate(B.LSC.sum = new_LSC * Bx.LSC,
-           ALx.LSC.sum = new_LSC * ALx.LSC) %>% 
+    mutate(B.LSC.sum = new_LSC * Bx.LSC) %>% 
     group_by(year) %>% 
-    summarise(B.LSC.sum   = sum(B.LSC.sum,   na.rm = TRUE),
-              ALx.LSC.sum = sum(ALx.LSC.sum, na.rm = TRUE),
-              n.LSC     = sum(new_LSC, na.rm = TRUE)) %>% 
+    summarise(B.LSC.sum = sum(B.LSC.sum),
+              n.LSC     = sum(new_LSC)) %>% 
     as.matrix
   
   

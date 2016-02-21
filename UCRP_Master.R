@@ -31,12 +31,12 @@ load("Data/2015-10-07/retirees.rda")
 #*********************************************************************************************************
 
 runname <- "UCRP"
-nsim    <- 5
+nsim    <- 10
 devMode <- FALSE
 ncore      <- 4 
 
 init.year <- 2015
-nyear <- 70
+nyear <- 30
 max.age <-  120
 
 range_ea <- c(20:74)
@@ -68,7 +68,7 @@ actuarial_method <- "EAN.CP"
 
 
 wf_growth <- 0
-no_entrance <- "T"
+no_entrance <- "F"
 entrants_dist <- rep(1/length(range_ea), length(range_ea))
 
 pct.F.actives <- 0.55
@@ -111,19 +111,13 @@ EEC_rate <- 0.05
 
 
 
-# Testing
+#
 
-# pct.ca.F  <- 0 # 0.8
-# pct.ca.M  <- 0 # 0.6
-# pct.ca <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
-# pct.la <- 1 - pct.ca
+LSCrates %<>% mutate(qxLSC.act = 0)
+pct.ca.F  <- 0 # 0.8
+pct.ca.M  <- 0 # 0.6
 
-
-
-#LSCrates %<>% mutate(qxLSC.act = 0)
-#retirees  %<>% mutate(benefit = 0)
-#termrates %<>% mutate(qxt_faculty = 0)
-
+# termrates %<>% mutate(qxt_faculty = 0) 
 
 
 #*********************************************************************************************************
@@ -147,8 +141,6 @@ bfactor %<>% rename(bfactor = bf.non13)
 #*********************************************************************************************************
 source("UCRP_Test_Import_Plan.R")
 
-# init_pop$actives[,] <- 0
-# init_pop$actives[1,"49"] <- 1
 
 #*********************************************************************************************************
 # 1.3  Actual investment return. ####
@@ -194,23 +186,6 @@ source("UCRP_Test_Sim.R")
 
 
 penSim_results %>% filter(sim == -1) %>% select(year, FR) %>% data.frame
-penSim_results %>% filter(sim == -1) %>% data.frame
-
-
-
-
-# OK when only with life annuity, and no initial retirees
-# OK when only with life annuity, and with initial retirees
-
-
-# FR first slightly decreases then increases after around year 30, when contingent annuity added. 
-
-
-
-.liab$active %>% filter(year == 2015, ea == 20, age == 49) %>% select(year, ea, age, ALx.LSC, Bx.LSC, NCx.LSC)
-.liab$active %>% filter(year == 2015, ea == 20, age == 50) %>% select(year, ea, age, ALx.LSC, Bx.LSC)
-.liab$B.LSC  %>% filter(year == 2016, ea == 20, age == 50)
-
 
 
 
