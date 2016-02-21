@@ -50,7 +50,7 @@ mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max
  # before r.full: qxm.pre
  # after r.full: qxm.post.W with age.r ==  r.full
 
-mortality.ucrp %<>% left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, qxm.post.term = qxm.post.W)) %>% 
+mortality.ucrp %<>% left_join(mortality.post.ucrp %>% ungroup %>%  filter(age.r == r.full) %>% select(age, qxm.post.term = qxm.post.W)) %>% 
                     mutate(qxm.term = ifelse(age < r.full, qxm.pre, qxm.post.term))
 
 

@@ -146,19 +146,21 @@
                    age.r > ea,
                    year <= max(year.r)) %>%
 
-            left_join(liab$active %>% filter(age %in% range_age.r) %>% select(year, ea, age.r = age, Bx.laca)) %>% 
-            left_join(pop$LSC.ca %>% select(year, ea, age.r = age, new_ca)) %>% 
+            left_join(liab$active %>% filter(age %in% range_age.r) %>% select(year.r = year, ea, age.r = age, Bx.laca)) %>% 
+            left_join(pop$LSC.ca  %>% select(year.r = year, ea, age.r = age, new_ca)) %>% 
             left_join(liab.ca) %>% 
             mutate(new_ca = na2zero(new_ca),
                    liab.ca.sum = new_ca * Bx.laca * liab.ca.sum.1,
                    B.ca.sum    = new_ca * Bx.laca * B.ca.sum.1,
                    n.R1        = new_ca * (n.R1S0.1 + n.R1S1.1), # Total number of living contingent annuitants
-                   n.R0S1      = new_ca * n.R0S1.1) %>%            # Total number of survivors
+                   n.R0S1      = new_ca * n.R0S1.1) %>%          # Total number of survivors
+                   #filter(year.r == 2025, age.r == 50, ea == 20) %>%            
             group_by(year) %>% 
             summarise(liab.ca.sum = sum(liab.ca.sum, na.rm = TRUE),
                       B.ca.sum    = sum(B.ca.sum, na.rm = TRUE),
                       n.R1        = sum(n.R1, na.rm = TRUE),
-                      n.R0S1      = sum(n.R0S1, na.rm = TRUE)) %>% 
+                      n.R0S1      = sum(n.R0S1, na.rm = TRUE),
+                      n.new_ca    = sum(new_ca, na.rm = TRUE)) %>% 
             as.matrix
   
 
@@ -191,3 +193,5 @@
 # end_time_prep_loop <-  proc.time()
 # Time_prep_loop <- end_time_prep_loop - start_time_prep_loop
 
+  ca.agg
+  

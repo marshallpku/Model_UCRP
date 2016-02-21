@@ -309,8 +309,6 @@ term_reduced <- wf_term %>% group_by(year, age) %>% summarise(number.v = sum(num
 
 
 
-
-
 wf_LSC.ca <- wf_active %>% left_join(decrement_wf %>% select(age, ea, qxr.LSC, qxr.ca)) %>% 
              mutate(new_LSC = number.a * qxr.LSC,
                     new_ca  = number.a * qxr.ca,

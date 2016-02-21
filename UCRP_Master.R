@@ -36,7 +36,7 @@ devMode <- FALSE
 ncore      <- 4 
 
 init.year <- 2015
-nyear <- 70
+nyear <- 30
 max.age <-  120
 
 range_ea <- c(20:74)
@@ -113,16 +113,16 @@ EEC_rate <- 0.05
 
 # Testing
 
-# pct.ca.F  <- 0 # 0.8
-# pct.ca.M  <- 0 # 0.6
+# pct.ca.F  <- 1 # 0.8
+# pct.ca.M  <- 1 # 0.6
 # pct.ca <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
 # pct.la <- 1 - pct.ca
 
 
 
-#LSCrates %<>% mutate(qxLSC.act = 0)
-#retirees  %<>% mutate(benefit = 0)
-#termrates %<>% mutate(qxt_faculty = 0)
+# LSCrates %<>% mutate(qxLSC.act = 0)
+# retirees  %<>% mutate(benefit = 0)
+# termrates %<>% mutate(qxt_faculty = 0)
 
 
 
@@ -148,7 +148,7 @@ bfactor %<>% rename(bfactor = bf.non13)
 source("UCRP_Test_Import_Plan.R")
 
 # init_pop$actives[,] <- 0
-# init_pop$actives[1,"49"] <- 1
+# init_pop$actives[1,"40"] <- 1
 
 #*********************************************************************************************************
 # 1.3  Actual investment return. ####
@@ -193,7 +193,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, AL, MA, starts_with("n")) %>% data.frame
 penSim_results %>% filter(sim == -1) %>% data.frame
 
 
