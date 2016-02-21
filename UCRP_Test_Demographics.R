@@ -122,7 +122,7 @@ p_active2la <- make_dmat("qxr.la")   # Prob of retiring as a life annuitant.
 
 
 # Where do the terminated go
-p_term2dead    <- make_dmat("qxm.pre") # need to modify later
+p_term2dead    <- make_dmat("qxm.term") # need to modify later
 
 
 # Where do the disabled go
