@@ -45,7 +45,13 @@ mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max
   )  %>% 
   select(age, qxm.post.W, pxm.post.W, ax.r.W)
 
-# mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)
+
+# construct mortality rate for terms: 
+ # before r.full: qxm.pre
+ # after r.full: qxm.post.W with age.r ==  r.full
+
+mortality.ucrp %<>% left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, qxm.post.term = qxm.post.W)) %>% 
+                    mutate(qxm.term = ifelse(age < r.full, qxm.pre, qxm.post.term))
 
 
 
@@ -148,7 +154,7 @@ decrement.ucrp %<>% group_by(ea) %>%
          qxr.tm13        = ifelse(age == r.max - 1,
                             1 - qxt - qxm.pre - qxd, 
                             lead(qxr.tm13)*(1 - qxt - qxm.pre - qxd)),                        # Total probability of retirement
-         qxr.LSC.tm13       = ifelse(age == r.max, 0 , qxr.tm13 * lead(qxLSC.act)),             # Prob of opting for LSC                                                        # Prob of opting for LSC
+         qxr.LSC.tm13       = ifelse(age == r.max, 0 , qxr.tm13 * lead(qxLSC.act)),           # Prob of opting for LSC                                                        # Prob of opting for LSC
          qxr.la.tm13      = ifelse(age == r.max, 0 , qxr.tm13 * lead(1 - qxLSC.act)),         # Prob of opting for life annuity                                                 # Prob of opting for life annuity
          qxr.ca.tm13      = 0)                                                                # Prob of opting for contingent annuity
          

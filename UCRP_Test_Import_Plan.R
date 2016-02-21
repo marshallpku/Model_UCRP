@@ -23,7 +23,7 @@ benefit <- retirees %>%
   select(start.year, ea, age, age.r, benefit)
 
 
-
+init_pop$retirees
 # init_pop$actives %>% sum
 # init_pop$retirees
 
