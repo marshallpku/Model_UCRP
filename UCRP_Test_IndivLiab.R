@@ -31,16 +31,12 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
                            ea = c(20:74), age = range_age) %>%
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
   mutate(year = start.year + age - ea) %>%  # year index in the simulation)
-  arrange(start.year, ea, age) %>%
-  mutate(sx = 1.05^(age - ea)) %>% # left_join(.salary)  %>%  # make-up salary 
-
-#   left_join(.benefit) %>% # must make sure the smallest age in the retirement benefit table is smaller than the single retirement age. (smaller than r.min with multiple retirement ages)
-#   right_join(.decrement) %>%
-
+  arrange(start.year, ea, age) %>% 
+  left_join(salary) %>%
+# left_join(.benefit) %>% # must make sure the smallest age in the retirement benefit table is smaller than the single retirement age. (smaller than r.min with multiple retirement ages)
   left_join(decrement.ucrp) %>% 
   left_join(bfactor) %>%
   left_join(mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)) %>%
-#  left_join(benefit) %>% 
   group_by(start.year, ea) %>%
   
   
