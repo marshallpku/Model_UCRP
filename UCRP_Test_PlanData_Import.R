@@ -77,44 +77,52 @@ retirees %<>% select(age = age_cell, nretirees, benefit)
 #*************************************************************************************************************
 
 terms_HAPC <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_HAPC", skip = 3) %>% rename(age = Age) %>% 
-              gather(yos, HAPC, -age) %>% 
-              filter(yos != "non-Vested") %>% 
-              mutate(
-                age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
-                age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
-                
-                yos_l =  ifelse(grepl("\\D$",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d+-") %>% gsub("\\D+", "",.)) %>% as.numeric,
-                yos_u =  ifelse(grepl("^\\D",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d{2}$")) %>% as.numeric,
-                
-                HAPC = (as.numeric(HAPC) * 12) %>% na2zero,
-                
-                age_cell = ifelse(is.na(age_l), age_u - 3, age_l),
-                yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
-                
-                age = NULL,
-                yos = NULL
-              )
+  gather(yos, HAPC, -age) %>% 
+  filter(yos != "non-Vested") %>% 
+  mutate(
+    age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
+    age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
+    
+    yos_l =  ifelse(grepl("\\D$",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d+-") %>% gsub("\\D+", "",.)) %>% as.numeric,
+    yos_u =  ifelse(grepl("^\\D",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d{2}$")) %>% as.numeric,
+    
+    HAPC = (as.numeric(HAPC) * 12) %>% na2zero,
+    
+    # age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
+    # yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
+    
+    age_cell = ifelse(is.na(age_u), age_l + 3, age_u),
+    yos_cell = yos_l,
+    
+    age = NULL,
+    yos = NULL
+  )
 
 terms_n <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_N", skip = 5) %>% rename(age = Age) %>% 
-              gather(yos, nterm, -age) %>% 
-              filter(yos != "non-Vested", yos != "All", age != "All") %>% 
-              mutate(
-                age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
-                age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
-                
-                yos_l =  ifelse(grepl("\\D$",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d+-") %>% gsub("\\D+", "",.)) %>% as.numeric,
-                yos_u =  ifelse(grepl("^\\D",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d{2}$")) %>% as.numeric,
-                
-                nterm = as.numeric(nterm) %>% na2zero,
-                
-                age_cell = ifelse(is.na(age_l), age_u - 3, age_l),
-                yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
-                
-                age = NULL,
-                yos = NULL
-              )
+  gather(yos, nterm, -age) %>% 
+  filter(yos != "non-Vested", yos != "All", age != "All") %>% 
+  mutate(
+    age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
+    age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
+    
+    yos_l =  ifelse(grepl("\\D$",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d+-") %>% gsub("\\D+", "",.)) %>% as.numeric,
+    yos_u =  ifelse(grepl("^\\D",  yos),  str_extract(yos, "\\d+"),  str_extract(yos, "\\d{2}$")) %>% as.numeric,
+    
+    nterm = as.numeric(nterm) %>% na2zero,
+    
+    # age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
+    # yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
+    
+    age_cell = ifelse(is.na(age_u), age_l + 3, age_u),
+    yos_cell = yos_l,
+    
+    age = NULL,
+    yos = NULL
+  )
 
-
+terminated <-  terms_n %>% select(age = age_cell, yos = yos_cell, nterm) %>% 
+  left_join(terms_HAPC %>% select(age = age_cell, yos = yos_cell, HAPC)) %>% 
+  filter(age - 1 - yos >= min.ea) # assme age.term is age - 1, ea must be greater than 20
 
 
 

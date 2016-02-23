@@ -270,6 +270,38 @@ liab.active %<>%
 #*************************************************************************************************************
 #                       4.2 AL for vested terminatede members                        #####
 #*************************************************************************************************************
+# 
+# # Calculate AL and benefit payment for initial vested terms.
+liab.term.init <- expand.grid(ea         = unique(HAPC_terms$ea),
+                              age.term   = unique(HAPC_terms$age.term),
+                              start.year = unique(HAPC_terms$start.year),
+                              age = range_age) %>%
+  filter(start.year + age - ea >= 1,
+         age >= ea,
+         age.term >= ea) %>%
+  left_join(HAPC_terms %>% select(-age)) %>%
+  left_join(select(liab.active, start.year, ea, age, bfactor, COLA.scale, pxRm, px_r.full_m)) %>%
+  left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, ax.r.W.term = ax.r.W)) %>%
+  group_by(start.year, ea, age.term) %>%
+
+  mutate(
+    year = start.year + age - ea,
+    age.ben  = ifelse(age[year == init.year] > r.full, age[year == init.year], r.full), # Age at which term starts to receive benefit.
+    year.term = year[age == age.term],
+
+    Bx.v = pmin(fas, na2zero(bfactor[age == ifelse(age.ben <= r.full, r.full, age[age == age.ben])] * yos * fas))* (1 + infl)^(r.full - age), #
+    B.v   = ifelse(age.ben > r.full, 0,   ifelse(age >= r.full, Bx.v[age == unique(age.term)] * COLA.scale/COLA.scale[age == r.full], 0)),  # Benefit payment after r.full
+    B.v   = ifelse(age.ben == r.full, B.v, ifelse(age >= age.ben, Bx.v[age == unique(age.term)] * COLA.scale/COLA.scale[age == age.ben], 0)),
+    ALx.v = ifelse(age <  r.full, Bx.v[age == unique(age.term)] * ax.r.W.term[age == r.full] * px_r.full_m * v^(r.full - age),
+                   B.v * ax.r.W.term)) %>%
+  ungroup %>%
+  select(ea, age, start.year, year, year.term, B.v, ALx.v) %>%
+  filter(year %in% seq(init.year, len = nyear))
+
+
+
+# liab.term.init %>% filter(start.year == 2007, ea == 55, age.term == 63) %>% data.frame()
+
 
 # Calculate AL and benefit payment for vested terms terminating at different ages.
 # Merge by using data.table: does not save much time, but time consumpton seems more stable than dplyr. The time consuming part is the mutate step.
@@ -301,12 +333,15 @@ liab.term %<>% as.data.frame %>%
   # select(#-start.year, -age.term,
   #        -Bx.v, -ax.r.W, -COLA.scale, -pxRm) %>%
 
-  select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm) %>%
-  filter(year %in% seq(init.year, len = nyear) ) 
+  select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm, -age.r) %>%
+  filter(year %in% seq(init.year, len = nyear)) 
 
 
-
-
+# liab.term %<>% mutate(B.v   = ifelse(year.term == init.year, 0, B.v),
+#                       ALx.v = ifelse(year.term == init.year, 0, ALx.v))
+# #liab.term %>% head
+# 
+# liab.term %>% filter(year.term == 2015, start.year == 1980) %>% head
 
 #*************************************************************************************************************
 #                 # Choosing AL and NC variables corresponding to the chosen acturial methed             #####

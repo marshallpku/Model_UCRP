@@ -38,7 +38,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 30
+nyear <- 6
 
 
 range_ea <- c(20:74)
@@ -206,7 +206,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, AL,AL.act, AL,  MA, NC_PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL,AL.act, AL.act.v,AL.term, AL,   NC_PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 

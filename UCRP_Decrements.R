@@ -55,9 +55,6 @@ mortality.ucrp %<>% left_join(mortality.post.ucrp %>% ungroup %>%  filter(age.r 
 
 
 
-
-
-
                               
 disbrates.ucrp <- disbrates %>%  mutate(qxd = qxd.M * pct.M.actives + qxd.F * pct.F.actives)
 

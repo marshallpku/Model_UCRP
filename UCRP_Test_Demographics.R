@@ -78,8 +78,9 @@ newDisb.act <- numeric(nyear)
 # Note on initial retirees: It is assumed that all initial retirees entered the workforce at age 54 and retireed in year 1. 
 # Altough this may produce yos greater than r.max - ea.min, it is irrelevant to the calculation since we do not care about initial retirees' yos.  
 # 
-wf_active[, , 1]  <- .init_pop$actives 
-wf_la[, , 1, 1]   <- .init_pop$retirees
+wf_active[, , 1]   <- .init_pop$actives 
+wf_la[, , 1, 1]    <- .init_pop$retirees
+#wf_term[, , 1, 1] <- .init_pop$terms
 # 
 
 
