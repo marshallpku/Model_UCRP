@@ -59,8 +59,14 @@ i <- 0.075
 v <- 1/(1 + i)
 infl <- 0.03
 prod <- 0.01
-m  <- 15 
+#m  <- 15 
 s.year <- 10
+
+m.UAAL0 <- 20
+m.UAAL1 <- 20
+m.surplus0 <- 30
+m.surplus1 <- 15
+
 
 r.full <- 60 # age at which vested terms are assumed to retire. 
 r.yos  <- 5
@@ -139,7 +145,7 @@ source("UCRP_Test_PlanData_Transform.R")
 
 # init_pop$actives[,] <- 0
 # init_pop$actives[1,"40"] <- 1
-
+terminated %>% mutate(nterm = 0, HAPC = 0)
 
 #*********************************************************************************************************
 # 1.2 Importing Decrement tables and Calculating Probabilities ####
@@ -161,7 +167,7 @@ bfactor %<>% rename(bfactor = bf.non13)
 # 1.3  Actual investment return. ####
 #*********************************************************************************************************
 source("UCRP_Test_InvReturns.R")
-
+#i.r[, "1"] <- c(rep(0.06,5), rep(0.15,10),rep(0.0725,40))
 
 #*********************************************************************************************************
 # 2. Demographics ####
@@ -200,8 +206,8 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, AL,AL.act, AL,  MA, NC_PR) %>% data.frame
-penSim_results %>% filter(sim == -1) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, AL, AL.act, AL,  MA, NC_PR) %>% data.frame
+#penSim_results %>% filter(sim == -1) %>% data.frame
 
 
 

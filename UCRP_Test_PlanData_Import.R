@@ -88,7 +88,7 @@ terms_HAPC <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_HAPC"
                 
                 HAPC = (as.numeric(HAPC) * 12) %>% na2zero,
                 
-                age_cell = ifelse(is.na(age_l), age_u - 3, age_l),
+                age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
                 yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
                 
                 age = NULL,
@@ -107,15 +107,15 @@ terms_n <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_N", skip
                 
                 nterm = as.numeric(nterm) %>% na2zero,
                 
-                age_cell = ifelse(is.na(age_l), age_u - 3, age_l),
+                age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
                 yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
                 
                 age = NULL,
                 yos = NULL
               )
 
-
-
+terminated <-  terms_n %>% select(age = age_cell, yos = yos_cell, nterm) %>% 
+               left_join(terms_HAPC %>% select(age = age_cell, yos = yos_cell, HAPC))
 
 
 #*************************************************************************************************************
