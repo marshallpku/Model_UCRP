@@ -70,46 +70,8 @@
   # In this program, the only source of gain or loss is the difference between assumed interest rate i and real rate of return i.r,
   # which will make I(t) != Ia(t) + Ic(t) - Ib(t)
   
-        
-  
-  #*************************************************************************************************************
-  #                                     Notes on the amortization method in UCRP ####
-  #************************************************************************************************************* 
-
-  ## Amortization before 7/1/2015 AV
-  # - Initial surpuls is amortized as a level dollar amount over 3 years.
-  # - UAAL identified prior to 7/1/2015 valuation:(before and not including, 14-15 plan year): any intial UAAL (after a period of surplus) or 
-  #   change in UAAL due to gains and losses(including contribution gains and losses) is amortized over 30 years. 
-  #
-  # - UAAL as of 2010:
-  #   Effective 7/1/2010， all UAAL amortization bases as of 7/1/2010 were combined and the combined bases is amortized as a level dollar amount 
-  #   over 30 years. 
-  # 
-  # - Implication for modeling: find the latest year when the plan had a surplus)
   
   
-  ## Amortization after 7/1/2015 AV(including 2014-15 plan year)
-  #
-  # - Any initial UAAL (after a period of surplus) or change  in UAAL due to gains/losses(including contribution gains/losses) is amortized 
-  #   over 20 years.
-  # 
-  # Surplus:
-  #   - For any year in which UCRP has a surplus, such surplus would be amortized as a level dollar amount over 30 years, and all prior UAAL 
-  #     amortization bases would be considered fully amortized.
-  #   - (intial surplus amortized over 30 years accroding to (11)?)
-  #   - Changes in surplus after the effective date due to actuarial gains/losses(including contribution gains and losses) is amortized as a 
-  #     level dollar amount over 15 years. 
-  
-  
-  
-  # Amortization rule in the model  
-  # 1. UAAL    -> Surplus: All prior amortization basis are considered fully amortized. Initial surplus is amortized over 30 years.
-  # 2. Surplus -> Surplus: change in surplus is amortized over 15 years.
-  # 3. Surplus -> UAAL:    All prior amortization basis are considered fully amortized. Initial UAAL is amortized over 20 years. 
-  # 4. UAAL    -> UAAL:    change in UAAL is amortized over 20 years.
-  
-
-        
   # Set up data frame
   penSim0 <- data.frame(year = 1:nyear) %>%
     mutate(AL   = 0, #
@@ -121,10 +83,9 @@
            UAAL = 0, #
            EUAAL= 0, #
            LG   = 0, #
-           Amort_basis = 0,   # amount to be amortized: AM(t) = LG(t) + [ADC(t - 1) - C(t-1)]*[1 + i(t-1)], i.e. actuarial loss/gain plus shortfall in paying NC+SC in last period(plus interests) 
+           AM   = 0, # amount to be amortized: AM(t) = LG(t) + [ADC(t - 1) - C(t-1)]*[1 + i(t-1)], i.e. actuarial loss/gain plus shortfall in paying NC+SC in last period(plus interests) 
            NC   = 0, #
            SC   = 0, #
-           Switch_amort = "", # Indicator for switching amortization method
            EEC  = 0, #
            ERC  = 0, #
            ADC  = 0, #
@@ -149,9 +110,7 @@
   penSim0 <- as.list(penSim0)
   
   # matrix representation of amortization: better visualization but large size, used in this excercise
-  
-  m.max <- max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
-  SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
+  SC_amort0 <- matrix(0, nyear + m, nyear + m)
   # SC_amort0
   # data frame representation of amortization: much smaller size, can be used in real model later.
   # SC_amort <- expand.grid(year = 1:(nyear + m), start = 1:(nyear + m))
@@ -258,54 +217,22 @@
       if (j == 1){
         penSim$EUAAL[j] <- 0
         penSim$LG[j] <- with(penSim,  UAAL[j])  # This is the intial underfunding, rather than actuarial loss/gain if the plan is established at period 1. 
-        penSim$Amort_basis[j] <- with(penSim, LG[j])
+        penSim$AM[j] <- with(penSim, LG[j])
         
       } else {
         penSim$EUAAL[j] <- with(penSim, (UAAL[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
         penSim$LG[j]    <- with(penSim,  UAAL[j] - EUAAL[j])
-        penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
+        penSim$AM[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
       }   
       
       
-      
-      
-      #*************************************************************************************************************
-      #                                       UCRP Amortization method  ####
-      #*************************************************************************************************************
-      
-      # Set up mode-switching indicator for amortization basis. 
-      if(j == 1) penSim$Switch_amort[j] <-  with(penSim, ifelse(UAAL[j]<0, "surplus0", "UAAL0")) else
-                 penSim$Switch_amort[j] <-  with(penSim, ifelse(UAAL[j]<0 & UAAL[j - 1]>=0, "surplus0",
-                                                                ifelse(UAAL[j]<0 & UAAL[j - 1]<0, "surplus1",
-                                                                       ifelse(UAAL[j]>=0 & UAAL[j - 1]<0, "UAAL0",
-                                                                              ifelse(UAAL[j]>=0 & UAAL[j - 1]>=0, "UAAL1", ""))))) 
-      
-      # Determine the amortization basis
-      if(j == 1) penSim$Amort_basis[j] <- with(penSim, Amort_basis[j]) else
-        penSim$Amort_basis[j] <- with(penSim, ifelse(Switch_amort[j] %in% c("Surplus1", "UAAL1"), Amort_basis[j], UAAL[j]))
-      
-      
-      # Determine the amortization period
-      m <- switch(penSim$Switch_amort[j],
-                  surplus0 = m.surplus0,
-                  surplus1 = m.surplus0,
-                  UAAL0    = m.UAAL0,
-                  UAAL1    = m.UAAL1)
-      
-      
       # Amortize LG(j)
-      if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
-      
-      if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(j-1),] <- 0
-      
+      if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$AM[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
       
       # Supplemental cost in j
       penSim$SC[j] <- switch(amort_type,
                              closed = sum(SC_amort[, j]),
                              open   = amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)[1])
-      
-      #**************************************************************************************************************
-      
       
       
       # Employee contribution, based on payroll. May be adjusted later. 

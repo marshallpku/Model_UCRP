@@ -187,41 +187,20 @@ benefit <- retirees %>% get_benefit()
 
 
 
-
-
-
-#*************************************************************************************************************
-#                               Import initial HAPC for vested terminated                           #####                  
-#*************************************************************************************************************
-
-HAPC_terms <-
-terminated %>% select(age, yos, fas = HAPC) %>%
-               mutate(year = init.year,
-                      age.term = age,   # assume all terms are terminated in init.year.
-                      ea   = age - yos,
-                      start.year = year - (age - ea))
-
-
-
-
-
-
 #*************************************************************************************************************
 #                               Generating inital population                                             #####                  
 #*************************************************************************************************************
 
-get_initPop <- function (.actives = actives,         # = tailored_demoData$actives,
-                         .retirees = retirees,
-                         .terminated = terminated  # = tailored_demoData$retirees
+get_initPop <- function (.actives,         # = tailored_demoData$actives,
+                         .retirees         # = tailored_demoData$retirees
                          # .paramlist        = paramlist,
                          # .Global_paramlist = Global_paramlist
                          ){
   # Import and standardize the total number of actives and retirees.  
   
   # Run the section below when developing new features.
-     # .actives           = actives
-     # .retirees          = retirees
-     # .terminated        = terminated
+     .actives           = actives
+     .retirees          = retirees
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
@@ -239,12 +218,7 @@ get_initPop <- function (.actives = actives,         # = tailored_demoData$activ
     #mutate(nretirees = n_init_retirees * nretirees/sum(nretirees, na.rm = TRUE)) %>% 
     spread(age, nretirees, fill = 0) %>% select(-ea) %>% as.matrix
   
-  init_terms <- .terminated %>% mutate(ea = age - yos) %>% select(ea, age, nterm)
-  init_terms <-  expand.grid(ea = range_ea, age = range_age) %>% left_join(init_terms) %>% 
-    #mutate(nactives = n_init_actives * nactives/sum(nactives, na.rm = TRUE)) %>%
-    spread(age, nterm, fill = 0) %>% select(-ea) %>% as.matrix 
-  
-  return(list(actives = init_actives, retirees = init_retirees, terms = init_terms))
+  return(list(actives = init_actives, retirees = init_retirees))
 }
 
 

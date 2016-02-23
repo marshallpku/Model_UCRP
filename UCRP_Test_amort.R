@@ -67,8 +67,6 @@ for (j in 1:nrow(df)){
   
   df$UAAL[j] <- with(df, AL[j] -  AA[j])
   
-  
-  
   # Set up mode-switching indicator for amortization basis. 
   
   if(j == 1) df$switch[j] <-  with(df, ifelse(UAAL[j]<0, "surplus0", "UAAL0")) else

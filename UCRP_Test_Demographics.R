@@ -80,8 +80,6 @@ newDisb.act <- numeric(nyear)
 # 
 wf_active[, , 1]  <- .init_pop$actives 
 wf_la[, , 1, 1]   <- .init_pop$retirees
-wf_term[, , 1, 1] <- .init_pop$terms
-
 # 
 
 

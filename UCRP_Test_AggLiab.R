@@ -117,9 +117,9 @@
   .pop$term   <- data.table(.pop$term,  key = "ea,age,year,year.term")
   .liab$term  <- merge(.pop$term, .liab$term, by = c("ea", "age","year", "year.term"), all.x = TRUE)
   .liab$term  <- as.data.frame(.liab$term)
-
-
   
+
+   
   .liab$term %<>% 
     mutate(ALx.v.tot = ALx.v * number.v,
            B.v.tot   = B.v  * number.v,
@@ -193,5 +193,5 @@
 # end_time_prep_loop <-  proc.time()
 # Time_prep_loop <- end_time_prep_loop - start_time_prep_loop
 
-#  ca.agg
+  ca.agg
   
