@@ -333,15 +333,17 @@ liab.term %<>% as.data.frame %>%
   # select(#-start.year, -age.term,
   #        -Bx.v, -ax.r.W, -COLA.scale, -pxRm) %>%
 
-  select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm, -age.r) %>%
+  select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm, - px_r.full_m, -age.r) %>%
   filter(year %in% seq(init.year, len = nyear)) 
 
 
-# liab.term %<>% mutate(B.v   = ifelse(year.term == init.year, 0, B.v),
-#                       ALx.v = ifelse(year.term == init.year, 0, ALx.v))
-# #liab.term %>% head
-# 
-# liab.term %>% filter(year.term == 2015, start.year == 1980) %>% head
+liab.term %<>% mutate(B.v   = ifelse(year.term == init.year - 1, 0, B.v),
+                      ALx.v = ifelse(year.term == init.year - 1, 0, ALx.v))
+
+
+
+
+# liab.term %>% filter(year.term == 2014, start.year == 1980) %>% head
 
 #*************************************************************************************************************
 #                 # Choosing AL and NC variables corresponding to the chosen acturial methed             #####
