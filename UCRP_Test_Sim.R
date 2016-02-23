@@ -110,7 +110,9 @@
   penSim0 <- as.list(penSim0)
   
   # matrix representation of amortization: better visualization but large size, used in this excercise
-  SC_amort0 <- matrix(0, nyear + m, nyear + m)
+  
+  m.max <- max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
+  SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
   # SC_amort0
   # data frame representation of amortization: much smaller size, can be used in real model later.
   # SC_amort <- expand.grid(year = 1:(nyear + m), start = 1:(nyear + m))
@@ -217,22 +219,59 @@
       if (j == 1){
         penSim$EUAAL[j] <- 0
         penSim$LG[j] <- with(penSim,  UAAL[j])  # This is the intial underfunding, rather than actuarial loss/gain if the plan is established at period 1. 
-        penSim$AM[j] <- with(penSim, LG[j])
+        penSim$Amort_basis[j] <- with(penSim, LG[j])
         
       } else {
         penSim$EUAAL[j] <- with(penSim, (UAAL[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
         penSim$LG[j]    <- with(penSim,  UAAL[j] - EUAAL[j])
-        penSim$AM[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
+        penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
       }   
       
       
+      # # Amortize LG(j)
+      # if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$AM[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
+      # 
+      # # Supplemental cost in j
+      # penSim$SC[j] <- switch(amort_type,
+      #                        closed = sum(SC_amort[, j]),
+      #                        open   = amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)[1])
+      
+      #*************************************************************************************************************
+      #                                       UCRP Amortization method  ####
+      #*************************************************************************************************************
+      
+      # Set up mode-switching indicator for amortization basis. 
+      if(j == 1) penSim$Switch_amort[j] <-  with(penSim, ifelse(UAAL[j]<0, "surplus0", "UAAL0")) else
+        penSim$Switch_amort[j] <-  with(penSim, ifelse(UAAL[j]<0 & UAAL[j - 1]>=0, "surplus0",
+                                                       ifelse(UAAL[j]<0 & UAAL[j - 1]<0, "surplus1",
+                                                              ifelse(UAAL[j]>=0 & UAAL[j - 1]<0, "UAAL0",
+                                                                     ifelse(UAAL[j]>=0 & UAAL[j - 1]>=0, "UAAL1", ""))))) 
+      
+      # Determine the amortization basis
+      if(j == 1) penSim$Amort_basis[j] <- with(penSim, Amort_basis[j]) else
+        penSim$Amort_basis[j] <- with(penSim, ifelse(Switch_amort[j] %in% c("Surplus1", "UAAL1"), Amort_basis[j], UAAL[j]))
+      
+      
+      # Determine the amortization period
+      m <- switch(penSim$Switch_amort[j],
+                  surplus0 = m.surplus0,
+                  surplus1 = m.surplus0,
+                  UAAL0    = m.UAAL0,
+                  UAAL1    = m.UAAL1)
+      
+      
       # Amortize LG(j)
-      if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$AM[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
+      if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
+      
+      if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(j-1),] <- 0
+      
       
       # Supplemental cost in j
       penSim$SC[j] <- switch(amort_type,
                              closed = sum(SC_amort[, j]),
                              open   = amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)[1])
+      
+      #**************************************************************************************************************
       
       
       # Employee contribution, based on payroll. May be adjusted later. 

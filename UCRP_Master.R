@@ -55,12 +55,18 @@ r.max  <- max(range_age.r)
 
 fasyears <- 3
 cola     <- 0.03
-i <- 0.075
+i <- 0.0725
 v <- 1/(1 + i)
 infl <- 0.03
 prod <- 0.01
-m  <- 15 
+#m  <- 15 
 s.year <- 10
+
+m.UAAL0 <- 20
+m.UAAL1 <- 20
+m.surplus0 <- 30
+m.surplus1 <- 15
+
 
 r.full <- 60 # age at which vested terms are assumed to retire. 
 r.yos  <- 5
@@ -201,7 +207,7 @@ source("UCRP_Test_Sim.R")
 
 
 penSim_results %>% filter(sim == -1) %>% select(year, FR, AL,AL.act, AL,  MA, NC_PR) %>% data.frame
-penSim_results %>% filter(sim == -1) %>% data.frame
+#penSim_results %>% filter(sim == -1) %>% data.frame
 
 
 
