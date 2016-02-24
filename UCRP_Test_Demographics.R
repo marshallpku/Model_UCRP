@@ -216,9 +216,9 @@ calc_entrants <- function(wf0, wf1, delta, dist, no.entrants = FALSE){
 # i runs from 2 to nyear. 
 
 for (j in 1:(nyear - 1)){
-  #i <-  1  
+  #j <-  1  
   # compute the inflow to and outflow
-  active2term    <- wf_active[, , j] * p_active2term  # This will join wf_term[, , j + 1, j], note that workers who terminate in year j won't join the terminated group until j+1. 
+  active2term    <- wf_active[, , j] * p_active2term  # This will join wf_term[, , j + 1, j + 1], note that workers who terminate in year j won't join the terminated group until j+1. 
   active2disb    <- wf_active[, , j] * p_active2disb
   active2dead    <- wf_active[, , j] * p_active2dead
   active2retired <- wf_active[, , j] * p_active2retired    # This will be used to calculate the number of actives leaving the workforce
@@ -324,7 +324,7 @@ wf_LSC.ca <- wf_active %>% left_join(decrement_wf %>% select(age, ea, qxr.LSC, q
 # Final outputs
 pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dead = wf_dead, LSC.ca = wf_LSC.ca)
 
-
+# pop$term %>% filter(year == 2016) %>% select(number.v) %>% sum
 
 
 

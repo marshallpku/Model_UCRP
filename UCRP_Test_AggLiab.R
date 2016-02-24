@@ -111,15 +111,18 @@
   #*************************************************************************************************************
   #                                 ## Liabilities and benefits for vested terms.   ####
   #*************************************************************************************************************
-  
-  # Save 10 seconds by using data.table to merge
-  .liab$term  <- data.table(.liab$term, key = "ea,age,year,year.term")
-  .pop$term   <- data.table(.pop$term,  key = "ea,age,year,year.term")
-  .liab$term  <- merge(.pop$term, .liab$term, by = c("ea", "age","year", "year.term"), all.x = TRUE)
-  .liab$term  <- as.data.frame(.liab$term)
-  
 
-   
+  # Save 10 seconds by using data.table to merge. Update 2/2016: the latest version of left_join is fast enough.
+  .liab$term <- left_join(.pop$term, .liab$term)
+  # .liab$term  <- data.table(.liab$term, key = "ea,age,year,year.term")
+  # .pop$term   <- data.table(.pop$term,  key = "ea,age,year,year.term")
+  # .liab$term  <- merge(.pop$term, .liab$term, by = c("ea", "age","year", "year.term"), all.x = TRUE)
+  # .liab$term  <- as.data.frame(.liab$term)
+  
+  #.liab$term %>% filter(year == 2015, year.term == 2014, age == 40)
+  
+  
+  
   .liab$term %<>% 
     mutate(ALx.v.tot = ALx.v * number.v,
            B.v.tot   = B.v  * number.v,
@@ -134,7 +137,7 @@
     # mutate(runname = runname) %>% 
     as.matrix
  
-  
+
   #*************************************************************************************************************
   #                                 ## Liabilities and benefits for contingent annuitants and survivors   ####
   #*************************************************************************************************************  

@@ -270,16 +270,16 @@ liab.active %<>%
 #*************************************************************************************************************
 #                       4.2 AL for vested terminatede members                        #####
 #*************************************************************************************************************
-# 
+
 # # Calculate AL and benefit payment for initial vested terms.
-liab.term.init <- expand.grid(ea         = unique(HAPC_terms$ea),
-                              age.term   = unique(HAPC_terms$age.term),
-                              start.year = unique(HAPC_terms$start.year),
+liab.term.init <- expand.grid(ea         = unique(terminated$ea),
+                              age.term   = unique(terminated$age.term),
+                              start.year = unique(terminated$start.year),
                               age = range_age) %>%
   filter(start.year + age - ea >= 1,
          age >= ea,
          age.term >= ea) %>%
-  left_join(HAPC_terms %>% select(-age)) %>%
+  left_join(terminated %>% select(ea, age.term, start.year, yos, fas = HAPC)) %>%
   left_join(select(liab.active, start.year, ea, age, bfactor, COLA.scale, pxRm, px_r.full_m)) %>%
   left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, ax.r.W.term = ax.r.W)) %>%
   group_by(start.year, ea, age.term) %>%
@@ -296,7 +296,8 @@ liab.term.init <- expand.grid(ea         = unique(HAPC_terms$ea),
                    B.v * ax.r.W.term)) %>%
   ungroup %>%
   select(ea, age, start.year, year, year.term, B.v, ALx.v) %>%
-  filter(year %in% seq(init.year, len = nyear))
+  filter(year %in% seq(init.year, len = nyear),
+         year.term == init.year - 1)
 
 
 
@@ -337,14 +338,22 @@ liab.term %<>% as.data.frame %>%
   filter(year %in% seq(init.year, len = nyear)) 
 
 
-liab.term %<>% mutate(B.v   = ifelse(year.term == init.year - 1, 0, B.v),
-                      ALx.v = ifelse(year.term == init.year - 1, 0, ALx.v))
+# liab.term %<>% mutate(B.v   = ifelse(year.term == init.year - 1, 0, B.v),
+#                       ALx.v = ifelse(year.term == init.year - 1, 0, ALx.v))
 
 
 
+
+
+liab.term <-  bind_rows(list(liab.term.init,                                  # Using rbind produces duplicated rows with unknown reasons. Use bind_rows from dplyr instead.
+                             filter(liab.term, year.term != init.year - 1)))
+
+# liab.term %>% filter(year == 2015)
 
 # liab.term %>% filter(year.term == 2014, start.year == 1980) %>% head
-
+# liab.term[!duplicated(liab.term %>% select(start.year, ea, age, year.term)),]
+#   any(T)
+#   
 #*************************************************************************************************************
 #                 # Choosing AL and NC variables corresponding to the chosen acturial methed             #####
 #*************************************************************************************************************
@@ -379,7 +388,7 @@ liab.active %<>%
 
 liab <- list(active = liab.active, la = liab.la, term = liab.term, liab.LSC = liab.LSC)
 
-
+liab$term
 
 
 

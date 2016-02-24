@@ -122,7 +122,14 @@ terms_n <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_N", skip
 
 terminated <-  terms_n %>% select(age = age_cell, yos = yos_cell, nterm) %>% 
   left_join(terms_HAPC %>% select(age = age_cell, yos = yos_cell, HAPC)) %>% 
-  filter(age - 1 - yos >= min.ea) # assme age.term is age - 1, ea must be greater than 20
+  mutate(year = init.year,
+         age.term = age - 1,   # assume all terms are terminated in init.year - 1.
+         ea   = age.term - yos,
+         start.year = year - (age - ea)) %>% 
+  filter(age.term >= min.ea,
+         ea >= min.ea)
+
+   # assme age.term is age - 1, ea must be greater than 20
 
 
 

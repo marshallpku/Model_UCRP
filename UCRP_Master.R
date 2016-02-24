@@ -38,7 +38,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 6
+nyear <- 30
 
 
 range_ea <- c(20:74)
