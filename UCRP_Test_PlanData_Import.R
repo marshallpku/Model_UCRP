@@ -7,8 +7,11 @@
 
 actives_raw <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Active_t76", skip = 5) %>% rename(age = Age)
 actives <- actives_raw %>% filter(!is.na(age))
-salary  <- actives_raw %>% filter(is.na(age)); salary$age <- actives$age
+salary  <- actives_raw %>% filter(is.na(age) & !is.na(Total)); salary$age <- actives$age
 
+
+actives
+salary
 
 actives %<>% gather(yos, nactives, -age) %>% filter(yos != "Total", age!= "Total") %>% 
              mutate(age_l = ifelse(grepl("over",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")),
@@ -50,8 +53,10 @@ salary  %<>% gather(yos, salary, -age) %>% filter(yos != "Total", age!= "Total")
 actives %<>% select(age = age_cell, yos = yos_cell, nactives) %>% mutate(ea = age - yos) %>%  
              left_join(salary  %>% select(age = age_cell, yos = yos_cell, salary))
 
-
-actives
+ # x <- actives  %>% mutate(salary_sum = nactives*salary)
+ # x$salary_sum %>% sum
+ # 
+ # actives %
 
 
 #*************************************************************************************************************

@@ -139,7 +139,7 @@ get_salary <- function(.SS.all = SS.all,
   
   salary <- .SS.all %>% left_join(.init_sal) %>% 
     group_by(start.year, ea) %>% 
-    mutate(sx = ifelse(start.year <= 1, salary[year == 1]* scale, 
+    mutate(sx = ifelse(start.year <= init.year, salary[year == init.year]* scale, 
                        salary[age == ea]* scale)) %>% 
     select(start.year, ea, age, year, sx)
   

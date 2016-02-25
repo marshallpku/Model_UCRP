@@ -28,7 +28,7 @@ min.year <- min(init.year - (max.age - (r.max - 1)), init.year - (r.max - 1 - mi
 
 
 liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) , 
-                           ea = c(20:74), age = range_age) %>%
+                           ea = range_ea, age = range_age) %>%
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
   mutate(year = start.year + age - ea) %>%  # year index in the simulation)
   arrange(start.year, ea, age) %>% 

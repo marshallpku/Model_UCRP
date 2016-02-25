@@ -38,7 +38,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 40
+nyear <- 15
 
 
 range_ea <- c(20:74)
@@ -208,7 +208,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == 1) %>% select(year, FR, MA, AL,AL.act, AL.act.v,AL.term, AL, nterms, NC_PR,Switch_amort) %>% data.frame
+penSim_results %>% filter(sim == 1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
@@ -227,5 +227,47 @@ penSim_results %>% filter(sim == 1) %>% select(year, FR, MA, AL,AL.act, AL.act.v
 # .liab$B.LSC  %>% filter(year == 2016, ea == 20, age == 50)
 # 
 # salary %>% filter(year == 2015)
+
+
+# init_pop$actives %>% sum
+# # 
+# # 
+# x <- salary %>% filter(year == 2015)
+# 
+# y <- actives %>% left_join(x) %>% mutate(salary_sum = nactives * sx)
+# y %<>% group_by(age) %>% summarise(salary_sum = sum(salary_sum, na.rm = T))
+# y$salary_sum %>% sum(na.rm = T)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# x <- pop$active %>% filter(year == 2015)
+# x$number.a %>% sum
+# 
+# y <- liab.active %>% filter(year == 2015) %>% select(age,ea, sx)
+# 
+# z <- y %>% left_join(x) %>% mutate(salary_sum = sx * number.a)
+# z$salary_sum %>% sum(na.rm = T)
+# 
+# z %<>% filter(!is.na(sx), number.a!=0) %>%  ungroup %>% arrange(age,ea)
+# 
+# z %>% group_by(age) %>% summarise(salary_sum = sum(salary_sum))
+# z$salary_sum %>% sum
+
+
+
+
+
+
+
+
+
 
 
