@@ -83,7 +83,8 @@
            UAAL = 0, #
            EUAAL= 0, #
            LG   = 0, #
-           AM   = 0, # amount to be amortized: AM(t) = LG(t) + [ADC(t - 1) - C(t-1)]*[1 + i(t-1)], i.e. actuarial loss/gain plus shortfall in paying NC+SC in last period(plus interests) 
+           Amort_basis  = 0, # amount to be amortized: AM(t) = LG(t) + [ADC(t - 1) - C(t-1)]*[1 + i(t-1)], i.e. actuarial loss/gain plus shortfall in paying NC+SC in last period(plus interests) 
+           Switch_amort = 0, 
            NC   = 0, #
            SC   = 0, #
            EEC  = 0, #
@@ -109,17 +110,36 @@
            nterms    = 0)
   penSim0 <- as.list(penSim0)
   
-  # matrix representation of amortization: better visualization but large size, used in this excercise
   
-  m.max <- max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
+  
+  # Vector used in asset amortization
+  s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector  # a vector containing the porportion of 
+  
+  
+  
+  
+  #*************************************************************************************************************
+  #                                     Defining variables in simulation ####
+  #*************************************************************************************************************  
+  # matrix representation of amortization: better visualization but larger size
   SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
   # SC_amort0
   # data frame representation of amortization: much smaller size, can be used in real model later.
   # SC_amort <- expand.grid(year = 1:(nyear + m), start = 1:(nyear + m))
   
-  # Vector used in asset amortization
-  s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector  # a vector containing the porportion of 
   
+  # Amortization payment amounts for all prior years. 
+  SC_amort.init <- matrix(0, nrow(init_amort_raw), nyear + m.max)
+  
+  for(j in 1:nrow(SC_amort.init)){
+    SC_amort.init[j, 1:init_amort_raw$year.remaining[j]] <-init_amort_raw$amount.annual[j] 
+  }
+  
+  nrow.initAmort <- nrow(SC_amort.init)
+  
+  SC_amort0 <- rbind(SC_amort.init, SC_amort0)
+  # The amortization basis of year j should be placed in row nrow.initAmort + j - 1. 
+ 
   
   #*************************************************************************************************************
   #                                       Simuation  ####
@@ -261,10 +281,13 @@
       
       
       # Amortize LG(j)
-      if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
       
-      if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(j-1),] <- 0
+      if(j > 1){ 
       
+      if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
+      
+      if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(nrow.initAmort + (j-2)),] <- 0
+      }
       
       # Supplemental cost in j
       penSim$SC[j] <- switch(amort_type,

@@ -38,7 +38,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 30
+nyear <- 40
 
 
 range_ea <- c(20:74)
@@ -66,6 +66,8 @@ m.UAAL0 <- 20
 m.UAAL1 <- 20
 m.surplus0 <- 30
 m.surplus1 <- 15
+m.max <- max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
+
 
 
 r.full <- 60 # age at which vested terms are assumed to retire. 
@@ -135,6 +137,7 @@ EEC_rate <- 0.05
 # retirees  %<>% mutate(benefit = 0)
 # termrates %<>% mutate(qxt_faculty = 0)
 
+# init_amort_raw %<>% mutate(amount.annual = 0) 
 
 
 #*********************************************************************************************************
@@ -167,8 +170,7 @@ bfactor %<>% rename(bfactor = bf.non13)
 # 1.3  Actual investment return. ####
 #*********************************************************************************************************
 source("UCRP_Test_InvReturns.R")
-
-
+i.r[, 3] <-  c(ir.mean, ir.mean/2, rep(ir.mean, nyear - 2))
 #*********************************************************************************************************
 # 2. Demographics ####
 #*********************************************************************************************************
@@ -206,7 +208,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL,AL.act, AL.act.v,AL.term, AL, nterms,   NC_PR) %>% data.frame
+penSim_results %>% filter(sim == 1) %>% select(year, FR, MA, AL,AL.act, AL.act.v,AL.term, AL, nterms, NC_PR,Switch_amort) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 

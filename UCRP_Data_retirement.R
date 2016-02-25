@@ -111,7 +111,22 @@ salgrowth <- data.frame(yos = 0:55) %>%
          salgrowth.stf = salgrowth.stf + infl + raise)
 
 
-save(retrates, LSCrates, termrates, disbrates, bfactor, salgrowth, file  = "Data/UCRP.inputs2.RData")
+
+#*********************************************************************************************************
+#                      ## Initial Amortization Basis  ####
+#*********************************************************************************************************
+
+init_amort_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Init_amort", skip = 0)%>% filter(!is.na(Type)) 
+names(init_amort_raw) <-  c("Type", "year.est", "m.init", "amount.init", "amount.annual", "year.remaining", "Balance")
+
+init_amort_raw %<>% mutate(year.est = year(year.est)) %>% filter(Type != "Total")
+
+
+
+
+save(retrates, LSCrates, termrates, disbrates, bfactor, salgrowth, init_amort_raw, file  = "Data/UCRP.inputs2.RData")
+
+
 
 
 
