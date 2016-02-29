@@ -73,7 +73,7 @@
   
   
   # Set up data frame
-  penSim0 <- data.frame(year = 1:nyear) %>%
+  penSim0 <- data.frame(year = init.year:(init.year + nyear - 1)) %>%
     mutate(AL   = 0, #
            MA   = 0, #
            AA   = 0, #

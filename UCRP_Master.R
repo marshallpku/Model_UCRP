@@ -137,7 +137,8 @@ EEC_rate <- 0.05
 # retirees  %<>% mutate(benefit = 0)
 # termrates %<>% mutate(qxt_faculty = 0)
 
-# init_amort_raw %<>% mutate(amount.annual = 0) 
+
+init_amort_raw %<>% mutate(amount.annual = 0) 
 
 
 #*********************************************************************************************************
@@ -171,6 +172,8 @@ bfactor %<>% rename(bfactor = bf.non13)
 #*********************************************************************************************************
 source("UCRP_Test_InvReturns.R")
 i.r[, 3] <-  c(ir.mean, ir.mean/2, rep(ir.mean, nyear - 2))
+
+
 #*********************************************************************************************************
 # 2. Demographics ####
 #*********************************************************************************************************
@@ -208,7 +211,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == 1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
