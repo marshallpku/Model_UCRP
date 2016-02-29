@@ -2,16 +2,15 @@
 
 
 #*************************************************************************************************************
-#                                       Importing Data for actives                                       #####                  
+#                                       Importing Data for initial actives                                       #####                  
 #*************************************************************************************************************
 
 actives_raw <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Active_t76", skip = 5) %>% rename(age = Age)
 actives <- actives_raw %>% filter(!is.na(age))
 salary  <- actives_raw %>% filter(is.na(age) & !is.na(Total)); salary$age <- actives$age
 
-
-actives
-salary
+# actives
+# salary
 
 actives %<>% gather(yos, nactives, -age) %>% filter(yos != "Total", age!= "Total") %>% 
              mutate(age_l = ifelse(grepl("over",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")),
@@ -56,11 +55,11 @@ actives %<>% select(age = age_cell, yos = yos_cell, nactives) %>% mutate(ea = ag
  # x <- actives  %>% mutate(salary_sum = nactives*salary)
  # x$salary_sum %>% sum
  # 
- # actives %
+ # actives
 
 
 #*************************************************************************************************************
-#                                       Importing Data for retirees                                     #####                  
+#                                       Importing Data for initial retirees                                     #####                  
 #*************************************************************************************************************
 
 retirees <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Retirees", skip = 2)
@@ -78,7 +77,7 @@ retirees %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d
 retirees %<>% select(age = age_cell, nretirees, benefit)
 
 #*************************************************************************************************************
-#                                       Importing Data for terms                                     #####                  
+#                                       Importing Data for initial terms                                     #####                  
 #*************************************************************************************************************
 
 terms_HAPC <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Terms_HAPC", skip = 3) %>% rename(age = Age) %>% 
@@ -135,6 +134,29 @@ terminated <-  terms_n %>% select(age = age_cell, yos = yos_cell, nterm) %>%
          ea >= min.ea)
 
    # assme age.term is age - 1, ea must be greater than 20
+
+
+
+#*************************************************************************************************************
+#                                       Importing Data for initial beneficiaries                                     #####                  
+#*************************************************************************************************************
+
+# n.R0S1 represents the number of beneficiaries of contingent annuitants.
+
+init_beneficiaries <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Beneficiaries", skip = 2)
+names(init_beneficiaries) <- c("age", "n.R0S1", "benefit")
+
+
+init_beneficiaries %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
+                        age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
+                        n.R0S1 = as.numeric(n.R0S1), 
+                        benefit   = benefit * 12, # convert to annual benefit
+                        age_cell  = ifelse(is.na(age_l), age_u, age_l + 2),
+                        age = NULL)
+
+init_beneficiaries %<>% select(age = age_cell, n.R0S1, benefit)
+
+init_beneficiaries
 
 
 

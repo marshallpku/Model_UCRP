@@ -211,7 +211,7 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 

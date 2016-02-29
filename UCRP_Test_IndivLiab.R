@@ -118,6 +118,10 @@ liab.active %<>%
 #                       2.2   AL and benefit for retirees with life annuity                        #####                  
 #*************************************************************************************************************
 
+
+
+
+
 # Calculate AL and benefit payment for retirees having retired at different ages.
 liab.la <- rbind(
   # grids for initial retirees in year 1

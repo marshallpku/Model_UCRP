@@ -142,6 +142,34 @@
   #                                 ## Liabilities and benefits for contingent annuitants and survivors   ####
   #*************************************************************************************************************  
   
+  
+  init_beneficiaries %<>% mutate(init.age = age, age.r = ifelse(age >= 60, 60, age), year = init.year, age = NULL)
+  
+  init.ca.agg <- expand.grid(init.age = unique(init_beneficiaries$init.age), age = r.min:max.age) %>%
+                 filter(age >= init.age) %>% 
+                 left_join(init_beneficiaries) %>% 
+                 group_by(init.age) %>% arrange(init.age, age) %>% 
+                 mutate(age.r = age.r[age == init.age]) %>% 
+                 left_join(select(mortality.post.ucrp, age, age.r, ax.r.W.ben = ax.r.W, pxm.post.W)) %>% 
+                 mutate(year   =  init.year + age -  init.age,
+                        n.R0S1 = n.R0S1 * cumprod(ifelse(age == init.age, 1, lag(pxm.post.W))),
+                        B.ca   = benefit * (1 + cola)^(age - init.age),
+                        B.ca.sum = B.ca * n.R0S1,
+                        liab.ca  = B.ca * ax.r.W.ben,
+                        liab.ca.sum = liab.ca * n.R0S1
+                        ) %>% 
+                 group_by(year) %>% 
+                 summarise(n.R0S1.init = sum(n.R0S1, na.rm = TRUE),
+                           B.ca.sum.init = sum(B.ca.sum, na.rm = TRUE),
+                           liab.ca.sum.init = sum(liab.ca.sum, na.rm = TRUE)) %>% 
+                 filter(year %in% init.year:(init.year + nyear - 1))
+    
+  # init.ca.agg
+  
+  
+  
+  
+  
   ca.agg <- expand.grid(year.r = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea, age = range_age) %>% 
             mutate(year = year.r + age - age.r) %>% 
              filter(age >= ea,
@@ -163,10 +191,19 @@
                       B.ca.sum    = sum(B.ca.sum, na.rm = TRUE),
                       n.R1        = sum(n.R1, na.rm = TRUE),
                       n.R0S1      = sum(n.R0S1, na.rm = TRUE),
-                      n.new_ca    = sum(new_ca, na.rm = TRUE)) %>% 
-            as.matrix
+                      n.new_ca    = sum(new_ca, na.rm = TRUE)) 
   
-
+ 
+  
+   # Combine the initial beneficiaries and new beneficiaries
+   ca.agg %<>% left_join(init.ca.agg) %>% 
+              mutate(n.R0S1   = n.R0S1 + n.R0S1.init,
+                     B.ca.sum = B.ca.sum + B.ca.sum.init,
+                     liab.ca.sum = liab.ca.sum + liab.ca.sum.init) %>% 
+              as.matrix
+  
+  
+  
   # 
   # LSC.agg %>% data.frame
   # ca.agg %>% data.frame
