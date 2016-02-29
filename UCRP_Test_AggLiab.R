@@ -142,7 +142,11 @@
   #                                 ## Liabilities and benefits for contingent annuitants and survivors   ####
   #*************************************************************************************************************  
   
-  
+  # Initial beneficiaries
+   # Assumptions about the retirement ages of initial beneficiaries:
+   # age.r = 60, if age in 2015 is greater than or equal to 60.
+   # age.r = age in 2015,  if age in 2015 is smaller than 60. 
+
   init_beneficiaries %<>% mutate(init.age = age, age.r = ifelse(age >= 60, 60, age), year = init.year, age = NULL)
   
   init.ca.agg <- expand.grid(init.age = unique(init_beneficiaries$init.age), age = r.min:max.age) %>%
