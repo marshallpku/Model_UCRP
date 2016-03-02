@@ -27,6 +27,8 @@ min.year <- min(init.year - (max.age - (r.max - 1)), init.year - (r.max - 1 - mi
 # the year a r.max year old active in year 1 enter the workforce at age min.ea 
 
 
+
+
 liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) , 
                            ea = range_ea, age = range_age) %>%
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
@@ -48,6 +50,8 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
   
   # Calculate salary and benefits
   mutate(
+    sx_cap = ifelse(year<=2015, Inf, ifelse(start.year < 1994, 265000, 395000) * (1 + infl)^(year - 2015)),  # Compensation limit, see AV 2015 p50.
+    sx     = pmin(sx, sx_cap),
     Sx = ifelse(age == min(age), 0, lag(cumsum(sx))),  # Cumulative salary
     yos= age - min(age),                               # years of service
     n  = pmin(yos, fasyears),                          # years used to compute fas

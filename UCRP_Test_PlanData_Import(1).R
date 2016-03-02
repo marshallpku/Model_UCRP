@@ -36,7 +36,7 @@ xlrange <- function(file, sheet, cell1, cell2) {
 }
 
 
-
+# Load actives
 import_actives <- function(file, sheet, planname){
   
 # tier <- "t76"
@@ -99,6 +99,10 @@ import_actives <- function(file, sheet, planname){
 
 
 
+
+
+
+# Interpolation of actives
 fillin.actives.spreadyos.splineage <- function(lactives) {
   # salary:
   #   first spread uniformly within age.cell-yos.cell group (same salary for all)
@@ -236,6 +240,12 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 
 
 
+
+
+#*************************************************************************************************************
+#                                       Importing Data for initial actives                                       #####                  
+#*************************************************************************************************************
+
 lactives <- import_actives(paste0(path, fileName), paste0("Actives_", Tier_select), paste0("Actives_", Tier_select))
 lactives$actives.yos %<>% filter(age - yos >= 20)             
 
@@ -247,6 +257,40 @@ actives <- fillin.actives.spreadyos.splineage(lactives) %>% ungroup %>%
 
 # actives.fillin %<>% filter(ea>=20) 
 # actives.fillin$nactives %>% sum
+
+
+## Check results
+actives %>% arrange(ea, age)
+
+actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
+ggplot(aes(x = age, y = nactives, color = factor(ea))) + geom_line() + geom_point()
+
+
+actives %>% filter(yos %in% seq(2, 42, 5)) %>%  
+  ggplot(aes(x = age, y = salary, color = factor(yos))) + geom_line() + geom_point()
+
+actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
+  ggplot(aes(x = age, y = salary, color = factor(ea))) + geom_line() + geom_point()
+
+
+
+lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
+  ggplot(aes(x = age, y = salary, color = factor(ea))) + 
+  geom_line() + 
+  geom_point()
+
+
+lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
+  ggplot(aes(x = age, y = salary, color = factor(yos))) + 
+  geom_line() + 
+  geom_point()
+
+
+
+
+
+
+
 
 #*************************************************************************************************************
 #                                       Importing Data for initial actives                                       #####                  

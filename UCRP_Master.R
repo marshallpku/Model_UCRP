@@ -8,6 +8,8 @@ library(data.table)
 library(gdata) # read.xls
 library(plyr)
 library(dplyr)
+options(dplyr.print_min = 60) # default is 10
+options(dplyr.print_max = 60) # default is 20
 library(ggplot2)
 library(magrittr)
 library(tidyr) # gather, spread
@@ -38,7 +40,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 30
+nyear <- 50
 
 
 range_ea <- c(20:74)
@@ -140,20 +142,21 @@ init_amort_raw %<>% mutate(amount.annual = 0)
 # 1.1 Import Salary table and initial retirement benefit table ####
 #*********************************************************************************************************
 source("UCRP_Test_PlanData_Import(1).R")
+#source("UCRP_Test_PlanData_Import.R")
 source("UCRP_Test_PlanData_Transform.R")
 
 # init_pop$actives[,] <- 0
 # init_pop$actives[1,"40"] <- 1
 
-LSCrates  %<>% mutate(qxLSC.act = 0)
+#LSCrates  %<>% mutate(qxLSC.act = 0)
 
-retirees  %<>% mutate(benefit = 0)
-benefit   %<>% mutate(benefit = 0)
+# retirees  %<>% mutate(benefit = 0)
+# benefit   %<>% mutate(benefit = 0)
+# 
+# init_beneficiaries %<>% mutate(benefit = 0)
 
-init_beneficiaries %<>% mutate(benefit = 0)
-
-terminated %<>% mutate(nterm = 0) 
-termrates %<>% mutate(qxt_faculty = 0)
+#terminated %<>% mutate(nterm = 0) 
+#termrates %<>% mutate(qxt_faculty = 0)
 
 #*********************************************************************************************************
 # 1.2 Importing Decrement tables and Calculating Probabilities ####
@@ -216,7 +219,7 @@ source("UCRP_Test_Sim.R")
 
 
 penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, NC_PR, 
-                                                B,B.la,B.v, B.LSC, nactives, PR) %>% data.frame
+                                                B, B.la, B.ca, B.LSC,B.v, nactives, PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
@@ -269,6 +272,7 @@ penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act
 # z %>% group_by(age) %>% summarise(salary_sum = sum(salary_sum))
 # z$salary_sum %>% sum
 
+#actives$salary %>% max
 
 
 

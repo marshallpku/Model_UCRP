@@ -191,7 +191,7 @@
   #for(k in 1:nsim){
   
   penSim_results <- foreach(k = -1:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
-    #k <- 1
+    #k <- -1
     # initialize
     penSim <- penSim0
     SC_amort <- SC_amort0 
@@ -200,12 +200,13 @@
     source("Functions.R")
     
     for (j in 1:nyear){
+
       # j <- 1
       # AL(j) 
       
       
       # MA(j) and EAA(j) 
-      if(j == 1) {penSim$MA[j]  <- ifelse(k == -1, penSim$AL[j],
+      if(j == 1) {penSim$MA[j]  <- ifelse(k == -1, penSim$AL[j],                   # k = -1 is for testing model consistency
                                           switch(init_MA, 
                                                  MA = MA_0,                        # Use preset value
                                                  AL = penSim$AL[j],                # Assume inital fund equals inital liability.

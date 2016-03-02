@@ -170,10 +170,7 @@
     
   # init.ca.agg
   
-  
-  
-  
-  
+
   ca.agg <- expand.grid(year.r = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea, age = range_age) %>% 
             mutate(year = year.r + age - age.r) %>% 
              filter(age >= ea,
@@ -201,11 +198,11 @@
   
    # Combine the initial beneficiaries and new beneficiaries
    ca.agg %<>% left_join(init.ca.agg) %>% 
+              colwise(na2zero)() %>% 
               mutate(n.R0S1   = n.R0S1 + n.R0S1.init,
                      B.ca.sum = B.ca.sum + B.ca.sum.init,
                      liab.ca.sum = liab.ca.sum + liab.ca.sum.init) %>% 
               as.matrix
-  
   
   
   # 
