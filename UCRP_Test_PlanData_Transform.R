@@ -186,7 +186,6 @@ get_benefit <- function(
 benefit <- retirees %>% get_benefit()
 
 
-
 #*************************************************************************************************************
 #                               Import initial HAPC for vested terminated                           #####                  
 #*************************************************************************************************************
@@ -207,8 +206,8 @@ get_initPop <- function (.actives = actives,         # = tailored_demoData$activ
   # Import and standardize the total number of actives and retirees.  
   
   # Run the section below when developing new features.
-     # .actives           = actives
-     # .retirees          = retirees
+      .actives           = actives
+      .retirees          = retirees
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
@@ -234,6 +233,9 @@ get_initPop <- function (.actives = actives,         # = tailored_demoData$activ
   
   return(list(actives = init_actives, retirees = init_retirees, terms = init_terms))
 }
+
+
+
 
 
 # if(!dev_mode) 
@@ -302,7 +304,7 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
 entrants_dist <- get_entrantsDist(actives)
 
 
-
+entrants_dist
 
 
 

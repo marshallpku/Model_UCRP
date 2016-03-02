@@ -38,7 +38,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 15
+nyear <- 30
 
 
 range_ea <- c(20:74)
@@ -132,24 +132,28 @@ EEC_rate <- 0.05
 # pct.la <- 1 - pct.ca
 
 
-
-# LSCrates %<>% mutate(qxLSC.act = 0)
-# retirees  %<>% mutate(benefit = 0)
-# termrates %<>% mutate(qxt_faculty = 0)
-
-
+# Exclude the initial amortization basis when testing the program.
 init_amort_raw %<>% mutate(amount.annual = 0) 
 
 
 #*********************************************************************************************************
 # 1.1 Import Salary table and initial retirement benefit table ####
 #*********************************************************************************************************
-source("UCRP_Test_PlanData_Import.R")
+source("UCRP_Test_PlanData_Import(1).R")
 source("UCRP_Test_PlanData_Transform.R")
 
 # init_pop$actives[,] <- 0
 # init_pop$actives[1,"40"] <- 1
 
+LSCrates  %<>% mutate(qxLSC.act = 0)
+
+retirees  %<>% mutate(benefit = 0)
+benefit   %<>% mutate(benefit = 0)
+
+init_beneficiaries %<>% mutate(benefit = 0)
+
+terminated %<>% mutate(nterm = 0) 
+termrates %<>% mutate(qxt_faculty = 0)
 
 #*********************************************************************************************************
 # 1.2 Importing Decrement tables and Calculating Probabilities ####
@@ -211,7 +215,8 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, NC_PR, B,B.la, Switch_amort, PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, NC_PR, 
+                                                B,B.la,B.v, B.LSC, nactives, PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
