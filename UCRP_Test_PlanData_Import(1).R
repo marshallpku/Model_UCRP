@@ -36,6 +36,15 @@ xlrange <- function(file, sheet, cell1, cell2) {
 }
 
 
+get_bound <- function(range, bound = c("l","u")){
+  # range must be in the form of "XX-YY", "X" is a single digit, and "XX" <= "YY".
+  switch(bound,
+         l =  str_extract(range, "\\d+-") %>% gsub("\\D+", "",.) %>% as.integer,
+         u =  str_extract(range, "-\\d+") %>% gsub("\\D+", "",.) %>% as.integer)
+}
+
+
+
 # Load actives
 import_actives <- function(file, sheet, planname){
   
@@ -43,16 +52,6 @@ import_actives <- function(file, sheet, planname){
 # file <- paste0(path, fileName)
 # sheet <- paste0("Actives_", tier)
 
-
-  get_bound <- function(range, bound = c("l","u")){
-     # range must be in the form of "XX-YY", "X" is a single digit, and "XX" <= "YY".
-     switch(bound,
-           l =  str_extract(range, "\\d+-") %>% gsub("\\D+", "",.) %>% as.integer,
-           u =  str_extract(range, "-\\d+") %>% gsub("\\D+", "",.) %>% as.integer)
-   }
-          
-  
-  
   range <- xlrange(file, sheet, "B2", "B3")
   
   df <- readWorksheetFromFile(file, sheet=sheet, header=TRUE, region=range, colTypes="character")
@@ -98,8 +97,45 @@ import_actives <- function(file, sheet, planname){
 }
 
 
+# Load retirees, also can be used to load initial beneficiaries
+import_retirees_byAge <- function(file, sheet, planname){
+
+# file <- paste0(path, fileName)
+# sheet <- "Beneficiaries"
+# planname <- Tier_select
 
 
+range <- xlrange(file, sheet, "B2", "B3")
+benperiod <- getcell(file, sheet, "B4")
+benmult <- ifelse(benperiod=="month", 12, 1)
+name_N  <- getcell(file, sheet, "B5")
+name_V  <- getcell(file, sheet, "B6")
+
+
+df <- readWorksheetFromFile(file, sheet=sheet, header=TRUE, region=range, colTypes="character")
+
+agecuts <- df %>%  
+  select(age.cell, agegrp) %>% 
+  mutate(agelb = get_bound(agegrp, "l"),
+         ageub = get_bound(agegrp, "u")) %>% 
+  select(-agegrp)
+
+df %<>%  
+  select(-agegrp) %>%
+  colwise(as.numeric)() %>% 
+  mutate(age.cell = as.integer(age.cell),
+         age = age.cell,
+         V = V * benmult,
+         planname = planname)
+
+
+list_out <- list()
+list_out$data <- df
+list_out$agecuts <- agecuts
+list_out$varNames <- c(name_N = name_N, name_V = name_V)
+
+return(list_out)
+}
 
 
 # Interpolation of actives
@@ -239,6 +275,56 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 }
 
 
+# Interpolation of retirees
+fillin.retirees <- function(list_data) {
+  
+  rdf <- select(list_data$data, planname, age, N, V) # keep only the vars we want
+  agecuts <- lretirees$agecuts
+  
+  planname <- paste0(rdf$planname[1], ".fillin")
+  name_N <- list_data$varNames["name_N"]
+  name_V <- list_data$varNames["name_V"]
+  
+  # add group ranges to the retirees data frame
+  combo <- rdf %>%
+    mutate(totben=N * V) %>%
+    mutate(ageidx=findInterval(age, agecuts$agelb),
+           age.lb=agecuts$agelb[ageidx],
+           age.ub=agecuts$ageub[ageidx]) %>%
+    arrange(age)
+  
+  # get avg benefits by age, via spline
+  avgben <- splong(select(combo, age, V), "age", min(combo$age.lb):max(combo$age.ub))
+  # force benefit to be non-negative DJB added 10/30/2015
+  avgben <- avgben %>% mutate(V=ifelse(V<0, 0, V))
+  
+  guessdf <- data.frame(age=min(combo$age.lb):max(combo$age.ub)) %>%
+    mutate(ageidx=findInterval(age, agecuts$agelb),
+           age.cell=combo$age[match(ageidx, combo$ageidx)],
+           N.cell=combo$N[match(ageidx, combo$ageidx)],
+           V.cell=combo$V[match(ageidx, combo$ageidx)]) %>%
+    group_by(age.cell) %>%
+    mutate(n.cell=n(),
+           N=N.cell / n.cell, # spread nretirees evenly
+           adjV=avgben$V[match(age, avgben$age)], # get the spline-based avg benefit
+           adjtotben=N * adjV)
+  
+  # refine the guess by adjusting ensure that we hit the right total benefits in each group
+  guessdf2 <- guessdf %>% group_by(age.cell) %>%
+    mutate(adjust=mean(N.cell * V.cell) / sum(adjtotben),
+           V=adjV*adjust,
+           totben=N * V)
+  
+  rdf.fillin <- guessdf2 %>% mutate(planname=planname) %>%
+                select(planname, age.cell, age, N, V) %>%
+                ungroup
+                #plyr::rename(c("N" = list_data$varNames["name_N"])))
+
+  names(rdf.fillin)[names(rdf.fillin) == "N"] <- name_N
+  names(rdf.fillin)[names(rdf.fillin) == "V"] <- name_V
+
+  return(rdf.fillin)
+}
 
 
 
@@ -247,7 +333,7 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
 #*************************************************************************************************************
 
 lactives <- import_actives(paste0(path, fileName), paste0("Actives_", Tier_select), paste0("Actives_", Tier_select))
-lactives$actives.yos %<>% filter(age - yos >= 20)             
+lactives$actives.yos %<>% filter(age - yos >= 20) # need to figure out how to add memebers with ea<20 back             
 
 
 actives <- fillin.actives.spreadyos.splineage(lactives) %>% ungroup %>% 
@@ -255,35 +341,47 @@ actives <- fillin.actives.spreadyos.splineage(lactives) %>% ungroup %>%
                   #age.cell, yos.cell, 
                   nactives, salary=salary.final)
 
+
+#*************************************************************************************************************
+#                                       Importing Data for initial retirees and beneficiaries            #####                  
+#*************************************************************************************************************
+
+lretirees      <- import_retirees_byAge(paste0(path, fileName), "Retirees",      paste0("Retirees_",      Tier_select))
+lbeneficiaries <- import_retirees_byAge(paste0(path, fileName), "Beneficiaries", paste0("Beneficiaries_", Tier_select))
+
+retirees           <- fillin.retirees(lretirees) %>% ungroup %>% select(-age.cell)
+init_beneficiaries <- fillin.retirees(lbeneficiaries) %>% select(-age.cell)
+
+
 # actives.fillin %<>% filter(ea>=20) 
 # actives.fillin$nactives %>% sum
 
 
 ## Check results
-actives %>% arrange(ea, age)
-
-actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
-ggplot(aes(x = age, y = nactives, color = factor(ea))) + geom_line() + geom_point()
-
-
-actives %>% filter(yos %in% seq(2, 42, 5)) %>%  
-  ggplot(aes(x = age, y = salary, color = factor(yos))) + geom_line() + geom_point()
-
-actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
-  ggplot(aes(x = age, y = salary, color = factor(ea))) + geom_line() + geom_point()
-
-
-
-lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
-  ggplot(aes(x = age, y = salary, color = factor(ea))) + 
-  geom_line() + 
-  geom_point()
-
-
-lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
-  ggplot(aes(x = age, y = salary, color = factor(yos))) + 
-  geom_line() + 
-  geom_point()
+# actives %>% arrange(ea, age)
+# 
+# actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
+# ggplot(aes(x = age, y = nactives, color = factor(ea))) + geom_line() + geom_point()
+# 
+# 
+# actives %>% filter(yos %in% seq(2, 42, 5)) %>%  
+#   ggplot(aes(x = age, y = salary, color = factor(yos))) + geom_line() + geom_point()
+# 
+# actives %>% filter(ea %in% seq(20, 70, 5)) %>%  
+#   ggplot(aes(x = age, y = salary, color = factor(ea))) + geom_line() + geom_point()
+# 
+# 
+# 
+# lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
+#   ggplot(aes(x = age, y = salary, color = factor(ea))) + 
+#   geom_line() + 
+#   geom_point()
+# 
+# 
+# lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 50, 5)) %>%  
+#   ggplot(aes(x = age, y = salary, color = factor(yos))) + 
+#   geom_line() + 
+#   geom_point()
 
 
 
@@ -353,19 +451,19 @@ lactives$actives.yos %>% mutate(ea = age - yos) %>%   #  filter(yos %in% seq(0, 
 #                                       Importing Data for initial retirees                                     #####                  
 #*************************************************************************************************************
 
-retirees <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Retirees", skip = 2)
-names(retirees) <- c("age", "nretirees", "benefit")
-
-
-retirees %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
-                    age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
-                    nretirees = as.numeric(nretirees), 
-                    benefit   = benefit * 12, # convert to annual benefit
-                    age_cell  = ifelse(is.na(age_l), age_u, age_l + 2),
-                    age = NULL)
-
-
-retirees %<>% select(age = age_cell, nretirees, benefit)
+# retirees <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Retirees", skip = 2)
+# names(retirees) <- c("age", "nretirees", "benefit")
+# 
+# 
+# retirees %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
+#                     age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
+#                     nretirees = as.numeric(nretirees), 
+#                     benefit   = benefit * 12, # convert to annual benefit
+#                     age_cell  = ifelse(is.na(age_l), age_u, age_l + 2),
+#                     age = NULL)
+# 
+# 
+# retirees %<>% select(age = age_cell, nretirees, benefit)
 
 #*************************************************************************************************************
 #                                       Importing Data for initial terms                                     #####                  
@@ -433,21 +531,21 @@ terminated <-  terms_n %>% select(age = age_cell, yos = yos_cell, nterm) %>%
 #*************************************************************************************************************
 
 # n.R0S1 represents the number of beneficiaries of contingent annuitants.
-
-init_beneficiaries <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Beneficiaries", skip = 2)
-names(init_beneficiaries) <- c("age", "n.R0S1", "benefit")
-
-
-init_beneficiaries %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
-                        age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
-                        n.R0S1 = as.numeric(n.R0S1), 
-                        benefit   = benefit * 12, # convert to annual benefit
-                        age_cell  = ifelse(is.na(age_l), age_u, age_l + 2),
-                        age = NULL)
-
-init_beneficiaries %<>% select(age = age_cell, n.R0S1, benefit)
-
-init_beneficiaries
+# 
+# init_beneficiaries <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Beneficiaries", skip = 2)
+# names(init_beneficiaries) <- c("age", "n.R0S1", "benefit")
+# 
+# 
+# init_beneficiaries %<>% mutate(age_l =  ifelse(grepl("\\D$",  age),  str_extract(age, "\\d+"),  str_extract(age, "^\\d{2}")) %>% as.numeric,
+#                         age_u =  ifelse(grepl("^\\D",  age),  str_extract(age, "\\d+"),  str_extract(age, "\\d{2}$")) %>% as.numeric,
+#                         n.R0S1 = as.numeric(n.R0S1), 
+#                         benefit   = benefit * 12, # convert to annual benefit
+#                         age_cell  = ifelse(is.na(age_l), age_u, age_l + 2),
+#                         age = NULL)
+# 
+# init_beneficiaries %<>% select(age = age_cell, n.R0S1, benefit)
+# 
+# init_beneficiaries
 
 
 
@@ -465,8 +563,6 @@ summary_actives <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Sum_Ac
                           Tier = ifelse(Tier == "Modi13", "tm13", Tier))
              
 summary_actives
-
-
 
 
 #*************************************************************************************************************

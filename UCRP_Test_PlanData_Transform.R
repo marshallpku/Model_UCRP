@@ -7,7 +7,6 @@
 #*************************************************************************************************************
 
 # Get weighed salary scale
-
 salgrowth_w.fac <- get(paste0("pct.fac.actives.", Tier_select))
 salgrowth_w.stf <- 1 - salgrowth_w.fac
 salgrowth %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)

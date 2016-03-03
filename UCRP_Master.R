@@ -40,7 +40,7 @@ ncore      <- 4
 
 
 init.year <- 2015
-nyear <- 50
+nyear <- 80
 
 
 range_ea <- c(20:74)
@@ -142,7 +142,7 @@ init_amort_raw %<>% mutate(amount.annual = 0)
 # 1.1 Import Salary table and initial retirement benefit table ####
 #*********************************************************************************************************
 source("UCRP_Test_PlanData_Import(1).R")
-#source("UCRP_Test_PlanData_Import.R")
+# source("UCRP_Test_PlanData_Import.R")
 source("UCRP_Test_PlanData_Transform.R")
 
 # init_pop$actives[,] <- 0
