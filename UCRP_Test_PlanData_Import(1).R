@@ -557,7 +557,7 @@ summary_actives <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Sum_Ac
                    gather(Tier, n, -Type, -Sex) %>% 
                    filter(!Tier %in% c("Tier2", "All"), Type != "Safety") %>% 
                    mutate(n    = as.numeric(n) %>% na2zero,
-                          Tier = levels(Tier)[Tier], 
+                          # Tier = levels(Tier)[Tier], # no longer needed with the new version of tidyr
                           Tier = ifelse(Tier == "13Tier", "t13", Tier),
                           Tier = ifelse(Tier == "76Tier", "t76", Tier),
                           Tier = ifelse(Tier == "Modi13", "tm13", Tier))

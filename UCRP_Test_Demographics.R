@@ -284,7 +284,7 @@ for (j in 1:(nyear - 1)){
 wf_active <- adply(wf_active, 3, function(x) {df = as.data.frame(x); df$ea = as.numeric(rownames(x));df}) %>% 
   rename(year = X1) %>%
   gather(age, number.a, -ea, -year) %>% 
-  mutate(year = f2n(year), age = f2n(age)) %>% 
+  mutate(year = f2n(year), age = as.numeric(age)) %>% 
   filter(age >= ea)
 
 
