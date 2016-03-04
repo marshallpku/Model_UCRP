@@ -234,9 +234,6 @@ get_initPop <- function (.actives = actives,         # = tailored_demoData$activ
 }
 
 
-
-
-
 # if(!dev_mode) 
 init_pop <- get_initPop()
 
