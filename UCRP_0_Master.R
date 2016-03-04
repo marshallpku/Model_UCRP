@@ -18,12 +18,11 @@ library(doParallel)
 library(microbenchmark)
 library(readxl)
 library(stringr)
+library("readxl")
+library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
+library("btools")
+
 source("Functions.R")
-
-
-load("Data/UCRP.inputs1.RData")
-load("Data/UCRP.inputs2.RData")
-load("Data/2015-10-07/retirees.rda") 
 
 
 
@@ -32,98 +31,98 @@ load("Data/2015-10-07/retirees.rda")
 # 0. Parameters   ####
 #*********************************************************************************************************
 
-runname <- "UCRP"
-Tier_select <- "t76" 
-nsim    <- 5
+Global_paramlist <- list(
+  
+  init.year = 2015,
+  nyear     = 30,
+  nsim      = 5,
+  ncore     = 4,
+
+  min.ea    = 20,
+  max.ea    = 74, 
+
+  min.age   = 20,
+  max.age   = 120 
+)
+
+
+
+
+paramlist <- list(
+
+  runname = "UCRP",
+  Tier_select = "t76", 
+  
+  r.min  = 50,
+  r.max  = 75, 
+
+  
+  
+  fasyears = 3,
+  cola     = 0.03,
+  i = 0.0725,
+  
+  infl = 0.03,
+  prod = 0.01,
+  s.year = 10,
+  
+  m.UAAL0 = 20,
+  m.UAAL1 = 20,
+  m.surplus0 = 30,
+  m.surplus1 = 15,
+  
+  r.full = 60, # age at which vested terms are assumed to retire. 
+  r.yos  = 5,
+  v.yos  = 5, 
+  
+  startingSal_growth = 0.04,
+  
+  actuarial_method = "EAN.CP",
+  
+  
+  wf_growth = 0,
+  no_entrance = "F",
+  #entrants_dist = rep(1/length(range_ea), length(range_ea)),
+  
+  pct.F.LSC = 0.6,
+ 
+  
+  pct.ca.F =  0.8,
+  pct.ca.M =  0.6,
+  
+  factor.ca = 0.25,
+  
+  # Investment returns
+  seed = 1234,
+  ir.mean = 0.0725,
+  ir.sd   = 0.12,
+  
+  
+  init_MA = "AL",
+  init_EAA = "MA",
+  smooth_method = "method1",
+  salgrowth_amort = 0,
+  amort_method = "cd",
+  amort_type = "closed",
+  nonNegC = "FALSE",
+  EEC_fixed = "TRUE",
+  ConPolicy = "ADC",
+  EEC_rate = 0.05
+)
+
+
+paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
+paramlist$range_age = with(Global_paramlist, min.age:max.age)
+paramlist$range_age.r = with(paramlist, r.min:r.max)
+paramlist$m.max = with(paramlist, max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
+paramlist$v     = with(paramlist, 1/(1 + i))
+paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
+
+assign_parmsList(Global_paramlist, envir = environment())
+assign_parmsList(paramlist,        envir = environment())  
+
+
 devMode <- FALSE
-ncore      <- 4 
-
-
-init.year <- 2015
-nyear <- 30
-
-
-range_ea <- c(20:74)
-min.ea  <- min(range_ea)
-max.ea <- max(range_ea) 
-
-range_age <- 20:120
-min.age  <- min(range_age)
-max.age  <- max(range_age) 
-
-range_age.r <- 50:75
-r.min  <- min(range_age.r)
-r.max  <- max(range_age.r) 
-
-fasyears <- 3
-cola     <- 0.03
-i <- 0.0725
-v <- 1/(1 + i)
-infl <- 0.03
-prod <- 0.01
-#m  <- 15 
-s.year <- 10
-
-m.UAAL0 <- 20
-m.UAAL1 <- 20
-m.surplus0 <- 30
-m.surplus1 <- 15
-m.max <- max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
-
-
-
-r.full <- 60 # age at which vested terms are assumed to retire. 
-r.yos  <- 5
-v.yos  <- 5 
-
-startingSal_growth <- 0.04
-
-actuarial_method <- "EAN.CP"
-
-
-wf_growth <- 0
-no_entrance <- "F"
-entrants_dist <- rep(1/length(range_ea), length(range_ea))
-
-pct.F.LSC <- 0.6
-pct.M.LSC <- 1 - pct.F.LSC
-
-
-# pct.F.actives <- 0.55
-# pct.M.actives <- 1 - pct.F.actives
-# 
-# pct.fac.actives.t76 <- 0.5
-# pct.stf.actives.t76 <- 1 - pct.fac.actives.t76 
-# pct.fac.actives.t13 <- 0.5
-# pct.stf.actives.t13 <- 1 - pct.fac.actives.t13 
-# pct.fac.actives.tm13 <- 0.5
-# pct.stf.actives.tm13 <- 1 - pct.fac.actives.t13  
-
-
-pct.ca.F <-  0.8
-pct.ca.M <-  0.6
-# pct.ca <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
-# pct.la <- 1 - pct.ca                                # For those opting for annuit rather than LSC, the % of choosing life annuity (100% for 2013 and modified 2013 tier)
-
-factor.ca <- 0.25
-
-# Investment returns
-seed <- 1234
-ir.mean <- 0.0725
-ir.sd   <- 0.12
-
-
-init_MA <- "AL"
-init_EAA <- "MA"
-smooth_method <- "method1"
-salgrowth_amort <- 0
-amort_method <- "cd"
-amort_type <- "closed"
-nonNegC <- "FALSE"
-EEC_fixed <- "TRUE"
-ConPolicy <- "ADC"
-EEC_rate <- 0.05
-
 
 
 # Testing
@@ -134,15 +133,14 @@ EEC_rate <- 0.05
 # pct.la <- 1 - pct.ca
 
 
-# Exclude the initial amortization basis when testing the program.
-init_amort_raw %<>% mutate(amount.annual = 0) 
-
-
 #*********************************************************************************************************
 # 1.1 Import Salary table and initial retirement benefit table ####
 #*********************************************************************************************************
 #source("UCRP_Data_RP2014.R")
 #source("UCRP_Data_PlanInfo.R")
+load("./Data/UCRP.PlanInfo.RData")
+
+
 
 source("UCRP_Data_Population.R")
 # source("UCRP_Test_PlanData_Import.R")
@@ -163,6 +161,11 @@ source("UCRP_Test_PlanData_Transform.R")
 
 #terminated %<>% mutate(nterm = 0) 
 #termrates %<>% mutate(qxt_faculty = 0)
+
+
+# Exclude the initial amortization basis when testing the program.
+init_amort_raw %<>% mutate(amount.annual = 0) 
+
 
 
 #*********************************************************************************************************
@@ -245,45 +248,6 @@ penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act
 # .liab$B.LSC  %>% filter(year == 2016, ea == 20, age == 50)
 # 
 # salary %>% filter(year == 2015)
-
-
-# init_pop$actives %>% sum
-# # 
-# # 
-# x <- salary %>% filter(year == 2015)
-# 
-# y <- actives %>% left_join(x) %>% mutate(salary_sum = nactives * sx)
-# y %<>% group_by(age) %>% summarise(salary_sum = sum(salary_sum, na.rm = T))
-# y$salary_sum %>% sum(na.rm = T)
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# x <- pop$active %>% filter(year == 2015)
-# x$number.a %>% sum
-# 
-# y <- liab.active %>% filter(year == 2015) %>% select(age,ea, sx)
-# 
-# z <- y %>% left_join(x) %>% mutate(salary_sum = sx * number.a)
-# z$salary_sum %>% sum(na.rm = T)
-# 
-# z %<>% filter(!is.na(sx), number.a!=0) %>%  ungroup %>% arrange(age,ea)
-# 
-# z %>% group_by(age) %>% summarise(salary_sum = sum(salary_sum))
-# z$salary_sum %>% sum
-
-#actives$salary %>% max
-
-
-
-
 
 
 
