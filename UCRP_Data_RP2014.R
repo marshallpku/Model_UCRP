@@ -1,6 +1,5 @@
 # This script constructs mortality tables for the UCRP model. 
 
-
 # Mortality tables:
 # - Pre-retirement mortality: RP2014 White Collar Employee Mortality Table projected with the two dimensional MP2014 
 #     projection scale to 2029 (RP2014 p60)
@@ -14,24 +13,6 @@
 
 
 
-rm(list = ls())
-gc()
-
-library(knitr)
-library(data.table)
-library(gdata) # read.xls
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(magrittr)
-library(tidyr) # gather, spread
-library(foreach)
-library(doParallel)
-library(microbenchmark)
-library(readxl)
-library(stringr)
-
-source("Functions.R")
 
 #*********************************************************************************************************
 #                      ## Import Data  ####
@@ -77,15 +58,15 @@ names(data_scale_F) <- c("age",1951:2030, "gender")
 
 # Transform data to long format
 data_raw %<>% gather(type, qxm, -age) %>% mutate(year = 2014, gender = str_sub(type, -1))
-data_scale_M %<>% gather(year.match, scale.M, -age, -gender) %>% mutate(year.match = as.numeric(f2n(year.match)))
-data_scale_F %<>% gather(year.match, scale.F, -age, -gender) %>% mutate(year.match = as.numeric(f2n(year.match)))
+data_scale_M %<>% gather(year.match, scale.M, -age, -gender) %>% mutate(year.match = as.numeric((year.match)))
+data_scale_F %<>% gather(year.match, scale.F, -age, -gender) %>% mutate(year.match = as.numeric((year.match)))
 
 
 # Creat data table: age x year x type
 # mortality <- expand.grid(year = 1951:2030, age = 20:120, type = levels(data_raw$type)) %>% 
 #   mutate(gender = str_sub(type, -1))
 
-mortality <- expand.grid(year = 1915:2164, age = 20:120, type = levels(data_raw$type)) %>% 
+mortality_RP2014 <- expand.grid(year = 1915:2164, age = 20:120, type = unique(data_raw$type)) %>% 
   mutate(gender     = str_sub(type, -1),
          year.match = ifelse(year < 1951, 1951, ifelse(year>2030, 2030, year)))
 
@@ -93,7 +74,7 @@ mortality <- expand.grid(year = 1915:2164, age = 20:120, type = levels(data_raw$
 
 
 # Calculate projected mortality
-mortality %<>% left_join(data_raw) %>% 
+mortality_RP2014 %<>% left_join(data_raw) %>% 
   left_join(data_scale_M) %>% 
   left_join(data_scale_F) %>% 
   mutate(scale = ifelse(gender == "M", scale.M, scale.F)) %>% 
@@ -106,33 +87,12 @@ mortality %<>% left_join(data_raw) %>%
 
 
 # Spot check the results
-df1 <- mortality %>% filter(type == "qxm.pre.M") %>% ungroup %>% 
+df1 <- mortality_RP2014 %>% filter(type == "qxm.pre.M") %>% ungroup %>% 
               select(year, age, qxm_proj) %>% filter(age == 20)
 
 
+save(mortality_RP2014, file = "Data/UCRP.RP2014.RData")
 
-#*********************************************************************************************************
-#                      ## Produce separate tables for each type ####
-#*********************************************************************************************************
-
-# pre-retirement table 
-mortality.pre <- mortality %>% filter(type %in% c("qxm.pre.M", "qxm.pre.F")) %>% ungroup %>% 
-                 spread(type, qxm_proj)
-
-# post-retirement table 
-mortality.post <- mortality %>% filter(type %in% c("qxm.post.M", "qxm.post.F")) %>% ungroup %>% 
-                  spread(type, qxm_proj)
-
-# disabled retirees table 
-mortality.disb <- mortality %>% filter(type %in% c("qxm.d.M", "qxm.d.F")) %>% ungroup %>% 
-  spread(type, qxm_proj)
-
-
-mortality.pre %>% filter(year == 2029) %>% print(n = 1000)
-mortality.disb %>% filter(year == 2029) %>% print(n = 1000)
-
-
-save(mortality.pre, mortality.post, mortality.disb, file = "Data/UCRP.inputs1.RData")
 
 
 

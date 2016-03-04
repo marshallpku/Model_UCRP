@@ -1,7 +1,5 @@
 
 
-
-
 library("readxl")
 library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
 library("btools")
@@ -14,8 +12,6 @@ library("btools")
 path <- "./Data/"
 fileName <- "UCRP-MembersData-2015(1).xlsx"
             
-
-
 
 #****************************************************************************************************
 #                                       Tools                                                   #####                  

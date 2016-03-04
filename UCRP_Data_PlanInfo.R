@@ -1,26 +1,5 @@
 # This script constructs tables of the retirement rates for the UCRP model. 
 
-rm(list = ls())
-gc()
-
-library(knitr)
-library(data.table)
-library(gdata) # read.xls
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(magrittr)
-library(tidyr) # gather, spread
-library(foreach)
-library(doParallel)
-library(microbenchmark)
-library(readxl)
-library(stringr)
-
-source("Functions.R")
-
-
-
 
 #*********************************************************************************************************
 #                      ## Produce mortality tables ####

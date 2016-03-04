@@ -141,9 +141,15 @@ init_amort_raw %<>% mutate(amount.annual = 0)
 #*********************************************************************************************************
 # 1.1 Import Salary table and initial retirement benefit table ####
 #*********************************************************************************************************
-source("UCRP_Test_PlanData_Import(1).R")
+#source("UCRP_Data_RP2014.R")
+#source("UCRP_Data_PlanInfo.R")
+
+source("UCRP_Data_Population.R")
 # source("UCRP_Test_PlanData_Import.R")
 source("UCRP_Test_PlanData_Transform.R")
+
+
+# Modification to plan data for testing purpose.  
 
 # init_pop$actives[,] <- 0
 # init_pop$actives[1,"40"] <- 1
@@ -158,10 +164,11 @@ source("UCRP_Test_PlanData_Transform.R")
 #terminated %<>% mutate(nterm = 0) 
 #termrates %<>% mutate(qxt_faculty = 0)
 
+
 #*********************************************************************************************************
 # 1.2 Importing Decrement tables and Calculating Probabilities ####
 #*********************************************************************************************************
-source("UCRP_Decrements.R")
+source("UCRP_Model_Decrements.R")
 
 # Chnange variable names for 1976 tier
 decrement.ucrp %<>% rename(pxT = pxT.t76,
