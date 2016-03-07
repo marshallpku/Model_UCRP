@@ -166,6 +166,12 @@
   penSim0$NC      <-  with(penSim0, NC.laca + NC.LSC + NC.v)
   
   
+  # NC(j)
+  penSim0$PVFB.laca <- .AggLiab$active[, "PVFBx.laca.sum"]
+  penSim0$PVFB.LSC  <- .AggLiab$active[, "PVFBx.LSC.sum"]
+  penSim0$PVFB.v    <- .AggLiab$active[, "PVFBx.v.sum"] 
+  penSim0$PVFB      <-  with(penSim0, PVFB.laca + PVFB.LSC + PVFB.v) #Note this is the total PVFB for actives. PVFB for retirees/beneficiaries are the same as AL.
+  
   # B(j)
   penSim0$B.la    <- .AggLiab$la[, "B.la.sum"]
   penSim0$B.ca    <- .AggLiab$ca[, "B.ca.sum"]
@@ -387,6 +393,7 @@
   penSim_results <- bind_rows(penSim_results) %>% 
     mutate(sim     = rep(-1:nsim, each = nyear),
            runname = runname,
+           Tier    = Tier_select,
            FR      = 100 * AA / exp(log(AL)),
            FR_MA   = 100 * MA / exp(log(AL)),
            UAAL_PR = 100 * UAAL / PR,

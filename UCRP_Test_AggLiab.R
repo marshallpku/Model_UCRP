@@ -40,6 +40,11 @@
            NCx.v.tot    = NCx.v    * number.a,
            NCx.av.tot   = NCx.laca.tot + NCx.LSC.tot + NCx.v.tot,
            
+           PVFBx.laca.tot = PVFBx.laca * number.a,
+           PVFBx.LSC.tot  = PVFBx.LSC  * number.a,
+           PVFBx.v.tot    = PVFBx.v    * number.a,
+           PVFBx.av.tot   = PVFBx.laca.tot + PVFBx.LSC.tot + PVFBx.v.tot,
+           
            PR.tot  = sx * number.a,
            
            runname = runname)
@@ -56,6 +61,12 @@
       NCx.LSC.sum  = sum(NCx.LSC.tot,  na.rm = TRUE),
       NCx.v.sum    = sum(NCx.v.tot,    na.rm = TRUE),
       NCx.av.sum   = sum(NCx.av.tot,   na.rm = TRUE),
+      
+      PVFBx.laca.sum = sum(PVFBx.laca.tot, na.rm = TRUE),
+      PVFBx.LSC.sum  = sum(PVFBx.LSC.tot,  na.rm = TRUE),
+      PVFBx.v.sum    = sum(PVFBx.v.tot,    na.rm = TRUE),
+      PVFBx.av.sum   = sum(PVFBx.av.tot,   na.rm = TRUE),
+      
       
       PR.sum    = sum(PR.tot,  na.rm = TRUE),
       

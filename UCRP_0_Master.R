@@ -1,32 +1,8 @@
-# Master file of the UCRP model
 
-rm(list = ls())
+
+
+
 gc()
-
-library(knitr)
-library(data.table)
-library(gdata) # read.xls
-library(plyr)
-library(dplyr)
-options(dplyr.print_min = 60) # default is 10
-options(dplyr.print_max = 60) # default is 20
-library(ggplot2)
-library(magrittr)
-library(tidyr) # gather, spread
-library(foreach)
-library(doParallel)
-library(microbenchmark)
-library(readxl)
-library(stringr)
-library("readxl")
-library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
-library("btools")
-
-source("Functions.R")
-
-
-
-
 #*********************************************************************************************************
 # 0. Parameters   ####
 #*********************************************************************************************************
@@ -34,27 +10,27 @@ source("Functions.R")
 Global_paramlist <- list(
   
   init.year = 2015,
-  nyear     = 15,
+  nyear     = 100,
   nsim      = 5,
   ncore     = 4,
-
+  
   min.ea    = 20,
   max.ea    = 74, 
-
+  
   min.age   = 20,
   max.age   = 120 
 )
 
 
 paramlist <- list(
-
+  
   runname = "UCRP",
-  Tier_select = "t76", 
+  Tier_select = Tier_select_RunControl, 
   Grouping    = "fillin",
   
   r.min  = 50,
   r.max  = 75, 
-
+  
   
   
   fasyears = 3,
@@ -80,11 +56,11 @@ paramlist <- list(
   
   
   wf_growth = 0,
-  no_entrance = "F",
+  no_entrance = "T",
   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
   
   pct.F.LSC = 0.6,
- 
+  
   
   pct.ca.F =  0.8,
   pct.ca.M =  0.6,
@@ -126,13 +102,16 @@ assign_parmsList(paramlist,        envir = environment())
 devMode <- FALSE
 
 
+
+
+
+
 # Testing
 
 # pct.ca.F  <- 1 # 0.8
 # pct.ca.M  <- 1 # 0.6
 # pct.ca <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
 # pct.la <- 1 - pct.ca
-
 
 #*********************************************************************************************************
 # 1.1 Import Salary table and initial retirement benefit table ####
@@ -142,26 +121,15 @@ devMode <- FALSE
 load("./Data/UCRP.PlanInfo.RData")
 
 
-
 source("UCRP_Data_Population.R")
-# source("UCRP_Test_PlanData_Import.R")
+# init_actives_all %<>% mutate(nactives = 0) 
+# init_retirees_all %<>% mutate(nretirees = 0)
+# init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
+#init_terminated_all %<>% mutate(nterm = 0)
+
+
 source("UCRP_Test_PlanData_Transform.R")
 
-
-# Modification to plan data for testing purpose.  
-
-# init_pop$actives[,] <- 0
-# init_pop$actives[1,"40"] <- 1
-
-#LSCrates  %<>% mutate(qxLSC.act = 0)
-
-# retirees  %<>% mutate(benefit = 0)
-# benefit   %<>% mutate(benefit = 0)
-# 
-# init_beneficiaries %<>% mutate(benefit = 0)
-
-#terminated %<>% mutate(nterm = 0) 
-#termrates %<>% mutate(qxt_faculty = 0)
 
 
 # Exclude the initial amortization basis when testing the program.
@@ -232,15 +200,15 @@ source("UCRP_Test_Sim.R")
 
 
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, NC_PR, 
-                                                B, B.la, B.ca, B.LSC,B.v, nactives, PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
+                                                B, B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR) %>% data.frame
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
 # liab.active %>% head
 # 
 # decrement.ucrp
-salary
+# salary
 
 
 # OK when only with life annuity, and no initial retirees
