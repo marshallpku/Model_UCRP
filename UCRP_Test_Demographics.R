@@ -361,9 +361,9 @@ pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dea
 
 
 
+wf_active %>% group_by(year) %>% summarise(n = sum(number.a))
 
-
-
+wf_active %>% head
 
 
 

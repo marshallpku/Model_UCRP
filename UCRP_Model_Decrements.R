@@ -1,4 +1,8 @@
 
+# need pct.ca and pct.la from Data_population
+
+
+
 #*************************************************************************************************************
 #                                Prepare mortality tables for UCRP                        #####                  
 #*************************************************************************************************************
@@ -135,8 +139,8 @@ decrement.ucrp %<>% group_by(ea) %>%
                             1 - qxt - qxm.pre - qxd, 
                             lead(qxr.t76)*(1 - qxt - qxm.pre - qxd)),                         # Total probability of retirement
          qxr.LSC.t76     = ifelse(age == r.max, 0 , qxr.t76 * lead(qxLSC.act)),               # Prob of opting for LSC
-         qxr.la.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.la),  # Prob of opting for life annuity
-         qxr.ca.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.ca),  # Prob of opting for contingent annuity
+         qxr.la.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.la.t76),  # Prob of opting for life annuity
+         qxr.ca.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.ca.t76),  # Prob of opting for contingent annuity
 
          # 2013 Tier: life annuity only  
          qxr.t13 = ifelse(age == r.max - 1,

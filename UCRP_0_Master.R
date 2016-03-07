@@ -34,7 +34,7 @@ source("Functions.R")
 Global_paramlist <- list(
   
   init.year = 2015,
-  nyear     = 30,
+  nyear     = 15,
   nsim      = 5,
   ncore     = 4,
 
@@ -46,12 +46,11 @@ Global_paramlist <- list(
 )
 
 
-
-
 paramlist <- list(
 
   runname = "UCRP",
   Tier_select = "t76", 
+  Grouping    = "fillin",
   
   r.min  = 50,
   r.max  = 75, 
@@ -110,7 +109,7 @@ paramlist <- list(
   EEC_rate = 0.05
 )
 
-
+# Parameters derived from the parameter list above. 
 paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
 paramlist$range_age = with(Global_paramlist, min.age:max.age)
 paramlist$range_age.r = with(paramlist, r.min:r.max)
@@ -118,6 +117,8 @@ paramlist$m.max = with(paramlist, max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
 paramlist$v     = with(paramlist, 1/(1 + i))
 paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
 
+
+# Assign parameters to the global environment
 assign_parmsList(Global_paramlist, envir = environment())
 assign_parmsList(paramlist,        envir = environment())  
 
@@ -173,15 +174,17 @@ init_amort_raw %<>% mutate(amount.annual = 0)
 #*********************************************************************************************************
 source("UCRP_Model_Decrements.R")
 
-# Chnange variable names for 1976 tier
-decrement.ucrp %<>% rename(pxT = pxT.t76,
-                           qxr.la   = qxr.la.t76,
-                           qxr.ca   = qxr.ca.t76,
-                           qxr.LSC  = qxr.LSC.t76,
-                           qxr      = qxr.t76)
-bfactor %<>% rename(bfactor = bf.non13)
+# Chnange variable names
 
+decrement.ucrp %<>% rename_("pxT" = paste0("pxT.", Tier_select),
+                           "qxr.la"   = paste0("qxr.la.", Tier_select),
+                           "qxr.ca"   = paste0("qxr.ca.", Tier_select),
+                           "qxr.LSC"  = paste0("qxr.LSC.", Tier_select),
+                           "qxr"      = paste0("qxr.", Tier_select)
+                           )
 
+bfactor %<>% mutate(bfactor = ifelse(Tier_select == "t13", bf.13, bf.non13)) %>% 
+             select(age, bfactor)
 
 
 #*********************************************************************************************************
@@ -233,6 +236,10 @@ penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act
 #penSim_results %>% filter(sim == -1) %>% data.frame
 
 
+# liab.active %>% head
+# 
+# decrement.ucrp
+salary
 
 
 # OK when only with life annuity, and no initial retirees

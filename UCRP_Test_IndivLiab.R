@@ -59,7 +59,7 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
     fas= ifelse(age == min(age), 0, fas),
     COLA.scale = (1 + cola)^(age - min(age)),          # later we can specify other kinds of COLA scale. Note that these are NOT COLA factors. They are used to derive COLA factors for different retirement ages.
     Bx = pmin(fas, na2zero(bfactor * yos * fas)),      # accrued benefits, note that only Bx for ages above r.min are necessary under EAN.
-    bx = lead(Bx) - Bx,                                # benefit accrual at age x
+    bx = lead(Bx) - Bx ,                                # benefit accrual at age x
 
     
     # ax = get_tla(pxm, i, COLA.scale),                  # Since retirees die at max.age for sure, the life annuity with COLA is equivalent to temporary annuity with COLA up to age max.age. 
@@ -81,6 +81,12 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
   )
 
 
+# liab.active %>% select(start.year, ea, age, year, fas, b)
+#                 #filter(start.year == 2015 , ea == 70) %>% 
+#                 mutate( COLA.scale = (1 + cola)^(age - min(age)), 
+#                 ax.LSC = get_tla(1 - qxm.LSC, i, COLA.scale))
+# 
+# 
 
 #*************************************************************************************************************
 #                        2.1  AL and NC of life annuity and contingent annuity for active                #####                  
@@ -280,14 +286,14 @@ liab.active %<>%
 #*************************************************************************************************************
 
 # # Calculate AL and benefit payment for initial vested terms.
-liab.term.init <- expand.grid(ea         = unique(terminated$ea),
-                              age.term   = unique(terminated$age.term),
-                              start.year = unique(terminated$start.year),
+liab.term.init <- expand.grid(ea         = unique(init_terminated$ea),
+                              age.term   = unique(init_terminated$age.term),
+                              start.year = unique(init_terminated$start.year),
                               age = range_age) %>%
   filter(start.year + age - ea >= 1,
          age >= ea,
          age.term >= ea) %>%
-  left_join(terminated %>% select(ea, age.term, start.year, yos, fas = HAPC)) %>%
+  left_join(init_terminated %>% select(ea, age.term, start.year, yos, fas = HAPC)) %>%
   left_join(select(liab.active, start.year, ea, age, bfactor, COLA.scale, pxRm, px_r.full_m)) %>%
   left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, ax.r.W.term = ax.r.W)) %>%
   group_by(start.year, ea, age.term) %>%
@@ -396,7 +402,7 @@ liab.active %<>%
 
 liab <- list(active = liab.active, la = liab.la, term = liab.term, liab.LSC = liab.LSC)
 
-liab$term
+
 
 
 

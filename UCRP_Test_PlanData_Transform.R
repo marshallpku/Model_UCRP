@@ -1,16 +1,35 @@
 
 
 
+#*************************************************************************************************************
+#                                        Choose data for selected tier                                    #####                  
+#*************************************************************************************************************
+# Tier_select <- "t76"
+# Grouping <- "fillin"
 
-#*************************************************************************************************************
-#                                        Create complete salary scale                                    #####                  
-#*************************************************************************************************************
+get_tierData <- function(df, tier = Tier_select, grouping = Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
+
+#Actives
+init_actives       <- get_tierData(init_actives_all)
+init_retirees      <- get_tierData(init_retirees_all)
+init_beneficiaries <- get_tierData(init_beneficiaries_all)
+init_terminated    <- init_terminated_all %>%  filter(grepl(Tier_select, planname))
+
+pct.fac.actives <- get(paste0("pct.fac.actives.", Tier_select))
+pct.stf.actives <- get(paste0("pct.stf.actives.", Tier_select))
+
 
 # Get weighed salary scale
 salgrowth_w.fac <- get(paste0("pct.fac.actives.", Tier_select))
 salgrowth_w.stf <- 1 - salgrowth_w.fac
 salgrowth %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)
 
+init_actives
+
+
+#*************************************************************************************************************
+#                                        Create complete salary scale                                    #####                  
+#*************************************************************************************************************
 
 get_scale <- function(
   #.salgrowth.hist   = salgrowth.hist,
@@ -66,7 +85,6 @@ get_scale <- function(
 
 SS.all <- get_scale()
 
-
 #*************************************************************************************************************
 #                     Supplement the inital salary table with all starting salary                        #####                  
 #*************************************************************************************************************
@@ -108,10 +126,10 @@ fill_startSal <- function(.actives         # = tailored_demoData$actives,
   
 }
 
-init_sal <- fill_startSal(actives %>% mutate(ea = age - yos))
+init_sal <- fill_startSal(init_actives)
 init_sal  %>% filter(age == ea)
 
-
+init_sal
 
 
 #*************************************************************************************************************
@@ -147,7 +165,7 @@ get_salary <- function(.SS.all = SS.all,
 }
 
 salary <- get_salary() 
-salary
+salary %>% filter(start.year < 2015) %>% arrange(start.year, ea, age)
 
 
 
@@ -182,7 +200,7 @@ get_benefit <- function(
   return(benefit)
 }
 
-benefit <- retirees %>% get_benefit()
+benefit <- init_retirees %>% get_benefit()
 
 
 #*************************************************************************************************************
@@ -196,17 +214,17 @@ benefit <- retirees %>% get_benefit()
 #                               Generating inital population                                             #####                  
 #*************************************************************************************************************
 
-get_initPop <- function (.actives = actives,         # = tailored_demoData$actives,
-                         .retirees = retirees,
-                         .terminated = terminated  # = tailored_demoData$retirees
+get_initPop <- function (.actives    = init_actives,         # = tailored_demoData$actives,
+                         .retirees   = init_retirees,
+                         .terminated = init_terminated  # = tailored_demoData$retirees
                          # .paramlist        = paramlist,
                          # .Global_paramlist = Global_paramlist
                          ){
   # Import and standardize the total number of actives and retirees.  
   
   # Run the section below when developing new features.
-      .actives           = actives
-      .retirees          = retirees
+      # .actives           = actives
+      # .retirees          = retirees
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
@@ -297,7 +315,7 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
   return(dist)
 }
 
-entrants_dist <- get_entrantsDist(actives)
+entrants_dist <- get_entrantsDist(init_actives)
 
 
 entrants_dist
