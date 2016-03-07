@@ -183,8 +183,9 @@ decrement.ucrp %<>% rename_("pxT" = paste0("pxT.", Tier_select),
                            "qxr"      = paste0("qxr.", Tier_select)
                            )
 
-bfactor %<>% mutate(bfactor = ifelse(Tier_select == "t13", bf.13, bf.non13)) %>% 
-             select(age, bfactor)
+bfactor %<>% mutate(Tier = Tier_select,
+                    bfactor = ifelse(Tier == "t13", bf.13, bf.non13)) %>% 
+                    select(age, bfactor)
 
 
 #*********************************************************************************************************

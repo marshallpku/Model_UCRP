@@ -57,9 +57,10 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
     n  = pmin(yos, fasyears),                          # years used to compute fas
     fas= ifelse(yos < fasyears, Sx/n, (Sx - lag(Sx, fasyears))/n), # final average salary
     fas= ifelse(age == min(age), 0, fas),
+    fas= fas - 133 * 12 * (Tier_select == "t76"),      # benefit rule for different tiers
     COLA.scale = (1 + cola)^(age - min(age)),          # later we can specify other kinds of COLA scale. Note that these are NOT COLA factors. They are used to derive COLA factors for different retirement ages.
     Bx = pmin(fas, na2zero(bfactor * yos * fas)),      # accrued benefits, note that only Bx for ages above r.min are necessary under EAN.
-    bx = lead(Bx) - Bx ,                                # benefit accrual at age x
+    bx = lead(Bx) - Bx,                                # benefit accrual at age x
 
     
     # ax = get_tla(pxm, i, COLA.scale),                  # Since retirees die at max.age for sure, the life annuity with COLA is equivalent to temporary annuity with COLA up to age max.age. 
