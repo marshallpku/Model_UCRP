@@ -258,7 +258,9 @@ liab.active %<>%
   mutate(gx.v = ifelse(yos >= v.yos, 1, 0),                                     # actives become vested after reaching v.yos years of yos
          gx.v = ifelse(start.year >= 1989, gx.v, ifelse(age >= 62, 1, gx.v)),   # eligibility rule 2
          
-         Bx.v = ifelse(ea < r.full, gx.v * pmin(fas, na2zero(bfactor[age == r.full] * yos * fas))* (1 + infl)^(r.full - age), 0), # initial annuity amount when the vested term retires at age r.full. Accrued benefit is CPI adjustd. 
+         Bx.v = ifelse(ea < r.full, 
+                       gx.v * pmin(fas, na2zero(bfactor[age == r.full] * yos * fas))* (1 + ifelse(Tier_select == "t76", infl, 0))^(r.full - age), 
+                       0), # initial annuity amount when the vested term retires at age r.full. Accrued benefit is CPI adjustd for 1976 Tier.(AV2015 p53) 
 
          TCx.v   = ifelse(ea < r.full, Bx.v * qxt * lead(px_r.full_m) * v^(r.full - age) * ax.r.W[age == r.full], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.full.
          PVFBx.v = ifelse(ea < r.full, c(get_PVFB(pxT[age < r.full], v, TCx.v[age < r.full]), rep(0, max.age - r.full + 1)), 0),  # To be compatible with the cases where workers enter after age r.min, r.max is used instead of r.min, which is used in textbook formula(winklevoss p115).

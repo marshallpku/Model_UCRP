@@ -55,26 +55,18 @@ df_results %>% filter(sim == -1, Tier == "t76")
 
 
 
-# fileName = "Data/detective_total.xlsx"
-# write.xlsx2(df_results_tot %>% filter(sim == -1), file = fileName, sheet = "Total")
-# write.xlsx2(df_results %>% filter(sim == -1, Tier == "t76"), file = fileName, sheet = "t76", append = T)
-# write.xlsx2(df_results %>% filter(sim == -1, Tier == "t13"), file = fileName, sheet = "t13", append = T )
-# write.xlsx2(df_results %>% filter(sim == -1, Tier == "tm13"), file = fileName, sheet = "tm13",  append = T)
+fileName = "Data/detective_TermOnly.xlsx"
+write.xlsx2(df_results_tot %>% filter(sim == -1), file = fileName, sheet = "Total")
+write.xlsx2(df_results %>% filter(sim == -1, Tier == "t76"), file = fileName, sheet = "t76", append = F)
+write.xlsx2(df_results %>% filter(sim == -1, Tier == "t13"), file = fileName, sheet = "t13", append = T )
+write.xlsx2(df_results %>% filter(sim == -1, Tier == "tm13"), file = fileName, sheet = "tm13",  append = T)
 
 
 
-
-
-
-
-
-
-
-
-df_results %>% filter(year == 2015, sim == -1) %>% 
-select(Tier, year,  FR, MA, 
-         AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, 
+df_results %>% filter(sim == -1, Tier == "t76") %>% 
+select(Tier, year,  FR, MA,B, 
+         AL, AL.act, AL.act.v,AL.act.LSC, AL.act.laca, AL.la, AL.ca, AL.term, AL, 
          PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
-         B, B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR)
+        B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR)
 
 

@@ -30,13 +30,12 @@ source("Functions.R")
 #*********************************************************************************************************
 # Run a single tier ####
 #*********************************************************************************************************
-Tier_select_RunControl <- "t76"
+Tier_select_RunControl <- "t13"
 source("UCRP_0_Master.R")
 
 #*********************************************************************************************************
 # Run all tiers ####
 #*********************************************************************************************************
-
 
 Tier_select_RunControl <- "t76"
 source("UCRP_0_Master.R")
@@ -54,11 +53,14 @@ penSim_results_tm13 <- penSim_results
 
 
 
-df_results_total <- bind_rows(penSim_results_t76,
+df_results_ActOnly <- bind_rows(penSim_results_t76,
                                 penSim_results_t13,
                                 penSim_results_tm13)
+df_results_RetOnly  <- penSim_results_t76
+df_results_TermOnly <- penSim_results_t76
 
-save(df_results_total, file = "PenSim_detective_total.RData")
+
+save(df_results_TermOnly, file = "PenSim_detective_TermOnly.RData")
 
 
 

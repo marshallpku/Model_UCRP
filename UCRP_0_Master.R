@@ -34,7 +34,7 @@ paramlist <- list(
   
   
   fasyears = 3,
-  cola     = 0.03,
+  cola     = 0.02,
   i = 0.0725,
   
   infl = 0.03,
@@ -122,9 +122,9 @@ load("./Data/UCRP.PlanInfo.RData")
 
 
 source("UCRP_Data_Population.R")
-# init_actives_all %<>% mutate(nactives = 0) 
-# init_retirees_all %<>% mutate(nretirees = 0)
-# init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
+init_actives_all %<>% mutate(nactives = 0) 
+init_retirees_all %<>% mutate(nretirees = 0)
+init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
 #init_terminated_all %<>% mutate(nterm = 0)
 
 
@@ -148,7 +148,8 @@ decrement.ucrp %<>% rename_("pxT" = paste0("pxT.", Tier_select),
                            "qxr.la"   = paste0("qxr.la.", Tier_select),
                            "qxr.ca"   = paste0("qxr.ca.", Tier_select),
                            "qxr.LSC"  = paste0("qxr.LSC.", Tier_select),
-                           "qxr"      = paste0("qxr.", Tier_select)
+                           "qxr"      = paste0("qxr.", Tier_select),
+                           "qxt"      = paste0("qxt.", Tier_select)
                            )
 
 bfactor %<>% mutate(Tier = Tier_select,
@@ -199,31 +200,31 @@ gc()
 source("UCRP_Test_Sim.R")
 
 
+penSim_results %>% filter(sim == -1) %>% select(Tier,year, FR, MA, AL, AL.act,AL.act.laca, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
+                                                B, B.la, B.ca, B.LSC,B.v, nactives, nterms, PR, NC_PR) %>% data.frame
+penSim_results %>% filter(sim == -1) %>% data.frame
 
-penSim_results %>% filter(sim == -1) %>% select(year, FR, MA, AL, AL.act, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
-                                                B, B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR) %>% data.frame
-#penSim_results %>% filter(sim == -1) %>% data.frame
 
 
-# liab.active %>% head
+
+
+
+#*********************************************************************************************************
+# Detecitve work: term rates ####
+#*********************************************************************************************************
+# The AL of actives becomes even higher when higher term rates are used. 
+
+# detective.t13 <- penSim_results
+# save(detective.t13, file= "detective.t13.RData")
 # 
-# decrement.ucrp
-# salary
-
-
-# OK when only with life annuity, and no initial retirees
-# OK when only with life annuity, and with initial retirees
-
-
-# FR first slightly decreases then increases after around year 30, when contingent annuity added. 
+# load("detective.t13.RData")
+# detective.t13 %>% filter(sim == -1) %>% select(Tier,year, FR, MA, AL, AL.act,AL.act.laca, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
+#                         B, B.la, B.ca, B.LSC,B.v, nactives, nterms, PR, NC_PR) %>% data.frame
 
 
 
-# .liab$active %>% filter(year == 2015, ea == 20, age == 49) %>% select(year, ea, age, ALx.LSC, Bx.LSC, NCx.LSC)
-# .liab$active %>% filter(year == 2015, ea == 20, age == 50) %>% select(year, ea, age, ALx.LSC, Bx.LSC)
-# .liab$B.LSC  %>% filter(year == 2016, ea == 20, age == 50)
-# 
-# salary %>% filter(year == 2015)
+
+
 
 
 

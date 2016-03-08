@@ -539,6 +539,14 @@ pct.stf.actives.t13 <- 1 - pct.fac.actives.t13
 pct.fac.actives.tm13 <- pct.fac.actives.t13
 pct.stf.actives.tm13 <- 1 - pct.fac.actives.tm13 
 
+# 
+# ratio_type.all <- ratio_type %>% group_by(Type) %>% summarise(n = sum(n))
+# pct.fac.actives.all <- with(ratio_type.all, n[Type == "Faculty"]/sum(n))
+# pct.sft.actives.all <- 1 - pct.fac.actives.all
+# 
+
+
+
 
 # Choice between life annuity and contingent annuity
 pct.ca.t76 <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)

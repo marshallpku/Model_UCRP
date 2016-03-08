@@ -62,7 +62,20 @@ mortality.ucrp %<>% left_join(mortality.post.ucrp %>% ungroup %>%  filter(age.r 
                               
 disbrates.ucrp <- disbrates %>%  mutate(qxd = qxd.M * pct.M.actives + qxd.F * pct.F.actives)
 
-termrates.ucrp <- termrates %>% mutate(qxt = qxt_faculty)
+termrates.ucrp <- termrates %>% mutate(#qxt = qxt_faculty
+                                        qxt.t76  = qxt.faculty * pct.fac.actives.t76 + qxt.staff * pct.stf.actives.t76,
+                                        qxt.t13  = qxt.faculty * pct.fac.actives.t13 + qxt.staff * pct.stf.actives.t13,
+                                        qxt.tm13 = qxt.faculty * pct.fac.actives.tm13 + qxt.staff * pct.stf.actives.tm13
+                                       )
+
+
+# termrates.ucrp <- termrates %>% mutate(
+#   qxt.t76  = qxt.faculty, 
+#   qxt.t13  = qxt.faculty, 
+#   qxt.tm13 = qxt.faculty
+# )
+
+
 
 retrates.ucrp  <- retrates %>% mutate(qxr.t76  = qxr.t76.fac * pct.fac.actives.t76 + qxr.t76.stf * pct.stf.actives.t76,
                                       qxr.t13  = qxr.t13.fac * pct.fac.actives.t13 + qxr.t13.stf * pct.stf.actives.t13,
@@ -95,9 +108,12 @@ decrement.ucrp <- expand.grid(age = range_age, ea = range_ea) %>%
 ## Imposing restrictions 
 decrement.ucrp %<>% mutate(
   # 1. Coerce termination rates to 0 when eligible for early retirement or reaching than r.full(when we assume terms start to receive benefits). 
-  qxt = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt),
-  #qxt = ifelse(age >= r.min | age >= r.full, 0, qxt),
+  qxt.t76  = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.t76),
+  qxt.t13  = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.t13),
+  qxt.tm13 = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.tm13),
   
+  
+  #qxt = ifelse(age >= r.min | age >= r.full, 0, qxt),
   # qxt = ifelse( age >= r.full, 0, qxt),
   # 2. Coerce retirement rates to 0 when age greater than r.max                     
   #   qxr = ifelse(age == r.max, 1, 
@@ -136,25 +152,25 @@ decrement.ucrp %<>% group_by(ea) %>%
   mutate(
          # 1976 Tier: LSC, life annuity and contingent annuity
          qxr.t76 = ifelse(age == r.max - 1,
-                            1 - qxt - qxm.pre - qxd, 
-                            lead(qxr.t76)*(1 - qxt - qxm.pre - qxd)),                         # Total probability of retirement
+                            1 - qxt.t76 - qxm.pre - qxd, 
+                            lead(qxr.t76)*(1 - qxt.t76 - qxm.pre - qxd)),                         # Total probability of retirement
          qxr.LSC.t76     = ifelse(age == r.max, 0 , qxr.t76 * lead(qxLSC.act)),               # Prob of opting for LSC
          qxr.la.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.la.t76),  # Prob of opting for life annuity
          qxr.ca.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.ca.t76),  # Prob of opting for contingent annuity
 
          # 2013 Tier: life annuity only  
          qxr.t13 = ifelse(age == r.max - 1,
-                            1 - qxt - qxm.pre - qxd, 
-                            lead(qxr.t13)*(1 - qxt - qxm.pre - qxd)),                         # Total probability of retirement
+                            1 - qxt.t13 - qxm.pre - qxd, 
+                            lead(qxr.t13)*(1 - qxt.t13 - qxm.pre - qxd)),                         # Total probability of retirement
          qxr.LSC.t13     = 0,                                                                 # Prob of opting for LSC
          qxr.la.t13      = qxr.t13,                                                           # Prob of opting for life annuity
          qxr.ca.t13      = 0,                                                                 # Prob of opting for contingent annuity
 
          # modified 2013 Tier: LSC and life annuity.   
          qxr.tm13        = ifelse(age == r.max - 1,
-                            1 - qxt - qxm.pre - qxd, 
-                            lead(qxr.tm13)*(1 - qxt - qxm.pre - qxd)),                        # Total probability of retirement
-         qxr.LSC.tm13       = ifelse(age == r.max, 0 , qxr.tm13 * lead(qxLSC.act)),           # Prob of opting for LSC                                                        # Prob of opting for LSC
+                            1 - qxt.tm13 - qxm.pre - qxd, 
+                            lead(qxr.tm13)*(1 - qxt.tm13 - qxm.pre - qxd)),                   # Total probability of retirement
+         qxr.LSC.tm13     = ifelse(age == r.max, 0 , qxr.tm13 * lead(qxLSC.act)),           # Prob of opting for LSC                                                        # Prob of opting for LSC
          qxr.la.tm13      = ifelse(age == r.max, 0 , qxr.tm13 * lead(1 - qxLSC.act)),         # Prob of opting for life annuity                                                 # Prob of opting for life annuity
          qxr.ca.tm13      = 0)                                                                # Prob of opting for contingent annuity
          
@@ -174,9 +190,9 @@ decrement.ucrp %<>%
   mutate( pxm.pre = 1 - qxm.pre,
           # pxm.r = 1 - qxm.r,
           
-          pxT.t76     = 1 - qxt - qxd - qxm.pre - qxr.t76,                              # (1 - qxm.p) * (1 - qxt.p) * (1 - qxd.p),
-          pxT.t13     = 1 - qxt - qxd - qxm.pre - qxr.t13,  
-          pxT.tm13    = 1 - qxt - qxd - qxm.pre - qxr.tm13,  
+          pxT.t76     = 1 - qxt.t76 - qxd - qxm.pre - qxr.t76,                              # (1 - qxm.p) * (1 - qxt.p) * (1 - qxd.p),
+          pxT.t13     = 1 - qxt.t13 - qxd - qxm.pre - qxr.t13,  
+          pxT.tm13    = 1 - qxt.tm13 - qxd - qxm.pre - qxr.tm13,  
           
           pxRm        = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxm.pre))), # prob of surviving up to r.max, mortality only
           px_r.full_m = order_by(-age, cumprod(ifelse(age >= r.full, 1, pxm.pre)))
