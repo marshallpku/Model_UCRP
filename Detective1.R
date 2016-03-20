@@ -23,34 +23,52 @@ library("btools")
 source("Functions.R")
 
 
-load("PenSim_detective_total.RData")
-df_results <- df_results_total
+select_vars <- c("Tier", "sim","year", "AL", "MA", "FR", "B", "PVFB", "NC", "NC_PR", "PR", 
+                 "AL.act", "AL.act.v", "AL.act.LSC", "AL.act.laca", "AL.la", "AL.ca", "AL.term", "AL.LSC",
+                 "NC.laca", "NC.LSC", "NC.v",
+                 "PVFB.laca", "PVFB.LSC", "PVFB.v",
+                 "B.la", "B.ca", "B.v", "B.LSC",
+                 "nactives", "nla", "n.ca.R1", "n.ca.R0S1", "n.LSC")
 
-load("PenSim_detective_ActOnly.RData")
-df_results <- df_results_ActOnly
+get_detective <- function(type, SAVE = F, vars){
+  load(paste0("PenSim_detective_", type, ".RData"))
+  results_byTier <- get(paste0("df_results_",type)) %>% 
+                    select(one_of(select_vars))
+  
+  results_sumTiers <- results_byTier %>% 
+    group_by(sim, year) %>% 
+    summarise(MA = sum(MA),
+              AL = sum(AL),
+              NC = sum(NC),
+              PVFB = sum(PVFB),
+              B = sum(B),
+              PR = sum(PR),
+              nactives = sum(nactives)) %>% 
+    mutate(NC_PR = NC/PR * 100,
+           FR = MA/AL * 100)
+  
+    if(SAVE) save(results_byTier, results_sumTiers, file = paste0("DetecitveWork_", type, ".RData"))
+  
+    return(list(byTier = results_byTier, sumTiers = results_sumTiers))
+  }
 
-load("PenSim_detective_RetOnly.RData")
-df_results <- df_results_RetOnly
+lresults_total   <- get_detective("total", T)
+lresults_ActOnly <- get_detective("ActOnly", T)
+lresults_RetOnly <- get_detective("RetOnly", T)
+lresults_TermOnly <- get_detective("TermOnly", T)
 
-load("PenSim_detective_TermOnly.RData")
-df_results <- df_results_TermOnly
+
+lresults_RetOnly$sumTiers
+lresults_RetOnly$byTier
 
 
-df_results_tot <- df_results %>% 
-  group_by(sim, year) %>% 
-  summarise(MA = sum(MA),
-            AL = sum(AL),
-            NC = sum(NC),
-            PVFB = sum(PVFB),
-            B = sum(B),
-            PR = sum(PR),
-            nactives = sum(nactives)) %>% 
-  mutate(NC_PR = NC/PR * 100,
-         FR = MA/AL * 100)
+
+
+
 
 
 df_results_tot %>% filter(sim == -1)
-df_results %>% filter(sim == -1, Tier == "t76")
+df_results %>% filter(sim == -1, Tier == "t13")
 
 
 
@@ -63,10 +81,28 @@ write.xlsx2(df_results %>% filter(sim == -1, Tier == "tm13"), file = fileName, s
 
 
 
-df_results %>% filter(sim == -1, Tier == "t76") %>% 
+df_results %>% filter(sim == -1, Tier == "t13") %>% 
 select(Tier, year,  FR, MA,B, 
-         AL, AL.act, AL.act.v,AL.act.LSC, AL.act.laca, AL.la, AL.ca, AL.term, AL, 
-         PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
-        B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR)
+       AL, AL.act, AL.act.v,AL.act.LSC, AL.act.laca, AL.la, AL.ca, AL.term, AL, 
+       PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
+       B.la, B.ca, B.LSC,B.v, nactives, PR, NC_PR) %>% data.frame
+
+
+select_vars <- c("Tier", "sim", "AL", "MA", "FR", "B", "PVFB", "NC", "NC_PR", "PR", 
+                 "AL.act", "AL.act.v", "AL.act.LSC", "AL.act.laca", "AL.la", "AL.ca", "AL.term", "AL.LSC",
+                 "NC.laca", "NC.LSC", "NC.v",
+                 "PVFB.laca", "PVFB.LSC", "PVFB.v",
+                 "B.la", "B.ca", "B.v", "B.LSC",
+                 "nla", "n.ca.R1", "n.ca.R0S1", "n.LSC")
+
+
+lresults_ActOnly$byTier %>% names
+
+
+
+
+
+
+
 
 

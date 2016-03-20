@@ -1,7 +1,5 @@
 
 
-
-
 gc()
 #*********************************************************************************************************
 # 0. Parameters   ####
@@ -10,7 +8,7 @@ gc()
 Global_paramlist <- list(
   
   init.year = 2015,
-  nyear     = 100,
+  nyear     = 40,
   nsim      = 5,
   ncore     = 4,
   
@@ -59,10 +57,10 @@ paramlist <- list(
   no_entrance = "T",
   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
   
-  pct.F.LSC = 0.6,
+  pct.F.LSC = 0.6, # assumed proporotion of females, for the calculation of LSC amount 
   
   
-  pct.ca.F =  0.8,
+  pct.ca.F =  0.8, # proportion of females who opt for ca upon retirement
   pct.ca.M =  0.6,
   
   factor.ca = 0.25,
@@ -122,10 +120,12 @@ load("./Data/UCRP.PlanInfo.RData")
 
 
 source("UCRP_Data_Population.R")
-init_actives_all %<>% mutate(nactives = 0) 
+
+#init_actives_all %<>% mutate(nactives = 0) 
 init_retirees_all %<>% mutate(nretirees = 0)
 init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
-#init_terminated_all %<>% mutate(nterm = 0)
+init_terminated_all %<>% mutate(nterm = 0)
+
 
 
 source("UCRP_Test_PlanData_Transform.R")

@@ -20,12 +20,21 @@ pct.stf.actives <- get(paste0("pct.stf.actives.", Tier_select))
 
 
 # Get weighed salary scale
-salgrowth_w.fac <- get(paste0("pct.fac.actives.", Tier_select))
-salgrowth_w.stf <- 1 - salgrowth_w.fac
-salgrowth %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)
+ salgrowth_w.fac <-  get(paste0("pct.fac.actives.", Tier_select))
+ salgrowth_w.stf <- 1 - salgrowth_w.fac
 
-init_actives
+ # salgrowth %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)
 
+init.sal.fac <- 100000
+init.sal.stf <- 75000
+
+salgrowth %<>% mutate(sal.fac = init.sal.fac *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.fac))),
+                     sal.stf = init.sal.stf *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.stf))),
+                     sal.sum = sal.fac * salgrowth_w.stf + sal.stf *salgrowth_w.stf,
+                     salgrowth_w = lead(sal.sum)/sal.sum - 1,
+                     salgrowth_w = ifelse(yos == max(yos), salgrowth_w[yos == max(yos - 1)], salgrowth_w))
+salgrowth
+#salgrowth_w.fac
 
 #*************************************************************************************************************
 #                                        Create complete salary scale                                    #####                  
