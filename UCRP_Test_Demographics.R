@@ -6,6 +6,12 @@
 #3. The mortality for retirees are now retirement age dependent.
 
 
+get_Population <- function(.init_pop         = init_pop,
+                           .entrants_dist    = entrants_dist,
+                           .decrement.ucrp   = decrement.ucrp,
+                           .paramlist        = paramlist,
+                           .Global_paramlist = Global_paramlist){
+
 ## Inputs
 # - range_ea:         all possible entry ages  
 # - range_age:        range of age
@@ -26,15 +32,16 @@
 #  (5)Dead       (dim = 3) We do not really need an array for dead, what's needed is only the total number of dead.  
 
 # Run the section below when developing new features.   
-   .init_pop         = init_pop
-   .entrants_dist    = entrants_dist
+   # .init_pop         = init_pop
+   # .entrants_dist    = entrants_dist
+   # .decrement.ucrp   = decrement.ucrp
 #   .paramlist        = paramlist
 #   .Global_paramlist = Global_paramlist
 # #   
 #   
 
-# assign_parmsList(.Global_paramlist, envir = environment())
-# assign_parmsList(.paramlist,        envir = environment())  
+ assign_parmsList(.Global_paramlist, envir = environment())
+ assign_parmsList(.paramlist,        envir = environment())  
 
 
 #*************************************************************************************************************
@@ -93,7 +100,7 @@ wf_term[, , 1, 1]  <- .init_pop$terms   # note that the initial terms are assign
 # Assume the actual decrement rates are the same as the rates in decrement tables.
 # Later we may allow the actual decrement rates to differ from the assumed rates. 
 
-decrement_wf <- sapply(decrement.ucrp, function(x){x[is.na(x)] <- 0; return(x)}) %>% data.frame # just for safety
+decrement_wf <- sapply(.decrement.ucrp, function(x){x[is.na(x)] <- 0; return(x)}) %>% data.frame # just for safety
 
 
 # Define a function that produce transition matrices from decrement table. 
@@ -324,6 +331,18 @@ wf_LSC.ca <- wf_active %>% left_join(decrement_wf %>% select(age, ea, qxr.LSC, q
 # Final outputs
 pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dead = wf_dead, LSC.ca = wf_LSC.ca)
 
+return(pop)
+
+}
+
+
+# pop <- get_Population()
+
+
+
+
+
+
 # pop$term %>% filter(year == 2016) %>% select(number.v) %>% sum
 
 
@@ -361,10 +380,10 @@ pop <-  list(active = wf_active, term = wf_term, disb = wf_disb, la = wf_la, dea
 
 
 
-wf_active %>% group_by(year) %>% summarise(n = sum(number.a))
-
-wf_active %>% head
-
+# wf_active %>% group_by(year) %>% summarise(n = sum(number.a))
+# 
+# wf_active %>% head
+# 
 
 
 

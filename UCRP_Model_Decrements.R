@@ -2,6 +2,10 @@
 # need pct.ca and pct.la from Data_population
 
 
+# Final outputs
+ # 1. decrement.ucrp
+ # 2. mortality.post.ucrp
+
 
 #*************************************************************************************************************
 #                                Prepare mortality tables for UCRP                        #####                  
@@ -206,10 +210,6 @@ decrement.ucrp %<>%
 
 
 
-# Final outputs
-
-#1. decrement.ucrp
-#2. mortality.post.ucrp
 
 
 

@@ -1,3 +1,13 @@
+# Summary of outputs
+
+# salary
+# benefit
+# init_pop
+# entrants_dist
+
+# 
+
+
 
 
 
@@ -10,42 +20,73 @@
 get_tierData <- function(df, tier = Tier_select, grouping = Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
 
 #Actives
-init_actives       <- get_tierData(init_actives_all)
-init_retirees      <- get_tierData(init_retirees_all)
-init_beneficiaries <- get_tierData(init_beneficiaries_all)
-init_terminated    <- init_terminated_all %>%  filter(grepl(Tier_select, planname))
+init_actives.t76       <- get_tierData(init_actives_all, "t76")
+init_retirees.t76      <- get_tierData(init_retirees_all, "t76")
+init_beneficiaries.t76 <- get_tierData(init_beneficiaries_all, "t76")
+init_terminated.t76    <- init_terminated_all %>%  filter(grepl("t76", planname))
 
-pct.fac.actives <- get(paste0("pct.fac.actives.", Tier_select))
-pct.stf.actives <- get(paste0("pct.stf.actives.", Tier_select))
 
+#Actives
+init_actives.t13       <- get_tierData(init_actives_all, "t13")
+init_retirees.t13      <- get_tierData(init_retirees_all, "t13")
+init_beneficiaries.t13 <- get_tierData(init_beneficiaries_all, "t13")
+init_terminated.t13    <- init_terminated_all %>%  filter(grepl("t13", planname))
+
+
+#Actives
+init_actives.tm13       <- get_tierData(init_actives_all, "tm13")
+init_retirees.tm13      <- get_tierData(init_retirees_all, "tm13")
+init_beneficiaries.tm13 <- get_tierData(init_beneficiaries_all, "tm13")
+init_terminated.tm13    <- init_terminated_all %>%  filter(grepl("tm13", planname))
+
+
+
+
+
+
+
+
+
+#*************************************************************************************************************
+#                        Create weighed salary scale for facutly and staff members                      #####                  
+#*************************************************************************************************************
+
+get_w.salgrowth <- function(method = c("simple","withInit"), Tier_ = Tier_select, salgrowth_ = salgrowth){
+# function also uses "pct.fac.actives.tXX"  
 
 # Get weighed salary scale
- salgrowth_w.fac <-  get(paste0("pct.fac.actives.", Tier_select))
+ salgrowth_w.fac <-  get(paste0("pct.fac.actives.", Tier_))
  salgrowth_w.stf <- 1 - salgrowth_w.fac
 
- # salgrowth %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)
+ ## 1) Simple weighted salary scale
+  if(method == "simple") salgrowth_ %<>%  mutate(salgrowth_w = salgrowth_w.stf * salgrowth.stf + salgrowth_w.fac * salgrowth.fac)
 
-init.sal.fac <- 100000
-init.sal.stf <- 75000
+ ## 2) Salary scale taking into account the difference in starting salary between faculty and staff.
+  if(method == "withInit"){
+    
+    init.sal.fac <- 100000
+    init.sal.stf <- 75000
+    
+    salgrowth_ %<>% mutate(sal.fac = init.sal.fac *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.fac))),
+                          sal.stf = init.sal.stf *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.stf))),
+                          sal.sum = sal.fac * salgrowth_w.stf + sal.stf *salgrowth_w.stf,
+                          salgrowth_w = lead(sal.sum)/sal.sum - 1,
+                          salgrowth_w = ifelse(yos == max(yos), salgrowth_w[yos == max(yos - 1)], salgrowth_w))
+     } 
+ return(salgrowth_)
+}
+  
+# salgrowth <- get_w.salgrowth("withInit")
 
-salgrowth %<>% mutate(sal.fac = init.sal.fac *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.fac))),
-                     sal.stf = init.sal.stf *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.stf))),
-                     sal.sum = sal.fac * salgrowth_w.stf + sal.stf *salgrowth_w.stf,
-                     salgrowth_w = lead(sal.sum)/sal.sum - 1,
-                     salgrowth_w = ifelse(yos == max(yos), salgrowth_w[yos == max(yos - 1)], salgrowth_w))
-salgrowth
-#salgrowth_w.fac
 
 #*************************************************************************************************************
 #                                        Create complete salary scale                                    #####                  
 #*************************************************************************************************************
 
 get_scale <- function(
-  #.salgrowth.hist   = salgrowth.hist,
-  #.salgrowth.assume = salgrowth.assume, 
-  .salgrowth = salgrowth
-  # .paramlist = paramlist,
-  # .Global_paramlist  = Global_paramlist
+   .salgrowth = salgrowth,
+   .paramlist = paramlist,
+   .Global_paramlist  = Global_paramlist
   ){
   
   # This function generates a complete salary scale for all combos of starting year, entry ages and ages relevant to
@@ -62,13 +103,11 @@ get_scale <- function(
   #   .Global_paramlist  = Global_paramlist
   
   
-  # assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
-  # assign_parmsList(.paramlist,        envir = environment())
+   assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
+   assign_parmsList(.paramlist,        envir = environment())
   # 
   
-  # sscale_hist   <- .salgrowth.hist   %>% filter(planname == .planname_sscale.hist) %>% select(-planname)
-  # sscale_assume <- .salgrowth.assume %>% filter(planname == .planname_sscale.assume) %>% select(-planname)
-  # Do not distinguish between sscale_hist and sscale_assume.
+
   
   .salgrowth <- .salgrowth %>% select(yos, salgrowth_w) # %>% filter(planname == planname_sscale) %>% select(-planname)
   
@@ -92,15 +131,15 @@ get_scale <- function(
   return(SS.all)
 }
 
-SS.all <- get_scale()
+# SS.all <- get_scale()
 
 #*************************************************************************************************************
 #                     Supplement the inital salary table with all starting salary                        #####                  
 #*************************************************************************************************************
 
-fill_startSal <- function(.actives         # = tailored_demoData$actives,
-                          # .paramlist        = paramlist,
-                          # .Global_paramlist = Global_paramlist
+fill_startSal <- function(.actives,         # = tailored_demoData$actives,
+                          .paramlist        = paramlist,
+                          .Global_paramlist = Global_paramlist
                           ){
   # This function generate a table of initial salary (year 1) which include all starting salary levels (age = ea)
   # If the starting salary is missing from the actives data frame, spline function is used to interpolate and/or 
@@ -112,11 +151,11 @@ fill_startSal <- function(.actives         # = tailored_demoData$actives,
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
-  # assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
-  # assign_parmsList(.paramlist,        envir = environment())  
-  # 
+   assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
+   assign_parmsList(.paramlist,        envir = environment())  
+   
   sal <- .actives %>% select(age, ea, salary)
-  #x <- sal %>% spread(age, salary)
+
   
   sal.start <- splong(sal, "ea", range_ea) %>% filter(age == ea) %>% select(-age) %>% splong("ea", range_ea) %>% mutate(age = ea)
   
@@ -135,10 +174,10 @@ fill_startSal <- function(.actives         # = tailored_demoData$actives,
   
 }
 
-init_sal <- fill_startSal(init_actives)
-init_sal  %>% filter(age == ea)
-
-init_sal
+# init_sal <- fill_startSal(init_actives)
+# init_sal  %>% filter(age == ea)
+# 
+# init_sal
 
 
 #*************************************************************************************************************
@@ -146,9 +185,9 @@ init_sal
 #*************************************************************************************************************
 
 get_salary <- function(.SS.all = SS.all,
-                       .init_sal =  init_sal
-                       # .paramlist = paramlist,
-                       # .Global_paramlist  = Global_paramlist
+                       .init_sal =  init_sal,
+                        .paramlist = paramlist,
+                        .Global_paramlist  = Global_paramlist
                        ){
   
   # Run the section below when developing new features.
@@ -158,8 +197,8 @@ get_salary <- function(.SS.all = SS.all,
   #   .Global_paramlist  = Global_paramlist
   
   
-  # assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
-  # assign_parmsList(.paramlist,        envir = environment())  
+   assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
+   assign_parmsList(.paramlist,        envir = environment())  
   
   #avgpay <- actives %>% filter(planname == .planname_actives) %>% select(age, ea, salary)
   
@@ -173,9 +212,35 @@ get_salary <- function(.SS.all = SS.all,
   return(salary)
 }
 
-salary <- get_salary() 
-salary %>% filter(start.year < 2015) %>% arrange(start.year, ea, age)
+# salary <- get_salary() 
+# salary %>% filter(start.year < 2015) %>% arrange(start.year, ea, age)
 
+
+
+#*************************************************************************************************************
+#                    The top level function for creating initial salary                                  #####                  
+#*************************************************************************************************************
+
+get_salary_proc <- function(Tier_select_ = Tier_select,  w.salgrwoth.method = "withInit"){ 
+
+# Inputs
+ # Tier_select
+ # salgrowth
+ # w.salgrwoth.method
+ # init_actives 
+ # paramlist
+ # Global_paramlist
+
+salgrowth.fn <- get_w.salgrowth(method = w.salgrwoth.method)
+
+SS.all.fn    <- get_scale(salgrowth.fn)
+
+init_sal.fn  <- fill_startSal(get_tierData(init_actives_all, Tier_select_))
+
+salary.fn <- get_salary(SS.all.fn, init_sal.fn) 
+
+return(salary.fn)
+}
 
 
 
@@ -184,16 +249,16 @@ salary %>% filter(start.year < 2015) %>% arrange(start.year, ea, age)
 #                               Import initial retirement benefit table from AV                          #####                  
 #*************************************************************************************************************
 get_benefit <- function(
-  .retirees #= tailored_demoData$retirees,
-  # .paramlist = paramlist,
-  # .Global_paramlist  = Global_paramlist,
+   .retirees, #= tailored_demoData$retirees,
+   .paramlist = paramlist,
+   .Global_paramlist  = Global_paramlist
   ){
   
   
   #.retirees <- retirees %>% select(age = age_cell, benefit) 
   
-  # assign_parmsList(.Global_paramlist, envir = environment())
-  # assign_parmsList(.paramlist,        envir = environment())  
+   assign_parmsList(.Global_paramlist, envir = environment())
+   assign_parmsList(.paramlist,        envir = environment())  
   
   avgben <- .retirees %>% select(age, benefit)  
   
@@ -209,7 +274,7 @@ get_benefit <- function(
   return(benefit)
 }
 
-benefit <- init_retirees %>% get_benefit()
+# benefit <- init_retirees %>% get_benefit()
 
 
 #*************************************************************************************************************
@@ -223,11 +288,11 @@ benefit <- init_retirees %>% get_benefit()
 #                               Generating inital population                                             #####                  
 #*************************************************************************************************************
 
-get_initPop <- function (.actives    = init_actives,         # = tailored_demoData$actives,
-                         .retirees   = init_retirees,
-                         .terminated = init_terminated  # = tailored_demoData$retirees
-                         # .paramlist        = paramlist,
-                         # .Global_paramlist = Global_paramlist
+get_initPop <- function (.actives,    #= init_actives,         
+                         .retirees,   #= init_retirees,
+                         .terminated, #= init_terminated,   
+                         .paramlist        = paramlist,
+                         .Global_paramlist = Global_paramlist
                          ){
   # Import and standardize the total number of actives and retirees.  
   
@@ -237,8 +302,8 @@ get_initPop <- function (.actives    = init_actives,         # = tailored_demoDa
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
-  # assign_parmsList(.Global_paramlist, envir = environment())
-  # assign_parmsList(.paramlist,        envir = environment())
+   assign_parmsList(.Global_paramlist, envir = environment())
+   assign_parmsList(.paramlist,        envir = environment())
   
   init_actives <- .actives %>% select(ea, age, nactives)
   init_actives <- expand.grid(ea = range_ea, age = range_age) %>% left_join(init_actives) %>% 
@@ -261,8 +326,8 @@ get_initPop <- function (.actives    = init_actives,         # = tailored_demoDa
 }
 
 
-# if(!dev_mode) 
-init_pop <- get_initPop()
+
+# init_pop <- get_initPop()
 
 # init_pop$actives
 # init_pop$retirees
@@ -276,8 +341,8 @@ init_pop <- get_initPop()
 get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
                              #.planname,         #= paramlist$planname_actives,
                              .range_ea = range_ea,         #= paramlist$range_ea,
-                             #.paramlist        = paramlist,
-                             #.Global_paramlist = Global_paramlist,
+                             .paramlist        = paramlist,
+                             .Global_paramlist = Global_paramlist,
                              simple = FALSE){
   # Simple imputation rule is applied under the following two circumstances:
   # 1. parameter "simple" is set to TRUE
@@ -289,8 +354,8 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist  
   
-  #assign_parmsList(.Global_paramlist, envir = environment())
-  #assign_parmsList(.paramlist,        envir = environment())   
+  assign_parmsList(.Global_paramlist, envir = environment())
+  assign_parmsList(.paramlist,        envir = environment())   
   
   nact <- .actives %>% select(age, ea, nactives)
   #nact %>% spread(age, nactives)
@@ -324,22 +389,54 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
   return(dist)
 }
 
-entrants_dist <- get_entrantsDist(init_actives)
-
-
-entrants_dist
-
-
-
+# entrants_dist <- get_entrantsDist(init_actives)
+# 
+# 
+# entrants_dist
 
 
 
+#*************************************************************************************************************
+#                                       Functions to create tier specific data                    #####                  
+#*************************************************************************************************************
+
+get_benefit_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+  #init_actives       <- get_tierData(init_actives_all, Tier_select_)
+  init_retirees      <- get_tierData(init_retirees_all, Tier_select_)
+  #init_beneficiaries <- get_tierData(init_beneficiaries_all, Tier_select_)
+  #init_terminated    <- init_terminated_all %>%  filter(grepl(Tier_select, planname, Tier_select_))
+  
+  init_retirees %>% get_benefit()
+  
+}
+
+
+get_initPop_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+  init_actives        <- get_tierData(init_actives_all, Tier_select_)
+  init_retirees       <- get_tierData(init_retirees_all, Tier_select_)
+  #init_beneficiaries <- get_tierData(init_beneficiaries_all, Tier_select_)
+  init_terminated     <- init_terminated_all %>%  filter(grepl(Tier_select, planname, Tier_select_))
+  
+  get_initPop(init_actives, init_retirees, init_terminated)
+  
+}
+
+get_entrantsDist_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+  init_actives       <- get_tierData(init_actives_all, Tier_select_)
+  get_entrantsDist(init_actives)
+}
 
 
 
+#*************************************************************************************************************
+#                                     Run functions  Functions                   #####                  
+#*************************************************************************************************************
 
+salary <- get_salary_proc()
 
-
+benefit  <- get_benefit_tier()
+init_pop <- get_initPop_tier()
+entrants_dist <- get_entrantsDist_tier()
 
 
 

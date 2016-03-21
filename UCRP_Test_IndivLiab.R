@@ -16,6 +16,31 @@
 
 
 
+get_indivLab <- function(.decrement.ucrp,
+                         .salary,
+                         .benefit,
+                         .bfactor,
+                         .init_terminated,
+                         # parameter for all tiers
+                         # mortality.post.ucrp,
+                         .paramlist = paramlist,
+                         .Global_paramlist = Global_paramlist){
+
+# Inputs
+ # decrement.ucrp
+ # salary
+ # benefit
+ # bfactor
+ # mortality.post.ucrp
+ # paramlist
+ # init.term
+ # Global_paramlist
+
+
+assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
+assign_parmsList(.paramlist,        envir = environment())
+
+
 #*************************************************************************************************************
 #                               1. Preparation                        #####                  
 #*************************************************************************************************************
@@ -34,10 +59,10 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
   mutate(year = start.year + age - ea) %>%  # year index in the simulation)
   arrange(start.year, ea, age) %>% 
-  left_join(salary) %>%
+  left_join(.salary) %>%
 # left_join(.benefit) %>% # must make sure the smallest age in the retirement benefit table is smaller than the single retirement age. (smaller than r.min with multiple retirement ages)
-  left_join(decrement.ucrp) %>% 
-  left_join(bfactor) %>%
+  left_join(.decrement.ucrp) %>% 
+  left_join(.bfactor) %>%
   left_join(mortality.post.ucrp %>% filter(age == age.r) %>% select(age, ax.r.W)) %>%
   group_by(start.year, ea) %>%
   
@@ -140,8 +165,8 @@ liab.la <- rbind(
     # retiree right in year 1. This assumption will cause the retirement age and yos of some of the retirees not compatible with the eligiblility rules,
     # but this is not an issue since the main goal is to generate the correct cashflow and liablity for the initial retirees/beneficiaries.
   expand.grid(ea         = r.min - 1,
-              age.r      = benefit$age, # This ensures that year of retirement is year 1.
-              start.year = init.year - (benefit$age - (r.min - 1)),
+              age.r      = .benefit$age, # This ensures that year of retirement is year 1.
+              start.year = init.year - (.benefit$age - (r.min - 1)),
               age        = range_age[range_age >= r.min]) %>%
     filter(age >= ea + 1 - start.year),
 
@@ -168,7 +193,7 @@ liab.la <- merge(liab.la,
                 arrange(start.year, ea, age.r) %>% 
                 as.data.frame %>% 
                 left_join(select(mortality.post.ucrp, age, age.r, ax.r.W.ret = ax.r.W)) %>%  #  load present value of annuity for all retirement ages, ax.r.W in liab.active cannot be used anymore. 
-                left_join(benefit)
+                left_join(.benefit)
 
 
 liab.la %<>% as.data.frame  %>% # filter(start.year == -41, ea == 21, age.retire == 65) %>%
@@ -289,14 +314,14 @@ liab.active %<>%
 #*************************************************************************************************************
 
 # # Calculate AL and benefit payment for initial vested terms.
-liab.term.init <- expand.grid(ea         = unique(init_terminated$ea),
-                              age.term   = unique(init_terminated$age.term),
-                              start.year = unique(init_terminated$start.year),
+liab.term.init <- expand.grid(ea         = unique(.init_terminated$ea),
+                              age.term   = unique(.init_terminated$age.term),
+                              start.year = unique(.init_terminated$start.year),
                               age = range_age) %>%
   filter(start.year + age - ea >= 1,
          age >= ea,
          age.term >= ea) %>%
-  left_join(init_terminated %>% select(ea, age.term, start.year, yos, fas = HAPC)) %>%
+  left_join(.init_terminated %>% select(ea, age.term, start.year, yos, fas = HAPC)) %>%
   left_join(select(liab.active, start.year, ea, age, bfactor, COLA.scale, pxRm, px_r.full_m)) %>%
   left_join(mortality.post.ucrp %>% filter(age.r == r.full) %>% select(age, ax.r.W.term = ax.r.W)) %>%
   group_by(start.year, ea, age.term) %>%
@@ -405,8 +430,13 @@ liab.active %<>%
 
 liab <- list(active = liab.active, la = liab.la, term = liab.term, liab.LSC = liab.LSC)
 
+}
 
 
-
+# liab <- get_indivLab(decrement.ucrp,
+#                      salary,
+#                      benefit,
+#                      bfactor,
+#                      init_terminated.t76)
 
 

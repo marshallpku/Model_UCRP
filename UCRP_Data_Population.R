@@ -381,23 +381,23 @@ fn_ret.ben <- function(sheet, path_ = path, fileName_ = fileName){
   df_out <- bind_rows(df_fillin, df_grouped)
 } 
 
-init_retirees      <- fn_ret.ben("Retirees_t76")
-init_beneficiaries <- fn_ret.ben("Beneficiaries_t76")
+init_retirees_all      <- fn_ret.ben("Retirees_t76")
+init_beneficiaries_all <- fn_ret.ben("Beneficiaries_t76")
 
 # Assume t13 and tm13 have no initial retirees or beneficiaries
 
-init_retirees_all <- bind_rows(init_retirees,
-                           init_retirees %>% mutate(nretirees = 0, benefit = 0,
+init_retirees_all <- bind_rows(init_retirees_all,
+                           init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
                                                     planname = gsub("t76", "t13", planname)),
-                           init_retirees %>% mutate(nretirees = 0, benefit = 0,
+                           init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
                                                     planname = gsub("t76", "tm13", planname))
                            )
   
 
-init_beneficiaries_all <- bind_rows(init_beneficiaries,
-                                init_beneficiaries %>% mutate(n.R0S1 = 0, benefit = 0,
+init_beneficiaries_all <- bind_rows(init_beneficiaries_all,
+                                    init_beneficiaries_all %>% mutate(n.R0S1 = 0, benefit = 0,
                                                               planname = gsub("t76", "t13", planname)),
-                                init_beneficiaries %>% mutate(n.R0S1 = 0, benefit = 0,
+                                    init_beneficiaries_all %>% mutate(n.R0S1 = 0, benefit = 0,
                                                               planname = gsub("t76", "tm13", planname))
                                )
 
@@ -463,7 +463,7 @@ terms_n <- read_excel(paste0(path, fileName), sheet = "Terms_N_t76", skip = 5) %
     yos = NULL
   )
 
-init_terminated <-  terms_n %>% 
+init_terminated_all <-  terms_n %>% 
   select(age = age_cell, yos = yos_cell, nterm) %>% 
   left_join(terms_HAPC %>% select(age = age_cell, yos = yos_cell, HAPC)) %>% 
   mutate(year = init.year,
@@ -480,12 +480,15 @@ init_terminated <-  terms_n %>%
 # assume t13 and tm13 have no initial terms
 
 
-init_terminated_all <- bind_rows(init_terminated,
-                                init_terminated %>% mutate(nterm = 0, HAPC = 0,
+init_terminated_all <- bind_rows(init_terminated_all,
+                                 init_terminated_all %>% mutate(nterm = 0, HAPC = 0,
                                                               planname = gsub("t76", "t13", planname)),
-                                init_terminated %>% mutate(nterm = 0, HAPC = 0,
+                                 init_terminated_all %>% mutate(nterm = 0, HAPC = 0,
                                                               planname = gsub("t76", "tm13", planname))
 )
+
+
+
 
 
 #*************************************************************************************************************

@@ -30,9 +30,11 @@ source("Functions.R")
 #*********************************************************************************************************
 # Run a single tier ####
 #*********************************************************************************************************
-Tier_select_RunControl <- "t76"
+Tier_select_RunControl <- "t13"
 
-source("UCRP_0_Master.R")
+source("UCRP_0_Master_allTiers.R")
+
+
 
 penSim_results %>% filter(sim == -1) %>% select(Tier,year, FR, MA, AL, AL.act,AL.act.laca, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
                                                 B, B.la, B.ca, B.LSC,B.v, nactives, nterms, PR, NC_PR) %>% data.frame

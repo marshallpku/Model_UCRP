@@ -2,22 +2,25 @@
 
 
 
-# get_AggLiab <- function(  .liab   = liab, 
-#                           .pop   = pop, 
-#                           .paramlist = paramlist,
-#                           .Global_paramlist = Global_paramlist){
-#   
+get_AggLiab <- function( .init_beneficiaries,
+                         .liab   = liab,
+                         .pop   = pop,
+
+                         .paramlist = paramlist,
+                         .Global_paramlist = Global_paramlist){
+
   # This function calculates total AL, NC and benefits.
   
   
   # Run the section below when developing new features.  
-     .liab   = liab
-     .pop   = pop
-  #   .paramlist = paramlist
-  #   .Global_paramlist = Global_paramlist
+     # .liab   = liab
+     # .pop    = pop
+     # .init_beneficiaries
+     # .paramlist = paramlist
+     # .Global_paramlist = Global_paramlist
   
-  # assign_parmsList(.Global_paramlist, envir = environment())
-  # assign_parmsList(.paramlist,        envir = environment())
+   assign_parmsList(.Global_paramlist, envir = environment())
+   assign_parmsList(.paramlist,        envir = environment())
   
   
   
@@ -158,11 +161,11 @@
    # age.r = 60, if age in 2015 is greater than or equal to 60.
    # age.r = age in 2015,  if age in 2015 is smaller than 60. 
 
-  init_beneficiaries %<>% mutate(init.age = age, age.r = ifelse(age >= 60, 60, age), year = init.year, age = NULL)
+  .init_beneficiaries %<>% mutate(init.age = age, age.r = ifelse(age >= 60, 60, age), year = init.year, age = NULL)
   
-  init.ca.agg <- expand.grid(init.age = unique(init_beneficiaries$init.age), age = r.min:max.age) %>%
+  init.ca.agg <- expand.grid(init.age = unique(.init_beneficiaries$init.age), age = r.min:max.age) %>%
                  filter(age >= init.age) %>% 
-                 left_join(init_beneficiaries) %>% 
+                 left_join(.init_beneficiaries) %>% 
                  group_by(init.age) %>% arrange(init.age, age) %>% 
                  mutate(age.r = age.r[age == init.age]) %>% 
                  left_join(select(mortality.post.ucrp, age, age.r, ax.r.W.ben = ax.r.W, pxm.post.W)) %>% 
@@ -233,9 +236,12 @@
               # ind_term    = if(paramlist$save.indiv) .liab$term    else "Not saved")
     
     #)
-#}
+}
 
- 
+
+
+
+
   
 
 # start_time_prep_loop <-  proc.time()
@@ -245,5 +251,4 @@
 # end_time_prep_loop <-  proc.time()
 # Time_prep_loop <- end_time_prep_loop - start_time_prep_loop
 
-  ca.agg
   

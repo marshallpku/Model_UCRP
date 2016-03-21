@@ -1,20 +1,20 @@
 # This script conducts the simulation of the finance of UCRP
 
-# run_sim <- function(      .i.r = i.r, 
-#                           .AggLiab   = AggLiab,
-#                           .paramlist = paramlist,
-#                           .Global_paramlist = Global_paramlist){
-#   
-#   # Run the section below when developing new features.  
-        .i.r = i.r 
-        .AggLiab   = AggLiab
-#   #     .paramlist = paramlist
-#   #     .Global_paramlist = Global_paramlist
-#   
-#   
-#   assign_parmsList(.Global_paramlist, envir = environment())
-#   assign_parmsList(.paramlist,        envir = environment())
-#   
+run_sim <- function(      .i.r = i.r,
+                          .AggLiab   = AggLiab,
+                          .paramlist = paramlist,
+                          .Global_paramlist = Global_paramlist){
+
+  # Run the section below when developing new features.
+  #     .i.r = i.r 
+  #     .AggLiab   = AggLiab
+  #     .paramlist = paramlist
+  #     .Global_paramlist = Global_paramlist
+
+
+  assign_parmsList(.Global_paramlist, envir = environment())
+  assign_parmsList(.paramlist,        envir = environment())
+
   
   #*************************************************************************************************************
   #                                     Defining variables in simulation ####
@@ -420,19 +420,19 @@
            PR.growth = ifelse(year > 1, 100 * (PR / lag(PR) - 1), NA)) %>%
     select(runname, sim, year, everything())
   
-#  return(penSim_results)
+  return(penSim_results)
   
-#}
+}
 
 
 # 
-# start_time_loop <- proc.time()
-# 
-# penSim_results <- run_sim()
-# 
-# end_time_loop <- proc.time()
-# Time_loop <- end_time_loop - start_time_loop 
-# Time_loop
+ start_time_loop <- proc.time()
+ 
+ penSim_results <- run_sim()
+ 
+ end_time_loop <- proc.time()
+ Time_loop <- end_time_loop - start_time_loop 
+ Time_loop
 
 
 
