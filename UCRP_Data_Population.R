@@ -490,6 +490,37 @@ init_terminated_all <- bind_rows(init_terminated_all,
 
 
 
+#*************************************************************************************************************
+#                                        Choose data for selected tier                                    #####                  
+#*************************************************************************************************************
+# Tier_select <- "t76"
+# Grouping <- "fillin"
+
+get_tierData <- function(df, tier = Tier_select, grouping = Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
+
+#Actives
+init_actives.t76       <- get_tierData(init_actives_all, "t76")
+init_retirees.t76      <- get_tierData(init_retirees_all, "t76")
+init_beneficiaries.t76 <- get_tierData(init_beneficiaries_all, "t76")
+init_terminated.t76    <- init_terminated_all %>%  filter(grepl("t76", planname))
+
+
+#Actives
+init_actives.t13       <- get_tierData(init_actives_all, "t13")
+init_retirees.t13      <- get_tierData(init_retirees_all, "t13")
+init_beneficiaries.t13 <- get_tierData(init_beneficiaries_all, "t13")
+init_terminated.t13    <- init_terminated_all %>%  filter(grepl("t13", planname))
+
+
+#Actives
+init_actives.tm13       <- get_tierData(init_actives_all, "tm13")
+init_retirees.tm13      <- get_tierData(init_retirees_all, "tm13")
+init_beneficiaries.tm13 <- get_tierData(init_beneficiaries_all, "tm13")
+init_terminated.tm13    <- init_terminated_all %>%  filter(grepl("tm13", planname))
+
+
+
+
 
 #*************************************************************************************************************
 #                                       Importing Summary data                                     #####                  

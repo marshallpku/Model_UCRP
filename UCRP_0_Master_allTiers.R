@@ -156,7 +156,7 @@ decrement.ucrp %<>% rename_("pxT" = paste0("pxT.", Tier_select),
 
 bfactor %<>% mutate(Tier = Tier_select,
                     bfactor = ifelse(Tier == "t13", bf.13, bf.non13)) %>% 
-  select(age, bfactor)
+             select(age, bfactor)
 
 
 
@@ -181,7 +181,7 @@ liab <- get_indivLab(decrement.ucrp,
                      salary,
                      benefit,
                      bfactor,
-                     init_terminated.t76)
+                     get(paste0("init_terminated.",paramlist$Tier_select)))
 
 
 #*********************************************************************************************************
@@ -196,7 +196,7 @@ liab.ca <- get_contingentAnnuity(decrement.ucrp)
 source("UCRP_Test_AggLiab.R")
 gc()
 
-AggLiab <- get_AggLiab(init_beneficiaries.t76) 
+AggLiab <- get_AggLiab(get(paste0("init_beneficiaries.", paramlist$Tier_select))) 
 
 
 
