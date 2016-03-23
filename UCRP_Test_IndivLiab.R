@@ -21,6 +21,7 @@ get_indivLab <- function(.decrement.ucrp,
                          .benefit,
                          .bfactor,
                          .init_terminated,
+                         .Tier_select,
                          # parameter for all tiers
                          # mortality.post.ucrp,
                          .paramlist = paramlist,
@@ -82,7 +83,7 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
     n  = pmin(yos, fasyears),                          # years used to compute fas
     fas= ifelse(yos < fasyears, Sx/n, (Sx - lag(Sx, fasyears))/n), # final average salary
     fas= ifelse(age == min(age), 0, fas),
-    fas= fas - 133 * 12 * (Tier_select == "t76"),      # benefit rule for different tiers
+    fas= fas - 133 * 12 * (.Tier_select == "t76"),      # benefit rule for different tiers
     COLA.scale = (1 + cola)^(age - min(age)),          # later we can specify other kinds of COLA scale. Note that these are NOT COLA factors. They are used to derive COLA factors for different retirement ages.
     Bx = pmin(fas, na2zero(bfactor * yos * fas)),      # accrued benefits, note that only Bx for ages above r.min are necessary under EAN.
     bx = lead(Bx) - Bx,                                # benefit accrual at age x
@@ -284,7 +285,7 @@ liab.active %<>%
          gx.v = ifelse(start.year >= 1989, gx.v, ifelse(age >= 62, 1, gx.v)),   # eligibility rule 2
          
          Bx.v = ifelse(ea < r.full, 
-                       gx.v * pmin(fas, na2zero(bfactor[age == r.full] * yos * fas))* (1 + ifelse(Tier_select == "t76", infl, 0))^(r.full - age), 
+                       gx.v * pmin(fas, na2zero(bfactor[age == r.full] * yos * fas))* (1 + ifelse(.Tier_select == "t76", infl, 0))^(r.full - age), 
                        0), # initial annuity amount when the vested term retires at age r.full. Accrued benefit is CPI adjustd for 1976 Tier.(AV2015 p53) 
 
          TCx.v   = ifelse(ea < r.full, Bx.v * qxt * lead(px_r.full_m) * v^(r.full - age) * ax.r.W[age == r.full], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.full.

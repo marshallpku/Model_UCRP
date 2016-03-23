@@ -542,9 +542,12 @@ summary_actives
 #                                        gender and faculty-staff ratios                                 #####                  
 #*************************************************************************************************************
 
-# Gender ratio for selected Tier
-ratio_gender <- summary_actives %>% filter(Tier == Tier_select) %>% group_by(Sex) %>% 
-  summarise(n = sum(n))
+
+# Gender ratio
+ratio_gender <- summary_actives %>% 
+                # filter(Tier == Tier_select) %>% 
+                group_by(Sex) %>% 
+                summarise(n = sum(n))
 
 pct.F.actives <- with(ratio_gender, n[Sex == "F"]/sum(n))
 pct.M.actives <- 1 - pct.F.actives

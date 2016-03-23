@@ -12,7 +12,7 @@
 #                        Create weighed salary scale for facutly and staff members                      #####                  
 #*************************************************************************************************************
 
-get_w.salgrowth <- function(method = c("simple","withInit"), Tier_ = Tier_select, salgrowth_ = salgrowth){
+get_w.salgrowth <- function(method = c("simple","withInit"), Tier_, salgrowth_ = salgrowth){
 # function also uses "pct.fac.actives.tXX"  
 
 # Get weighed salary scale
@@ -182,7 +182,7 @@ get_salary <- function(.SS.all = SS.all,
 #                    The top level function for creating initial salary                                  #####                  
 #*************************************************************************************************************
 
-get_salary_proc <- function(Tier_select_ = Tier_select,  w.salgrwoth.method = "withInit"){ 
+get_salary_proc <- function(Tier_select_,  w.salgrwoth.method = "withInit"){ 
 
 # Inputs
  # Tier_select
@@ -192,7 +192,7 @@ get_salary_proc <- function(Tier_select_ = Tier_select,  w.salgrwoth.method = "w
  # paramlist
  # Global_paramlist
 
-salgrowth.fn <- get_w.salgrowth(method = w.salgrwoth.method)
+salgrowth.fn <- get_w.salgrowth(method = w.salgrwoth.method, Tier_ = Tier_select_)
 
 SS.all.fn    <- get_scale(salgrowth.fn)
 
@@ -361,7 +361,7 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
 #                                       Functions to create tier specific data                    #####                  
 #*************************************************************************************************************
 
-get_benefit_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+get_benefit_tier <- function(Tier_select_, grouping_ = paramlist$Grouping){
   #init_actives       <- get_tierData(init_actives_all, Tier_select_)
   init_retirees      <- get_tierData(init_retirees_all, Tier_select_)
   #init_beneficiaries <- get_tierData(init_beneficiaries_all, Tier_select_)
@@ -372,17 +372,17 @@ get_benefit_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
 }
 
 
-get_initPop_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+get_initPop_tier <- function(Tier_select_, grouping_ =  paramlist$Grouping){
   init_actives        <- get_tierData(init_actives_all, Tier_select_)
   init_retirees       <- get_tierData(init_retirees_all, Tier_select_)
   #init_beneficiaries <- get_tierData(init_beneficiaries_all, Tier_select_)
-  init_terminated     <- init_terminated_all %>%  filter(grepl(Tier_select, planname, Tier_select_))
+  init_terminated     <- init_terminated_all %>%  filter(grepl(Tier_select_, planname))
   
   get_initPop(init_actives, init_retirees, init_terminated)
   
 }
 
-get_entrantsDist_tier <- function(Tier_select_ = Tier_select, grouping_ = Grouping){
+get_entrantsDist_tier <- function(Tier_select_, grouping_ =  paramlist$Grouping){
   init_actives       <- get_tierData(init_actives_all, Tier_select_)
   get_entrantsDist(init_actives)
 }
@@ -393,11 +393,11 @@ get_entrantsDist_tier <- function(Tier_select_ = Tier_select, grouping_ = Groupi
 #                                     Run functions  Functions                   #####                  
 #*************************************************************************************************************
 
-salary <- get_salary_proc()
-
-benefit  <- get_benefit_tier()
-init_pop <- get_initPop_tier()
-entrants_dist <- get_entrantsDist_tier()
+# salary <- get_salary_proc()
+# 
+# benefit  <- get_benefit_tier()
+# init_pop <- get_initPop_tier()
+# entrants_dist <- get_entrantsDist_tier()
 
 
 

@@ -1,7 +1,8 @@
 # This script conducts the simulation of the finance of UCRP
 
-run_sim <- function(      .i.r = i.r,
-                          .AggLiab   = AggLiab,
+run_sim <- function(      .Tier_select,
+                          .AggLiab,
+                          .i.r = i.r,
                           .paramlist = paramlist,
                           .Global_paramlist = Global_paramlist){
 
@@ -393,7 +394,7 @@ run_sim <- function(      .i.r = i.r,
   penSim_results <- bind_rows(penSim_results) %>% 
     mutate(sim     = rep(-1:nsim, each = nyear),
            runname = runname,
-           Tier    = Tier_select,
+           Tier    = .Tier_select,
            FR      = 100 * AA / exp(log(AL)),
            FR_MA   = 100 * MA / exp(log(AL)),
            UAAL_PR = 100 * UAAL / PR,
@@ -426,15 +427,15 @@ run_sim <- function(      .i.r = i.r,
 
 
 # 
- start_time_loop <- proc.time()
- 
- penSim_results <- run_sim()
- 
- end_time_loop <- proc.time()
- Time_loop <- end_time_loop - start_time_loop 
- Time_loop
-
-
-
+ # start_time_loop <- proc.time()
+ # 
+ # penSim_results <- run_sim()
+ # 
+ # end_time_loop <- proc.time()
+ # Time_loop <- end_time_loop - start_time_loop 
+ # Time_loop
+ # 
+ # 
+ # 
 
 

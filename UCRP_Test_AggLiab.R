@@ -3,8 +3,9 @@
 
 
 get_AggLiab <- function( .init_beneficiaries,
-                         .liab   = liab,
-                         .pop   = pop,
+                         .liab,
+                         .liab.ca,
+                         .pop,
 
                          .paramlist = paramlist,
                          .Global_paramlist = Global_paramlist){
@@ -111,7 +112,7 @@ get_AggLiab <- function( .init_beneficiaries,
   LSC.agg <- expand.grid(year = init.year:(init.year + nyear - 1), age.r = range_age.r, ea = range_ea) %>% 
     filter(age.r > ea) %>% 
     left_join(.liab$liab.LSC %>% select(year, ea, age.r = age, Bx.LSC, ALx.LSC)) %>% 
-    left_join(pop$LSC.ca %>% select(year, ea, age.r = age, new_LSC)) %>% 
+    left_join(.pop$LSC.ca %>% select(year, ea, age.r = age, new_LSC)) %>% 
     mutate(B.LSC.sum = new_LSC * Bx.LSC,
            ALx.LSC.sum = new_LSC * ALx.LSC) %>% 
     group_by(year) %>% 
@@ -192,9 +193,9 @@ get_AggLiab <- function( .init_beneficiaries,
                    age.r > ea,
                    year <= max(year.r)) %>%
 
-            left_join(liab$active %>% filter(age %in% range_age.r) %>% select(year.r = year, ea, age.r = age, Bx.laca)) %>% 
-            left_join(pop$LSC.ca  %>% select(year.r = year, ea, age.r = age, new_ca)) %>% 
-            left_join(liab.ca) %>% 
+            left_join(.liab$active %>% filter(age %in% range_age.r) %>% select(year.r = year, ea, age.r = age, Bx.laca)) %>% 
+            left_join(.pop$LSC.ca  %>% select(year.r = year, ea, age.r = age, new_ca)) %>% 
+            left_join(.liab.ca) %>% 
             mutate(new_ca = na2zero(new_ca),
                    liab.ca.sum = new_ca * Bx.laca * liab.ca.sum.1,
                    B.ca.sum    = new_ca * Bx.laca * B.ca.sum.1,
