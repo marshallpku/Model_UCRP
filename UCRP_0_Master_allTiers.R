@@ -4,10 +4,16 @@ gc()
 # 0. Parameters   ####
 #*********************************************************************************************************
 
+
+
+
+
+
+
 Global_paramlist <- list(
   
   init.year = 2015,
-  nyear     = 30,
+  nyear     = 70,
   nsim      = 5,
   ncore     = 4,
   
@@ -45,13 +51,14 @@ paramlist <- list(
   r.yos  = 5,
   v.yos  = 5, 
   
-  startingSal_growth = 0.04,
+  startingSal_growth = 0.038,
+  w.salgrowth.method =  "simple", # "simple" or "withInit"
   
   actuarial_method = "EAN.CP",
   
   
   wf_growth = 0,
-  no_entrance = "F",
+  no_entrance = "T",
   newEnt_byTier = c(t76 = 0, t13 = 0.65, tm13 = 0.35),
   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
   
@@ -69,8 +76,11 @@ paramlist <- list(
   ir.sd   = 0.12,
   
   
-  init_MA = "AL",
+  init_MA = "AL_pct",
+  MA_0_pct = 0.8069,
   init_EAA = "MA",
+  
+  
   smooth_method = "method1",
   salgrowth_amort = 0,
   amort_method = "cd",
@@ -116,16 +126,45 @@ source("UCRP_Data_Population.R")    # for all tiers
 source("UCRP_Model_Decrements.R")   # for all tiers
 
 
-## Modify initial data
 
-# Exclude selected type(s) of initial members
- # init_actives_all %<>% mutate(nactives = 0) 
- # init_retirees_all %<>% mutate(nretirees = 0)
- # init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
- # init_terminated_all %<>% mutate(nterm = 0)
+#**********************************************
+##   Modify initial data ####
+#**********************************************
 
-# Exclude the initial amortization basis when testing the program.
+## Exclude selected type(s) of initial members
+# init_actives_all %<>% mutate(nactives = 0) 
+init_retirees_all %<>% mutate(nretirees = 0)
+init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
+init_terminated_all %<>% mutate(nterm = 0)
+
+## Exclude the initial amortization basis when testing the program.
 init_amort_raw %<>% mutate(amount.annual = 0) 
+
+
+## Matching Segal cash flow
+
+# Matching Segal payroll 
+  # Payroll from model:
+    # Total: 11040551k
+    # t76:   9094102199
+    # t13:   1279359295 
+    # tm13:   667089761   
+  # Goal: 9659652k (from Segal projection and AV 2015) 
+  
+  # Method: Applying adjustment factors to initial population and initial salary.
+    # Adjustment factor for initial workforce, applied to all 3 tiers (NEXT STEP? apply only to t76 tier.)
+      # Payroll of none-lab seg / Payroll of all segs(unit： $k): 
+        f1 <- 9659652 / 9927833 # 0.972987  
+    # Adjustment factor for initial salary
+      # payroll from vii table / payroll from model (both for all segs, unit $k):
+        f2 <- 9927833 / 11040551 # 0.8992154
+    # Total adjustment factor is 
+      # f1 * f2 = 0.8749248
+
+  # Adjusting initial workforce and salary:
+    init_actives_all %<>% mutate(nactives = nactives * f1,
+                                 salary   = salary   * f2) 
+
 
 
 #*********************************************************************************************************
@@ -143,9 +182,9 @@ source("UCRP_Test_PlanData_Transform.R")
 
 # Create data for each tier
 
-salary.t76  <- get_salary_proc("t76")
-salary.t13  <- get_salary_proc("t13")
-salary.tm13 <- get_salary_proc("tm13")
+salary.t76  <- get_salary_proc("t76", w.salgrowth.method)
+salary.t13  <- get_salary_proc("t13", w.salgrowth.method)
+salary.tm13 <- get_salary_proc("tm13",w.salgrowth.method)
 
 benefit.t76  <- get_benefit_tier("t76")
 benefit.t13  <- get_benefit_tier("t13")
@@ -280,10 +319,10 @@ var_display <- c("Tier", "year", "FR", "MA", "AL",
                  "B", "B.la", "B.ca", "B.LSC", "B.v", 
                  "nactives", "nterms", "PR", "NC_PR")
 
-penSim_results.t76  %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
-penSim_results.t13  %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
-penSim_results.tm13 %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
-
+# penSim_results.t76  %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
+# penSim_results.t13  %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
+# penSim_results.tm13 %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
+# 
 
 
 
@@ -309,6 +348,88 @@ penSim_results_sumTiers %>% filter(sim == -1)
 
 write.xlsx2(penSim_results_sumTiers %>% filter(sim == -1), file = "Data/detective_constant_wf.xlsx", sheet = "Total")
 
+
+
+#*********************************************************************************************************
+# 8. Comparing model results with Segal open plan projections ####
+#*********************************************************************************************************
+
+# load Segal open plan projections
+fileName <- "Data/SegalProj_Data_2015.xlsx"
+
+results_sumTiers_SegalOpen <- read_excel(fileName, sheet = "Data", skip = 1) %>% filter(!is.na(year)) %>% 
+                mutate(year = year(year)) %>% 
+                right_join(penSim_results_sumTiers) %>% 
+                mutate(NC_PR.segal = 100 * NC_PR.segal,
+                       d_AL = 100 * (AL/AL.segal - 1),
+                       d_B  = 100 * (B/B.segal - 1),
+                       d_NC = 100 * (NC/NC.segal - 1),
+                       d_PR = 100 * (PR/PR.segal - 1),
+                       d_NC_PR = 100 * (NC_PR/NC_PR.segal - 1)) %>% 
+                select(year, 
+                       AL.segal, AL, d_AL, 
+                       B.segal, B, d_B,
+                       NC.segal, NC, d_NC, 
+                       NC_PR.segal, NC_PR, d_NC_PR, 
+                       PR.segal, PR, d_PR, 
+                       everything())
+
+kable(results_sumTiers_SegalOpen %>% filter(sim == -1) %>% select(year:d_PR, FR), digits = 2)
+
+df_SegalOpen_long <- df_SegalOpen %>% gather(variable, value, -year)
+
+
+save(results_sumTiers_SegalOpen, penSim_results.t76, penSim_results.t13, penSim_results.tm13, 
+     file = "Data/Results_SegalOpen.RData")
+write.xlsx2(results_sumTiers_SegalOpen %>% filter(sim == -1), file = "Data/Results_SegalOpen.xlsx")
+
+
+
+
+
+## Comparing AL
+
+plot_comp <- function(v.segal, v, d_v, ylim1, ylim2 = c(-20, 20), df = df_SegalOpen_long){
+  
+ g1 <-  df_SegalOpen_long %>% filter(variable %in% c(v.segal, v)) %>% 
+    ggplot(aes(x = year, y = value, color = variable)) + geom_point() + geom_line() + 
+    coord_cartesian(ylim = ylim1 )
+  
+ g2 <-   df_SegalOpen_long %>% filter(variable %in% c(d_v)) %>% 
+    ggplot(aes(x = year, y = value)) + geom_point() + geom_line()+ 
+    scale_y_continuous(breaks = seq(-100, 100, 5)) + 
+    coord_cartesian(ylim = ylim2 )
+
+ return(list(g1 = g1, g2 = g2))
+ 
+}
+
+plot_comp("AL.segal", "AL", "d_AL", c(0, 2e8))
+plot_comp("B.segal",  "B",  "d_B", c(0, 1.2e7))
+plot_comp("PR.segal", "PR",  "d_PR", c(0, 3e7))
+plot_comp("NC.segal", "NC",  "d_NC", c(0, 5e6))
+
+
+
+#*********************************************************************************************************
+# 9. Comparing model results with Segal closed plan projections ####
+#*********************************************************************************************************
+
+fileName <- "Data/SegalProj_PaymentProjection_2015_ClosedGroup.xlsx"
+results_sumTiers_ActivesOnly_SegalClosed <- read_excel(fileName, sheet = "Data", skip = 2) %>% filter(!is.na(year)) %>%
+                  mutate_each(funs(./1000), -year) %>% 
+                  right_join(penSim_results_sumTiers) %>% 
+                  mutate(d_B = 100 * (B  / B.actives.segal - 1)) %>% 
+                  select(year, B.actives.segal, B, d_B, everything())
+
+
+kable(results_sumTiers_ActivesOnly_SegalClosed[,1:10] %>% filter(sim == -1), digits = 2)
+
+save(results_sumTiers_ActivesOnly_SegalClosed, penSim_results.t76, penSim_results.t13, penSim_results.tm13,
+     file = "Data/Results_ActivesOnly_SegalClosed.RData")
+
+
+write.xlsx2(results_sumTiers_ActivesOnly_SegalClosed %>% filter(sim == -1), file = "Data/Results_ActivesOnly_SegalClosed.xlsx")
 
 
 

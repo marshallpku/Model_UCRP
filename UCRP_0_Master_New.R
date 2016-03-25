@@ -118,16 +118,38 @@ source("UCRP_Model_Decrements.R")   # for all tiers
 
 
 
-## Modify initial data
 
-# Exclude selected type(s) of initial members
+#**********************************************
+##   Modify initial data ####
+#**********************************************
+
+## Exclude selected type(s) of initial members
  # init_actives_all %<>% mutate(nactives = 0) 
  # init_retirees_all %<>% mutate(nretirees = 0)
  # init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
  # init_terminated_all %<>% mutate(nterm = 0)
 
-# Exclude the initial amortization basis when testing the program.
+## Exclude the initial amortization basis when testing the program.
 init_amort_raw %<>% mutate(amount.annual = 0) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #*********************************************************************************************************
@@ -220,8 +242,6 @@ AggLiab <- get_AggLiab(get(paste0("init_beneficiaries.", paramlist$Tier_select))
 #*********************************************************************************************************
 source("UCRP_Test_Sim.R")
 penSim_results <- run_sim(paramlist$Tier_select, AggLiab)
-
-
 
 
 penSim_results %>% filter(sim == -1) %>% select(Tier,year, FR, MA, AL, AL.act,AL.act.laca, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 

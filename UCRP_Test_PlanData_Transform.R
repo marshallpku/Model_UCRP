@@ -29,15 +29,16 @@ get_w.salgrowth <- function(method = c("simple","withInit"), Tier_, salgrowth_ =
     init.sal.stf <- 75000
     
     salgrowth_ %<>% mutate(sal.fac = init.sal.fac *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.fac))),
-                          sal.stf = init.sal.stf *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.stf))),
-                          sal.sum = sal.fac * salgrowth_w.stf + sal.stf *salgrowth_w.stf,
-                          salgrowth_w = lead(sal.sum)/sal.sum - 1,
-                          salgrowth_w = ifelse(yos == max(yos), salgrowth_w[yos == max(yos - 1)], salgrowth_w))
+                           sal.stf = init.sal.stf *  cumprod(ifelse(yos == 0, 1, 1 + lag(salgrowth.stf))),
+                           sal.sum = sal.fac * salgrowth_w.stf + sal.stf *salgrowth_w.stf,
+                           salgrowth_w = lead(sal.sum)/sal.sum - 1,
+                           salgrowth_w = ifelse(yos == max(yos), salgrowth_w[yos == max(yos - 1)], salgrowth_w))
      } 
  return(salgrowth_)
 }
   
-# salgrowth <- get_w.salgrowth("withInit")
+get_w.salgrowth("withInit", "t76")
+get_w.salgrowth("simple", "t76")
 
 
 #*************************************************************************************************************
@@ -182,7 +183,7 @@ get_salary <- function(.SS.all = SS.all,
 #                    The top level function for creating initial salary                                  #####                  
 #*************************************************************************************************************
 
-get_salary_proc <- function(Tier_select_,  w.salgrwoth.method = "withInit"){ 
+get_salary_proc <- function(Tier_select_,  w.salgrowth.method = "withInit"){ 
 
 # Inputs
  # Tier_select
@@ -192,7 +193,7 @@ get_salary_proc <- function(Tier_select_,  w.salgrwoth.method = "withInit"){
  # paramlist
  # Global_paramlist
 
-salgrowth.fn <- get_w.salgrowth(method = w.salgrwoth.method, Tier_ = Tier_select_)
+salgrowth.fn <- get_w.salgrowth(method = w.salgrowth.method, Tier_ = Tier_select_)
 
 SS.all.fn    <- get_scale(salgrowth.fn)
 
