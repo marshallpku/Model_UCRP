@@ -419,7 +419,16 @@ init_beneficiaries_all <- bind_rows(init_beneficiaries_all,
 #                                       Importing Data for initial terms                                     #####                  
 #*************************************************************************************************************
 
-terms_HAPC <- read_excel(paste0(path, fileName), sheet = "Terms_HAPC_t76", skip = 3) %>% rename(age = Age) %>% 
+# Thoughts on term data 
+ # We can only smooth the data along age, and calibrate the benefit payment by adjusting yos. 
+
+# Notes:
+ # assume all terms are terminated in init.year - 1.
+ # Currently excluding all cells with yos < 20. Should manage to bring them back in later versions. 
+
+
+
+terms_HAPC <- read_excel(paste0(path, fileName), sheet = "Terms_HAPC_t76_raw", skip = 3) %>% rename(age = Age) %>% 
   gather(yos, HAPC, -age) %>% 
   filter(yos != "non-Vested") %>% 
   mutate(
@@ -434,14 +443,15 @@ terms_HAPC <- read_excel(paste0(path, fileName), sheet = "Terms_HAPC_t76", skip 
     # age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
     # yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
     
-    age_cell = ifelse(is.na(age_u), age_l + 3, age_u),
-    yos_cell = yos_l,
+    age_cell = ifelse(is.na(age_u), age_l + 3, age_u - 2),
+    yos_cell = ifelse(yos_l == 5, 7, ifelse(yos_l == 11, 12, 21)),
+    # yos_cell = yos_l,
     
     age = NULL,
     yos = NULL
   )
 
-terms_n <- read_excel(paste0(path, fileName), sheet = "Terms_N_t76", skip = 5) %>% rename(age = Age) %>% 
+terms_n <- read_excel(paste0(path, fileName), sheet = "Terms_N_t76_raw", skip = 5) %>% rename(age = Age) %>% 
   gather(yos, nterm, -age) %>% 
   filter(yos != "non-Vested", yos != "All", age != "All") %>% 
   mutate(
@@ -456,8 +466,9 @@ terms_n <- read_excel(paste0(path, fileName), sheet = "Terms_N_t76", skip = 5) %
     # age_cell = ifelse(is.na(age_l), age_u - 3, age_l+3),
     # yos_cell = ifelse(is.na(yos_u), yos_l + 4, round((yos_l + yos_u)/2 )),
     
-    age_cell = ifelse(is.na(age_u), age_l + 3, age_u),
-    yos_cell = yos_l,
+    age_cell = ifelse(is.na(age_u), age_l + 3, age_u - 2),
+    yos_cell = ifelse(yos_l == 5, 7, ifelse(yos_l == 11, 12, 21)),
+    # yos_cell = yos_l,
     
     age = NULL,
     yos = NULL
@@ -629,4 +640,4 @@ pct.la.t13 <- pct.la.tm13 <- 1
 # pct.la.tm13
 
 
-
+decrement.ucrp %>% filter(ea == 20) %>% select(age, qxm.pre) %>% mutate(qxm.pre = qxm.pre * 100)

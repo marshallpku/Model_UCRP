@@ -1,14 +1,20 @@
 # This script conducts the simulation of the finance of UCRP
 
+
+
+
+
 run_sim <- function(      .Tier_select,
                           .AggLiab,
                           .i.r = i.r,
+                          .init_amort_raw = init_amort_raw, # amount.annual, year.remaining 
                           .paramlist = paramlist,
                           .Global_paramlist = Global_paramlist){
 
   # Run the section below when developing new features.
   #     .i.r = i.r 
   #     .AggLiab   = AggLiab
+  #     .init_amort_raw = init_amort_raw, 
   #     .paramlist = paramlist
   #     .Global_paramlist = Global_paramlist
 
@@ -247,7 +253,7 @@ run_sim <- function(      .Tier_select,
       if (j == 1){
         penSim$EUAAL[j] <- 0
         penSim$LG[j] <- with(penSim,  UAAL[j])  # This is the intial underfunding, rather than actuarial loss/gain if the plan is established at period 1. 
-        penSim$Amort_basis[j] <- with(penSim, LG[j])
+        penSim$Amort_basis[j] <- with(penSim, LG[j])  # This will not be used for UCRP since the amortization scheme for year 1 is provided by SC_amort.(from AV2015)
         
       } else {
         penSim$EUAAL[j] <- with(penSim, (UAAL[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
@@ -289,7 +295,8 @@ run_sim <- function(      .Tier_select,
       
       
       # Amortize LG(j)
-      
+       # The amortization basis for year 1 and all years before are provided in SC_amort. 
+       # Thus amortization payment streams are calculated starting from year 2. 
       if(j > 1){ 
       
       if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  

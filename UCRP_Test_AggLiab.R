@@ -2,11 +2,12 @@
 
 
 
-get_AggLiab <- function( .init_beneficiaries,
+get_AggLiab <- function( 
+                         .init_beneficiaries,
                          .liab,
                          .liab.ca,
                          .pop,
-
+                         
                          .paramlist = paramlist,
                          .Global_paramlist = Global_paramlist){
 
@@ -242,7 +243,53 @@ get_AggLiab <- function( .init_beneficiaries,
 
 
 
+#*************************************************************************************************************
+#                                     ## Summing up tier values to get total values of a plan   ####
+#*************************************************************************************************************
 
+get_AggLiab_sumTiers <- function(...){
+ # This function create list of aggregate values of a plan from list of tiers. 
+ # ... :  a series data list of tiers.   
+  
+ #  AggLiab.list <- list(AggLiab.t76, AggLiab.t13, AggLiab.tm13)
+  
+  AggLiab.list <- list(...)
+  
+  AggLiab.list %<>% lapply( function(List) lapply(List, as.data.frame)) 
+
+  nTiers <- length(AggLiab.list)
+  nTypes <- length(AggLiab.list[[1]])
+  TypeNames <- names(AggLiab.list[[1]])
+  
+  AggLiab.list2 <- vector("list", nTypes)
+  names(AggLiab.list2) <- TypeNames
+  
+  for (j in TypeNames){
+    AggLiab.list2[[j]] <- lapply(AggLiab.list, function(df){df[[j]]}) 
+  }
+  
+  sum_tiers <- function(df){ df %<>% group_by(year) %>% 
+      summarise_each(funs(sum))
+  } 
+  
+  AggLiab_sumTiers <- AggLiab.list2 %>% 
+                      lapply(bind_rows) %>% 
+                      lapply(sum_tiers) %>% 
+                      lapply(as.matrix)
+  
+  return(AggLiab_sumTiers)
+}
+  
+  
+  
+  
+
+
+
+
+
+
+  
   
 
 # start_time_prep_loop <-  proc.time()
@@ -252,4 +299,4 @@ get_AggLiab <- function( .init_beneficiaries,
 # end_time_prep_loop <-  proc.time()
 # Time_prep_loop <- end_time_prep_loop - start_time_prep_loop
 
-  
+

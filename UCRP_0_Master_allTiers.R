@@ -6,10 +6,6 @@ gc()
 
 
 
-
-
-
-
 Global_paramlist <- list(
   
   init.year = 2015,
@@ -58,7 +54,7 @@ paramlist <- list(
   
   
   wf_growth = 0,
-  no_entrance = "T",
+  no_entrance = "F",
   newEnt_byTier = c(t76 = 0, t13 = 0.65, tm13 = 0.35),
   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
   
@@ -108,8 +104,6 @@ assign_parmsList(paramlist,        envir = environment())
 devMode <- FALSE
 
 
-
-
 #*********************************************************************************************************
 # 1.1 Load data,  for all tiers ####
 #*********************************************************************************************************
@@ -127,18 +121,18 @@ source("UCRP_Model_Decrements.R")   # for all tiers
 
 
 
-#**********************************************
-##   Modify initial data ####
-#**********************************************
+#*****************************************************
+##   Calibration and Modification of initial data ####
+#*****************************************************
 
 ## Exclude selected type(s) of initial members
 # init_actives_all %<>% mutate(nactives = 0) 
-init_retirees_all %<>% mutate(nretirees = 0)
-init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
-init_terminated_all %<>% mutate(nterm = 0)
+# init_retirees_all %<>% mutate(nretirees = 0)
+# init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
+#init_terminated_all %<>% mutate(nterm = 0)
 
 ## Exclude the initial amortization basis when testing the program.
-init_amort_raw %<>% mutate(amount.annual = 0) 
+init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check only; will make initial UAAL not amortized. 
 
 
 ## Matching Segal cash flow
@@ -298,6 +292,9 @@ AggLiab.tm13 <- get_AggLiab(get(paste0("init_beneficiaries.", "tm13")),
                            pop$pop.tm13) 
 
 
+AggLiab.sumTiers <- get_AggLiab_sumTiers(AggLiab.t76, AggLiab.t13, AggLiab.tm13)
+
+
 
 #*********************************************************************************************************
 # 6.  Simulation ####
@@ -307,15 +304,15 @@ penSim_results.t76  <- run_sim("t76",  AggLiab.t76)
 penSim_results.t13  <- run_sim("t13",  AggLiab.t13)
 penSim_results.tm13 <- run_sim("tm13", AggLiab.tm13)
 
-
+penSim_results.sumTiers <- run_sim("sumTiers", AggLiab.sumTiers)
 
 
 #*********************************************************************************************************
 # 7.  Showing results ####
 #*********************************************************************************************************
-var_display <- c("Tier", "year", "FR", "MA", "AL", 
-                 "AL.act", "AL.act.laca", "AL.act.v", "AL.act.LSC", "AL.la", "AL.ca", "AL.term", 
-                 "PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
+var_display <- c("Tier", "sim", "year", "FR", "MA", "AL", 
+                 #"AL.act", "AL.act.laca", "AL.act.v", "AL.act.LSC", "AL.la", "AL.ca", "AL.term", 
+                 #"PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
                  "B", "B.la", "B.ca", "B.LSC", "B.v", 
                  "nactives", "nterms", "PR", "NC_PR")
 
@@ -323,6 +320,10 @@ var_display <- c("Tier", "year", "FR", "MA", "AL",
 # penSim_results.t13  %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
 # penSim_results.tm13 %>% filter(sim == -1) %>% select(one_of(var_display)) %>% data.frame
 # 
+
+kable(penSim_results.sumTiers %>% filter(sim == -1) %>% select(one_of(var_display)), digits = 2) 
+
+
 
 
 
@@ -430,6 +431,11 @@ save(results_sumTiers_ActivesOnly_SegalClosed, penSim_results.t76, penSim_result
 
 
 write.xlsx2(results_sumTiers_ActivesOnly_SegalClosed %>% filter(sim == -1), file = "Data/Results_ActivesOnly_SegalClosed.xlsx")
+
+
+
+
+
 
 
 
