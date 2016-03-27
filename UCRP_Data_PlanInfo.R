@@ -127,8 +127,6 @@ names(init_amort_raw) <-  c("Type", "year.est", "m.init", "amount.init", "amount
 init_amort_raw %<>% mutate(year.est = year(year.est)) %>% filter(Type != "Total")
 
 
-
-
 save(mortality.pre, mortality.post, mortality.disb, retrates, LSCrates, termrates, disbrates, bfactor, salgrowth, init_amort_raw, 
      file  = "Data/UCRP.PlanInfo.RData")
 

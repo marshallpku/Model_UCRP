@@ -11,11 +11,11 @@
 #                                Prepare mortality tables for UCRP                        #####                  
 #*************************************************************************************************************
 
-mortality.ucrp <- data.frame(age = range_age) %>% 
+mortality.ucrp <- data.frame(age = paramlist$range_age) %>% 
   left_join(mortality.post %>% filter(year == 2029) %>% select(age ,qxm.post.M, qxm.post.F)) %>% 
   left_join(mortality.pre  %>% filter(year == 2029) %>% select(age ,qxm.pre.M,  qxm.pre.F)) %>% 
   mutate(qxm.pre = qxm.pre.M  * pct.M.actives + qxm.pre.F  * pct.F.actives,   # mortality for actives
-         qxm.LSC = lag(qxm.post.M * pct.M.LSC + qxm.post.F * pct.F.LSC),      # mortality used for LSC, age is moved one year ahead according to AV.
+         qxm.LSC = lag(qxm.post.M * paramlist$pct.M.LSC + qxm.post.F * paramlist$pct.F.LSC),      # mortality used for LSC, age is moved one year ahead according to AV.
          qxm.LSC = ifelse(age == 50, lead(qxm.LSC),                           # Note the hard-coded "50", it is the starting post-retirement mortality in RP2014
                           ifelse(age == max(age), 1, qxm.LSC)),
          
@@ -28,7 +28,7 @@ mortality.ucrp <- data.frame(age = range_age) %>%
 
 
 # compute present values of life annuity(with cola) at each retirement age, using uni-sex mortality with age dependent weights
-mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max.age) %>% 
+mortality.post.ucrp <- expand.grid(age = paramlist$range_age, age.r = min(paramlist$range_age.r):Global_paramlist$max.age) %>% 
   left_join(mortality.ucrp) %>%
   filter(age >= age.r) %>% 
   group_by(age.r) %>%  
@@ -45,9 +45,9 @@ mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max
     qxm.post.W = qxm.post.M * w.M + qxm.post.F * w.F, # dynamically weighted mortality
     pxm.post.W = 1 - qxm.post.W,
     
-    COLA.scale = (1 + cola)^(row_number() - 1 ),
+    COLA.scale = (1 + paramlist$cola)^(row_number() - 1 ),
     B =  COLA.scale,
-    ax.r.W     =  get_tla(pxm.post.W, i, COLA.scale),
+    ax.r.W     =  get_tla(pxm.post.W, paramlist$i, COLA.scale),
     liab.la.W = B * ax.r.W    # "la" for life annuity
   )  %>% 
   select(age, qxm.post.W, pxm.post.W, ax.r.W)
@@ -57,8 +57,8 @@ mortality.post.ucrp <- expand.grid(age = range_age, age.r = min(range_age.r):max
  # before r.full: qxm.pre
  # after r.full: qxm.post.W with age.r ==  r.full
 
-mortality.ucrp %<>% left_join(mortality.post.ucrp %>% ungroup %>%  filter(age.r == r.full) %>% select(age, qxm.post.term = qxm.post.W)) %>% 
-                    mutate(qxm.term = ifelse(age < r.full, qxm.pre, qxm.post.term))
+mortality.ucrp %<>% left_join(mortality.post.ucrp %>% ungroup %>%  filter(age.r == paramlist$r.full) %>% select(age, qxm.post.term = qxm.post.W)) %>% 
+                    mutate(qxm.term = ifelse(age < paramlist$r.full, qxm.pre, qxm.post.term))
 
 
 
@@ -93,7 +93,7 @@ retrates.ucrp  <- retrates %>% mutate(qxr.t76  = qxr.t76.fac * pct.fac.actives.t
 #*************************************************************************************************************
 
 # Create decrement table and calculate probability of survival
-decrement.ucrp <- expand.grid(age = range_age, ea = range_ea) %>% 
+decrement.ucrp <- expand.grid(age = paramlist$range_age, ea = paramlist$range_ea) %>% 
   mutate(yos = age - ea) %>% 
   filter(age >= ea) %>% 
   left_join(mortality.ucrp) %>%                  # mortality 
@@ -112,9 +112,9 @@ decrement.ucrp <- expand.grid(age = range_age, ea = range_ea) %>%
 ## Imposing restrictions 
 decrement.ucrp %<>% mutate(
   # 1. Coerce termination rates to 0 when eligible for early retirement or reaching than r.full(when we assume terms start to receive benefits). 
-  qxt.t76  = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.t76),
-  qxt.t13  = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.t13),
-  qxt.tm13 = ifelse((age >= r.min & (age - ea) >= r.yos) | age >= r.full, 0, qxt.tm13),
+  qxt.t76  = ifelse((age >= paramlist$r.min & (age - ea) >= paramlist$r.yos) | age >= paramlist$r.full, 0, qxt.t76),
+  qxt.t13  = ifelse((age >= paramlist$r.min & (age - ea) >= paramlist$r.yos) | age >= paramlist$r.full, 0, qxt.t13),
+  qxt.tm13 = ifelse((age >= paramlist$r.min & (age - ea) >= paramlist$r.yos) | age >= paramlist$r.full, 0, qxt.tm13),
   
   
   #qxt = ifelse(age >= r.min | age >= r.full, 0, qxt),
@@ -123,21 +123,21 @@ decrement.ucrp %<>% mutate(
   #   qxr = ifelse(age == r.max, 1, 
   #                ifelse(age %in% r.min:(r.max - 1), qxr, 0))
   #   
-  qxr.t76 = ifelse(age == r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
-               ifelse(yos < r.yos, 0, 
-                      ifelse(age %in% 50:(r.max - 1), qxr.t76, 0)
+  qxr.t76 = ifelse(age == paramlist$r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
+               ifelse(yos < paramlist$r.yos, 0, 
+                      ifelse(age %in% 50:(paramlist$r.max - 1), qxr.t76, 0)
                       )
                    ),
   
-  qxr.t13 = ifelse(age == r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
-                   ifelse(yos < r.yos, 0, 
-                          ifelse(age %in% 55:(r.max - 1), qxr.t13, 0)
+  qxr.t13 = ifelse(age == paramlist$r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
+                   ifelse(yos < paramlist$r.yos, 0, 
+                          ifelse(age %in% 55:(paramlist$r.max - 1), qxr.t13, 0)
                    )
   ),
 
-  qxr.tm13 = ifelse(age == r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
-                   ifelse(yos < r.yos, 0, 
-                          ifelse(age %in% 50:(r.max - 1), qxr.tm13, 0)
+  qxr.tm13 = ifelse(age == paramlist$r.max, 1,  # Assume retirement rates applies only when they are applicable (according to Bob North.)
+                   ifelse(yos < paramlist$r.yos, 0, 
+                          ifelse(age %in% 50:(paramlist$r.max - 1), qxr.tm13, 0)
                    )
   ) 
   ) 
@@ -155,15 +155,15 @@ decrement.ucrp %<>% mutate(
 decrement.ucrp %<>% group_by(ea) %>%  
   mutate(
          # 1976 Tier: LSC, life annuity and contingent annuity
-         qxr.t76 = ifelse(age == r.max - 1,
+         qxr.t76 = ifelse(age == paramlist$r.max - 1,
                             1 - qxt.t76 - qxm.pre - qxd, 
                             lead(qxr.t76)*(1 - qxt.t76 - qxm.pre - qxd)),                         # Total probability of retirement
-         qxr.LSC.t76     = ifelse(age == r.max, 0 , qxr.t76 * lead(qxLSC.act)),               # Prob of opting for LSC
-         qxr.la.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.la.t76),  # Prob of opting for life annuity
-         qxr.ca.t76      = ifelse(age == r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.ca.t76),  # Prob of opting for contingent annuity
+         qxr.LSC.t76     = ifelse(age == paramlist$r.max, 0 , qxr.t76 * lead(qxLSC.act)),               # Prob of opting for LSC
+         qxr.la.t76      = ifelse(age == paramlist$r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.la.t76),  # Prob of opting for life annuity
+         qxr.ca.t76      = ifelse(age == paramlist$r.max, 0 , qxr.t76 * lead(1 - qxLSC.act) * pct.ca.t76),  # Prob of opting for contingent annuity
 
          # 2013 Tier: life annuity only  
-         qxr.t13 = ifelse(age == r.max - 1,
+         qxr.t13 = ifelse(age == paramlist$r.max - 1,
                             1 - qxt.t13 - qxm.pre - qxd, 
                             lead(qxr.t13)*(1 - qxt.t13 - qxm.pre - qxd)),                         # Total probability of retirement
          qxr.LSC.t13     = 0,                                                                 # Prob of opting for LSC
@@ -171,11 +171,11 @@ decrement.ucrp %<>% group_by(ea) %>%
          qxr.ca.t13      = 0,                                                                 # Prob of opting for contingent annuity
 
          # modified 2013 Tier: LSC and life annuity.   
-         qxr.tm13        = ifelse(age == r.max - 1,
+         qxr.tm13        = ifelse(age == paramlist$r.max - 1,
                             1 - qxt.tm13 - qxm.pre - qxd, 
                             lead(qxr.tm13)*(1 - qxt.tm13 - qxm.pre - qxd)),                   # Total probability of retirement
-         qxr.LSC.tm13     = ifelse(age == r.max, 0 , qxr.tm13 * lead(qxLSC.act)),           # Prob of opting for LSC                                                        # Prob of opting for LSC
-         qxr.la.tm13      = ifelse(age == r.max, 0 , qxr.tm13 * lead(1 - qxLSC.act)),         # Prob of opting for life annuity                                                 # Prob of opting for life annuity
+         qxr.LSC.tm13     = ifelse(age == paramlist$r.max, 0 , qxr.tm13 * lead(qxLSC.act)),           # Prob of opting for LSC                                                        # Prob of opting for LSC
+         qxr.la.tm13      = ifelse(age == paramlist$r.max, 0 , qxr.tm13 * lead(1 - qxLSC.act)),         # Prob of opting for life annuity                                                 # Prob of opting for life annuity
          qxr.ca.tm13      = 0)                                                                # Prob of opting for contingent annuity
          
 
@@ -198,8 +198,8 @@ decrement.ucrp %<>%
           pxT.t13     = 1 - qxt.t13 - qxd - qxm.pre - qxr.t13,  
           pxT.tm13    = 1 - qxt.tm13 - qxd - qxm.pre - qxr.tm13,  
           
-          pxRm        = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxm.pre))), # prob of surviving up to r.max, mortality only
-          px_r.full_m = order_by(-age, cumprod(ifelse(age >= r.full, 1, pxm.pre)))
+          pxRm        = order_by(-age, cumprod(ifelse(age >= paramlist$r.max, 1, pxm.pre))), # prob of surviving up to r.max, mortality only
+          px_r.full_m = order_by(-age, cumprod(ifelse(age >= paramlist$r.full, 1, pxm.pre)))
           
           # px65T = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxT))), # prob of surviving up to r.max, composite rate
           # p65xm = cumprod(ifelse(age <= r.max, 1, lag(pxm))))            # prob of surviving to x from r.max, mortality only

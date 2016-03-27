@@ -1,7 +1,7 @@
 # This module create investment return series. 
 
-# gen_returns <- function( #.paramlist = paramlist,
-#   #.Global_paramlist = Global_paramlist,
+gen_returns <- function( .paramlist = paramlist,
+                         .Global_paramlist = Global_paramlist){
 #   
 #   nyear   = Global_paramlist$nyear,
 #   nsim    = Global_paramlist$nsim,
@@ -9,8 +9,8 @@
 #   ir.sd   = paramlist$ir.sd,
 #   seed    = 1234) {
   
-  #assign_parmsList(.Global_paramlist, envir = environment())
-  #assign_parmsList(.paramlist,        envir = environment())
+  assign_parmsList(.Global_paramlist, envir = environment())
+  assign_parmsList(.paramlist,        envir = environment())
   
   
   set.seed(seed)
@@ -71,4 +71,6 @@ i.r <- cbind(rep(i, nyear),                  # Check consistency
              i.r)
 colnames(i.r) <- c(-1:nsim)
 
-
+return(i.r)
+}
+gen_returns()

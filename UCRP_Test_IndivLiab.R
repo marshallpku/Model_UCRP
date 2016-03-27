@@ -28,14 +28,14 @@ get_indivLab <- function(.decrement.ucrp,
                          .Global_paramlist = Global_paramlist){
 
 # Inputs
- # decrement.ucrp
- # salary
- # benefit
- # bfactor
- # mortality.post.ucrp
- # paramlist
- # init.term
- # Global_paramlist
+ # .decrement.ucrp =  decrement.ucrp.t76
+ # .salary = salary.t76
+ # .benefit = benefit.t76
+ # .bfactor = bfactor.t76
+ # .init_terminated = get(paste0("init_terminated.","t76"))
+ # .Tier_select = "t76"
+ # .paramlist =  paramlist
+ # .Global_paramlist =  Global_paramlist
 
 
 assign_parmsList(.Global_paramlist, envir = environment()) # environment() returns the local environment of the function.
@@ -315,6 +315,8 @@ liab.active %<>%
 #*************************************************************************************************************
 
 # # Calculate AL and benefit payment for initial vested terms.
+
+
 liab.term.init <- expand.grid(ea         = unique(.init_terminated$ea),
                               age.term   = unique(.init_terminated$age.term),
                               start.year = unique(.init_terminated$start.year),
@@ -330,6 +332,7 @@ liab.term.init <- expand.grid(ea         = unique(.init_terminated$ea),
   mutate(
     year = start.year + age - ea,
     age.ben  = ifelse(age[year == init.year] > r.full, age[year == init.year], r.full), # Age at which term starts to receive benefit.
+
     year.term = year[age == age.term],
 
     Bx.v = pmin(fas, na2zero(bfactor[age == ifelse(age.ben <= r.full, r.full, age[age == age.ben])] * yos * fas))* (1 + infl)^(r.full - age), #

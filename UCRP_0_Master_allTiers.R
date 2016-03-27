@@ -9,7 +9,7 @@ gc()
 Global_paramlist <- list(
   
   init.year = 2015,
-  nyear     = 70,
+  nyear     = 40,
   nsim      = 5,
   ncore     = 4,
   
@@ -96,9 +96,9 @@ paramlist$v     = with(paramlist, 1/(1 + i))
 paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
 
 
-# Assign parameters to the global environment
-assign_parmsList(Global_paramlist, envir = environment())
-assign_parmsList(paramlist,        envir = environment())  
+# # Assign parameters to the global environment
+# assign_parmsList(Global_paramlist, envir = environment())
+# assign_parmsList(paramlist,        envir = environment())  
 
 
 devMode <- FALSE
@@ -109,15 +109,16 @@ devMode <- FALSE
 #*********************************************************************************************************
 
 # Plan information
-#source("UCRP_Data_RP2014.R")
-#source("UCRP_Data_PlanInfo.R")
+# source("UCRP_Data_RP2014.R")   # not dependent on parameter lists
+# source("UCRP_Data_PlanInfo.R") # not dependent on parameter lists
 load("./Data/UCRP.PlanInfo.RData")  # for all tiers
 
+
 # Initial population
-source("UCRP_Data_Population.R")    # for all tiers
+source("UCRP_Data_Population.R")    # for all tiers; uses init.year, Grouping, pct.ca.F, pct.ca.M in paramlist
 
 # Decrement tables
-source("UCRP_Model_Decrements.R")   # for all tiers
+source("UCRP_Model_Decrements.R")   # for all tiers; range_age, range_ea age_range.r, pct.M.LSC, max.age, cola, i, r.full, r.max, r.min, r.yos 
 
 
 
@@ -129,7 +130,11 @@ source("UCRP_Model_Decrements.R")   # for all tiers
 # init_actives_all %<>% mutate(nactives = 0) 
 # init_retirees_all %<>% mutate(nretirees = 0)
 # init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
-#init_terminated_all %<>% mutate(nterm = 0)
+# init_terminated_all %<>% mutate(nterm = 0)
+
+
+init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
+                                ea >= Global_paramlist$min.ea)
 
 ## Exclude the initial amortization basis when testing the program.
 init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check only; will make initial UAAL not amortized. 
@@ -165,7 +170,9 @@ init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check o
 # 1.2  Actual investment return, for all tiers ####
 #*********************************************************************************************************
 source("UCRP_Test_InvReturns.R")
-i.r[, 3] <-  c(ir.mean, ir.mean/2, rep(ir.mean, nyear - 2))
+i.r <- gen_returns()
+    
+i.r[, 3] <-  c(paramlist$ir.mean, paramlist$ir.mean/2, rep(paramlist$ir.mean, Global_paramlist$nyear - 2))
 
 
 
@@ -176,9 +183,9 @@ source("UCRP_Test_PlanData_Transform.R")
 
 # Create data for each tier
 
-salary.t76  <- get_salary_proc("t76", w.salgrowth.method)
-salary.t13  <- get_salary_proc("t13", w.salgrowth.method)
-salary.tm13 <- get_salary_proc("tm13",w.salgrowth.method)
+salary.t76  <- get_salary_proc("t76", paramlist$w.salgrowth.method)
+salary.t13  <- get_salary_proc("t13", paramlist$w.salgrowth.method)
+salary.tm13 <- get_salary_proc("tm13",paramlist$w.salgrowth.method)
 
 benefit.t76  <- get_benefit_tier("t76")
 benefit.t13  <- get_benefit_tier("t13")
@@ -300,9 +307,9 @@ AggLiab.sumTiers <- get_AggLiab_sumTiers(AggLiab.t76, AggLiab.t13, AggLiab.tm13)
 # 6.  Simulation ####
 #*********************************************************************************************************
 source("UCRP_Test_Sim.R")
-penSim_results.t76  <- run_sim("t76",  AggLiab.t76)
-penSim_results.t13  <- run_sim("t13",  AggLiab.t13)
-penSim_results.tm13 <- run_sim("tm13", AggLiab.tm13)
+# penSim_results.t76  <- run_sim("t76",  AggLiab.t76)
+# penSim_results.t13  <- run_sim("t13",  AggLiab.t13)
+# penSim_results.tm13 <- run_sim("tm13", AggLiab.tm13)
 
 penSim_results.sumTiers <- run_sim("sumTiers", AggLiab.sumTiers)
 

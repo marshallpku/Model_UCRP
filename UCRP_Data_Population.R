@@ -477,13 +477,15 @@ terms_n <- read_excel(paste0(path, fileName), sheet = "Terms_N_t76_raw", skip = 
 init_terminated_all <-  terms_n %>% 
   select(age = age_cell, yos = yos_cell, nterm) %>% 
   left_join(terms_HAPC %>% select(age = age_cell, yos = yos_cell, HAPC)) %>% 
-  mutate(year = init.year,
+  mutate(year = Global_paramlist$init.year,
          age.term = age - 1,   # assume all terms are terminated in init.year - 1.
          ea   = age.term - yos,
          start.year = year - (age - ea),
-         planname = "Terms_t76_grouped") %>% 
-  filter(age.term >= min.ea,
-         ea >= min.ea)
+         planname = "Terms_t76_grouped") 
+
+         # %>% 
+         # filter(age.term >= Global_paramlist$min.ea,
+         #        ea >= Global_paramlist$min.ea)
 
    # assme age.term is age - 1, ea must be greater than 20
 
@@ -507,7 +509,7 @@ init_terminated_all <- bind_rows(init_terminated_all,
 # Tier_select <- "t76"
 # Grouping <- "fillin"
 
-get_tierData <- function(df, tier = Tier_select, grouping = Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
+get_tierData <- function(df, tier = Tier_select, grouping = paramlist$Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
 
 #Actives
 init_actives.t76       <- get_tierData(init_actives_all, "t76")
@@ -597,7 +599,7 @@ pct.stf.actives.tm13 <- 1 - pct.fac.actives.tm13
 
 
 # Choice between life annuity and contingent annuity
-pct.ca.t76 <- pct.ca.F * pct.F.actives + pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
+pct.ca.t76 <- paramlist$pct.ca.F * pct.F.actives + paramlist$pct.ca.M * pct.M.actives # For those opting for annuit rather than LSC, the % of choosing contingent annuity (0% for 2013 and modified 2013 tier)
 pct.la.t76 <- 1 - pct.ca.t76                                          # For those opting for annuit rather than LSC, the % of choosing life annuity (100% for 2013 and modified 2013 tier)
 
 pct.ca.t13 <- pct.ca.tm13 <- 0
@@ -640,4 +642,4 @@ pct.la.t13 <- pct.la.tm13 <- 1
 # pct.la.tm13
 
 
-decrement.ucrp %>% filter(ea == 20) %>% select(age, qxm.pre) %>% mutate(qxm.pre = qxm.pre * 100)
+# decrement.ucrp %>% filter(ea == 20) %>% select(age, qxm.pre) %>% mutate(qxm.pre = qxm.pre * 100)
