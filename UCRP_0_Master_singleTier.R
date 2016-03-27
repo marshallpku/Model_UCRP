@@ -1,113 +1,5 @@
 
 gc()
-#*********************************************************************************************************
-# 0. Parameters   ####
-#*********************************************************************************************************
-
-# Global_paramlist <- list(
-#   
-#   init.year = 2015,
-#   nyear     = 40,
-#   nsim      = 5,
-#   ncore     = 4,
-#   
-#   min.ea    = 20,
-#   max.ea    = 74, 
-#   
-#   min.age   = 20,
-#   max.age   = 120 
-# )
-# 
-# paramlist <- list(
-#   
-#   runname = "UCRP",
-#   Tier_select = Tier_select_RunControl, 
-#   Grouping    = "fillin",
-#   useAVamort  = FALSE, 
-#   useExtFund  = FALSE, 
-#   
-#   
-#   r.min  = 50,
-#   r.max  = 75, 
-#   
-#   
-#   
-#   fasyears = 3,
-#   cola     = 0.02,
-#   i = 0.0725,
-#   
-#   infl = 0.03,
-#   prod = 0.01,
-#   s.year = 10,
-#   
-#   m.UAAL0 = 20,
-#   m.UAAL1 = 20,
-#   m.surplus0 = 30,
-#   m.surplus1 = 15,
-#   
-#   r.full = 60, # age at which vested terms are assumed to retire. 
-#   r.yos  = 5,
-#   v.yos  = 5, 
-#   
-#   startingSal_growth = 0.04,
-#   w.salgrowth.method =  "simple", # "simple" or "withInit"
-#   
-#   actuarial_method = "EAN.CP",
-#   
-#   
-#   wf_growth = 0,
-#   no_entrance = "T",
-#   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
-#   
-#   pct.F.LSC = 0.6, # assumed proporotion of females, for the calculation of LSC amount 
-#   
-#   
-#   pct.ca.F =  0.8, # proportion of females who opt for ca upon retirement
-#   pct.ca.M =  0.6,
-#   
-#   factor.ca = 0.25,
-#   
-#   # Investment returns
-#   seed = 1234,
-#   ir.mean = 0.0725,
-#   ir.sd   = 0.12,
-#   
-#   
-#   #init_MA = "AL",
-#   #init_EAA = "MA",
-#   
-#   init_MA = "AL_pct",
-#   MA_0_pct = 0.8069,
-#   init_EAA = "MA",
-#   
-#   smooth_method = "method1",
-#   salgrowth_amort = 0,
-#   amort_method = "cd",
-#   amort_type = "closed",
-#   nonNegC = "FALSE",
-#   EEC_fixed = "TRUE",
-#   ConPolicy = "ADC",
-#   EEC_rate = 0.05
-# )
-# 
-# # Parameters derived from the parameter list above. 
-# paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
-# paramlist$range_age = with(Global_paramlist, min.age:max.age)
-# paramlist$range_age.r = with(paramlist, r.min:r.max)
-# paramlist$m.max = with(paramlist, max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
-# paramlist$v     = with(paramlist, 1/(1 + i))
-# paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
-# 
-# 
-# # Assign parameters to the global environment
-# # assign_parmsList(Global_paramlist, envir = environment())
-# # assign_parmsList(paramlist,        envir = environment())  
-# 
-# 
-# devMode <- FALSE
-# 
-
-
 
 #*********************************************************************************************************
 # 1.1 Load data,  for all tiers ####
@@ -136,6 +28,12 @@ source("UCRP_Data_Decrements.R")   # for all tiers
  # init_retirees_all %<>% mutate(nretirees = 0)
  # init_beneficiaries_all %<>% mutate(n.R0S1 = 0)
  # init_terminated_all %<>% mutate(nterm = 0)
+
+
+## Exclude initial terms with ea < 20: Data_population, line 504 
+ # init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
+ #                                 ea >= Global_paramlist$min.ea)
+
 
 ## Exclude the initial amortization basis when testing the program.
 if(!paramlist$useAVamort)  init_amort_raw %<>% mutate(amount.annual = 0) 
