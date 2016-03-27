@@ -264,7 +264,7 @@ fillin.actives.spreadyos.splineage <- function(lactives) {
            pay.adj=sum(salary.final * nactives),
            ea=age - yos
            #ea.cell=eacuts$stub[findInterval(ea, eacuts$lb)]
-           )
+    )
   
   return(adf.x3)
 }
@@ -311,13 +311,13 @@ fillin.retirees <- function(list_data) {
            totben=N * V)
   
   rdf.fillin <- guessdf2 %>% mutate(planname=planname) %>%
-                select(planname, age.cell, age, N, V) %>%
-                ungroup
-                #plyr::rename(c("N" = list_data$varNames["name_N"])))
-
+    select(planname, age.cell, age, N, V) %>%
+    ungroup
+  #plyr::rename(c("N" = list_data$varNames["name_N"])))
+  
   names(rdf.fillin)[names(rdf.fillin) == "N"] <- name_N
   names(rdf.fillin)[names(rdf.fillin) == "V"] <- name_V
-
+  
   return(rdf.fillin)
 }
 
@@ -337,14 +337,14 @@ fn_actives <- function(sheet, path_ = path, fileName_ = fileName){
   lactives$actives.yos %<>% filter(age - yos >= 20) # Will drop a small number of members, need to figure out how to add memebers with ea<20 back   
   
   actives_grouped <- lactives$actives.yos %>% select(planname, age, yos, nactives, salary) %>% 
-                     mutate(planname = paste0(planname, "_grouped"),
-                            ea = age - yos)
+    mutate(planname = paste0(planname, "_grouped"),
+           ea = age - yos)
   
   actives_fillin  <- fillin.actives.spreadyos.splineage(lactives) %>% ungroup %>% 
-                     select(planname, age, yos, ea,
-                     #age.cell, yos.cell, 
-                     nactives, salary=salary.final) %>% 
-                     mutate(planname = paste0(planname, "_fillin"))
+    select(planname, age, yos, ea,
+           #age.cell, yos.cell, 
+           nactives, salary=salary.final) %>% 
+    mutate(planname = paste0(planname, "_fillin"))
   
   actives_out <- bind_rows(actives_fillin, actives_grouped)
 } 
@@ -376,7 +376,7 @@ fn_ret.ben <- function(sheet, path_ = path, fileName_ = fileName){
   names(df_grouped)[names(df_grouped) == "V"] <- ldata$varNames["name_V"]
   
   df_fillin  <- fillin.retirees(ldata) %>% ungroup %>% select(-age.cell) %>%
-                mutate(planname = paste0(planname, "_fillin"))
+    mutate(planname = paste0(planname, "_fillin"))
   
   df_out <- bind_rows(df_fillin, df_grouped)
 } 
@@ -387,19 +387,19 @@ init_beneficiaries_all <- fn_ret.ben("Beneficiaries_t76")
 # Assume t13 and tm13 have no initial retirees or beneficiaries
 
 init_retirees_all <- bind_rows(init_retirees_all,
-                           init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
-                                                    planname = gsub("t76", "t13", planname)),
-                           init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
-                                                    planname = gsub("t76", "tm13", planname))
-                           )
-  
+                               init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
+                                                            planname = gsub("t76", "t13", planname)),
+                               init_retirees_all %>% mutate(nretirees = 0, benefit = 0,
+                                                            planname = gsub("t76", "tm13", planname))
+)
+
 
 init_beneficiaries_all <- bind_rows(init_beneficiaries_all,
                                     init_beneficiaries_all %>% mutate(n.R0S1 = 0, benefit = 0,
-                                                              planname = gsub("t76", "t13", planname)),
+                                                                      planname = gsub("t76", "t13", planname)),
                                     init_beneficiaries_all %>% mutate(n.R0S1 = 0, benefit = 0,
-                                                              planname = gsub("t76", "tm13", planname))
-                               )
+                                                                      planname = gsub("t76", "tm13", planname))
+)
 
 
 
@@ -412,7 +412,7 @@ init_beneficiaries_all <- bind_rows(init_beneficiaries_all,
 # 
 # init_retirees      <- fillin.retirees(lretirees) %>% ungroup %>% select(-age.cell)
 # init_beneficiaries <- fillin.retirees(lbeneficiaries) %>% select(-age.cell)
- 
+
 
 
 #*************************************************************************************************************
@@ -420,11 +420,11 @@ init_beneficiaries_all <- bind_rows(init_beneficiaries_all,
 #*************************************************************************************************************
 
 # Thoughts on term data 
- # We can only smooth the data along age, and calibrate the benefit payment by adjusting yos. 
+# We can only smooth the data along age, and calibrate the benefit payment by adjusting yos. 
 
 # Notes:
- # assume all terms are terminated in init.year - 1.
- # Currently excluding all cells with yos < 20. Should manage to bring them back in later versions. 
+# assume all terms are terminated in init.year - 1.
+# Currently excluding all cells with yos < 20. Should manage to bring them back in later versions. 
 
 
 
@@ -483,11 +483,11 @@ init_terminated_all <-  terms_n %>%
          start.year = year - (age - ea),
          planname = "Terms_t76_grouped") 
 
-         # %>% 
-         # filter(age.term >= Global_paramlist$min.ea,
-         #        ea >= Global_paramlist$min.ea)
+# %>% 
+# filter(age.term >= Global_paramlist$min.ea,
+#        ea >= Global_paramlist$min.ea)
 
-   # assme age.term is age - 1, ea must be greater than 20
+# assme age.term is age - 1, ea must be greater than 20
 
 
 # assume t13 and tm13 have no initial terms
@@ -495,11 +495,14 @@ init_terminated_all <-  terms_n %>%
 
 init_terminated_all <- bind_rows(init_terminated_all,
                                  init_terminated_all %>% mutate(nterm = 0, HAPC = 0,
-                                                              planname = gsub("t76", "t13", planname)),
+                                                                planname = gsub("t76", "t13", planname)),
                                  init_terminated_all %>% mutate(nterm = 0, HAPC = 0,
-                                                              planname = gsub("t76", "tm13", planname))
+                                                                planname = gsub("t76", "tm13", planname))
 )
 
+
+init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
+                                ea >= Global_paramlist$min.ea)
 
 
 
@@ -511,21 +514,21 @@ init_terminated_all <- bind_rows(init_terminated_all,
 
 get_tierData <- function(df, tier = Tier_select, grouping = paramlist$Grouping) df %<>% filter(grepl(tier, planname), grepl(grouping, planname))
 
-#Actives
+#t1976
 init_actives.t76       <- get_tierData(init_actives_all, "t76")
 init_retirees.t76      <- get_tierData(init_retirees_all, "t76")
 init_beneficiaries.t76 <- get_tierData(init_beneficiaries_all, "t76")
 init_terminated.t76    <- init_terminated_all %>%  filter(grepl("t76", planname))
 
 
-#Actives
+#t2014
 init_actives.t13       <- get_tierData(init_actives_all, "t13")
 init_retirees.t13      <- get_tierData(init_retirees_all, "t13")
 init_beneficiaries.t13 <- get_tierData(init_beneficiaries_all, "t13")
 init_terminated.t13    <- init_terminated_all %>%  filter(grepl("t13", planname))
 
 
-#Actives
+#t modified 2014
 init_actives.tm13       <- get_tierData(init_actives_all, "tm13")
 init_retirees.tm13      <- get_tierData(init_retirees_all, "tm13")
 init_beneficiaries.tm13 <- get_tierData(init_beneficiaries_all, "tm13")
@@ -540,14 +543,14 @@ init_terminated.tm13    <- init_terminated_all %>%  filter(grepl("tm13", plannam
 #*************************************************************************************************************
 
 summary_actives <- read_excel("Data/UCRP-MembersData-2015.xlsx", sheet = "Sum_Active", skip = 1) %>% 
-                   gather(Tier, n, -Type, -Sex) %>% 
-                   filter(!Tier %in% c("Tier2", "All"), Type != "Safety") %>% 
-                   mutate(n    = as.numeric(n) %>% na2zero,
-                          # Tier = levels(Tier)[Tier], # no longer needed with the new version of tidyr
-                          Tier = ifelse(Tier == "13Tier", "t13", Tier),
-                          Tier = ifelse(Tier == "76Tier", "t76", Tier),
-                          Tier = ifelse(Tier == "Modi13", "tm13", Tier))
-             
+  gather(Tier, n, -Type, -Sex) %>% 
+  filter(!Tier %in% c("Tier2", "All"), Type != "Safety") %>% 
+  mutate(n    = as.numeric(n) %>% na2zero,
+         # Tier = levels(Tier)[Tier], # no longer needed with the new version of tidyr
+         Tier = ifelse(Tier == "13Tier", "t13", Tier),
+         Tier = ifelse(Tier == "76Tier", "t76", Tier),
+         Tier = ifelse(Tier == "Modi13", "tm13", Tier))
+
 summary_actives
 
 
@@ -558,9 +561,9 @@ summary_actives
 
 # Gender ratio
 ratio_gender <- summary_actives %>% 
-                # filter(Tier == Tier_select) %>% 
-                group_by(Sex) %>% 
-                summarise(n = sum(n))
+  # filter(Tier == Tier_select) %>% 
+  group_by(Sex) %>% 
+  summarise(n = sum(n))
 
 pct.F.actives <- with(ratio_gender, n[Sex == "F"]/sum(n))
 pct.M.actives <- 1 - pct.F.actives

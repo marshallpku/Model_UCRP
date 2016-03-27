@@ -4,105 +4,106 @@ gc()
 # 0. Parameters   ####
 #*********************************************************************************************************
 
-Global_paramlist <- list(
-  
-  init.year = 2015,
-  nyear     = 40,
-  nsim      = 5,
-  ncore     = 4,
-  
-  min.ea    = 20,
-  max.ea    = 74, 
-  
-  min.age   = 20,
-  max.age   = 120 
-)
-
-
-paramlist <- list(
-  
-  runname = "UCRP",
-  #Tier_select = Tier_select_RunControl,
-  simTiers = simTiers,
-  
-  
-  Grouping    = "fillin",
-  
-  r.min  = 50,
-  r.max  = 75, 
-
-  fasyears = 3,
-  cola     = 0.02,
-  i = 0.0725,
-  
-  infl = 0.03,
-  prod = 0.01,
-  s.year = 10,
-  
-  m.UAAL0 = 20,
-  m.UAAL1 = 20,
-  m.surplus0 = 30,
-  m.surplus1 = 15,
-  
-  r.full = 60, # age at which vested terms are assumed to retire. 
-  r.yos  = 5,
-  v.yos  = 5, 
-  
-  startingSal_growth = 0.038,
-  w.salgrowth.method =  "simple", # "simple" or "withInit"
-  
-  actuarial_method = "EAN.CP",
-  
-  
-  wf_growth = 0,
-  no_entrance = "F",
-  newEnt_byTier = c(t76 = 0, t13 = 0.65, tm13 = 0.35),
-  #entrants_dist = rep(1/length(range_ea), length(range_ea)),
-  
-  pct.F.LSC = 0.6, # assumed proporotion of females, for the calculation of LSC amount 
-  
-  
-  pct.ca.F =  0.8, # proportion of females who opt for ca upon retirement
-  pct.ca.M =  0.6,
-  
-  factor.ca = 0.25,
-  
-  # Investment returns
-  seed = 1234,
-  ir.mean = 0.0725,
-  ir.sd   = 0.12,
-  
-  
-  init_MA = "AL_pct",
-  MA_0_pct = 0.8069,
-  init_EAA = "MA",
-  
-  
-  smooth_method = "method1",
-  salgrowth_amort = 0,
-  amort_method = "cd",
-  amort_type = "closed",
-  nonNegC = "FALSE",
-  EEC_fixed = "TRUE",
-  ConPolicy = "ADC",
-  EEC_rate = 0.05
-)
-
-# Parameters derived from the parameter list above. 
-paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
-paramlist$range_age = with(Global_paramlist, min.age:max.age)
-paramlist$range_age.r = with(paramlist, r.min:r.max)
-paramlist$m.max = with(paramlist, max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
-paramlist$v     = with(paramlist, 1/(1 + i))
-paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
-
-
-# # Assign parameters to the global environment
-# assign_parmsList(Global_paramlist, envir = environment())
-# assign_parmsList(paramlist,        envir = environment())  
-
-
-devMode <- FALSE
+# Global_paramlist <- list(
+#   
+#   init.year = 2015,
+#   nyear     = 40,
+#   nsim      = 5,
+#   ncore     = 4,
+#   
+#   min.ea    = 20,
+#   max.ea    = 74, 
+#   
+#   min.age   = 20,
+#   max.age   = 120 
+# )
+# 
+# 
+# paramlist <- list(
+#   
+#   runname = "UCRP",
+#   # Tier_select = Tier_select_RunControl,
+#   # simTiers = simTiers,
+#   useAVamort  = FALSE, 
+#   useExtFund  = FALSE,
+#   
+#   Grouping    = "fillin",
+#   
+#   r.min  = 50,
+#   r.max  = 75, 
+# 
+#   fasyears = 3,
+#   cola     = 0.02,
+#   i = 0.0725,
+#   
+#   infl = 0.03,
+#   prod = 0.01,
+#   s.year = 10,
+#   
+#   m.UAAL0 = 20,
+#   m.UAAL1 = 20,
+#   m.surplus0 = 30,
+#   m.surplus1 = 15,
+#   
+#   r.full = 60, # age at which vested terms are assumed to retire. 
+#   r.yos  = 5,
+#   v.yos  = 5, 
+#   
+#   startingSal_growth = 0.038,
+#   w.salgrowth.method =  "simple", # "simple" or "withInit"
+#   
+#   actuarial_method = "EAN.CP",
+#   
+#   
+#   wf_growth = 0,
+#   no_entrance = "F",
+#   newEnt_byTier = c(t76 = 0, t13 = 0.65, tm13 = 0.35),
+#   #entrants_dist = rep(1/length(range_ea), length(range_ea)),
+#   
+#   pct.F.LSC = 0.6, # assumed proporotion of females, for the calculation of LSC amount 
+#   
+#   
+#   pct.ca.F =  0.8, # proportion of females who opt for ca upon retirement
+#   pct.ca.M =  0.6,
+#   
+#   factor.ca = 0.25,
+#   
+#   # Investment returns
+#   seed = 1234,
+#   ir.mean = 0.0725,
+#   ir.sd   = 0.12,
+#   
+#   
+#   init_MA = "AL_pct",
+#   MA_0_pct = 0.8069,
+#   init_EAA = "MA",
+#   
+#   
+#   smooth_method = "method1",
+#   salgrowth_amort = 0,
+#   amort_method = "cd",
+#   amort_type = "closed",
+#   nonNegC = "FALSE",
+#   EEC_fixed = "TRUE",
+#   ConPolicy = "ADC",
+#   EEC_rate = 0.05
+# )
+# 
+# # Parameters derived from the parameter list above. 
+# paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
+# paramlist$range_age = with(Global_paramlist, min.age:max.age)
+# paramlist$range_age.r = with(paramlist, r.min:r.max)
+# paramlist$m.max = with(paramlist, max(m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
+# paramlist$v     = with(paramlist, 1/(1 + i))
+# paramlist$pct.M.LSC = with(paramlist, 1 - pct.F.LSC)
+# 
+# 
+# # # Assign parameters to the global environment
+# # assign_parmsList(Global_paramlist, envir = environment())
+# # assign_parmsList(paramlist,        envir = environment())  
+# 
+# 
+# devMode <- FALSE
 
 
 #*********************************************************************************************************
@@ -119,7 +120,7 @@ load("./Data/UCRP.PlanInfo.RData")  # for all tiers
 source("UCRP_Data_Population.R")    # for all tiers; uses init.year, Grouping, pct.ca.F, pct.ca.M in paramlist
 
 # Decrement tables
-source("UCRP_Model_Decrements.R")   # for all tiers; range_age, range_ea age_range.r, pct.M.LSC, max.age, cola, i, r.full, r.max, r.min, r.yos 
+source("UCRP_Data_Decrements.R")   # for all tiers; range_age, range_ea age_range.r, pct.M.LSC, max.age, cola, i, r.full, r.max, r.min, r.yos 
 
 
 
@@ -138,7 +139,7 @@ init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
                                 ea >= Global_paramlist$min.ea)
 
 ## Exclude the initial amortization basis when testing the program.
-init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check only; will make initial UAAL not amortized. 
+if(!paramlist$useAVamort)  init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check only; will make initial UAAL not amortized. 
 
 
 ## Matching Segal cash flow
@@ -170,7 +171,7 @@ init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check o
 #*********************************************************************************************************
 # 1.2  Actual investment return, for all tiers ####
 #*********************************************************************************************************
-source("UCRP_Test_InvReturns.R")
+source("UCRP_Model_InvReturns.R")
 i.r <- gen_returns()
     
 i.r[, 3] <-  c(paramlist$ir.mean, paramlist$ir.mean/2, rep(paramlist$ir.mean, Global_paramlist$nyear - 2))
@@ -180,7 +181,7 @@ i.r[, 3] <-  c(paramlist$ir.mean, paramlist$ir.mean/2, rep(paramlist$ir.mean, Gl
 #*********************************************************************************************************
 # 1.2 Importing Decrement tables and Calculating Probabilities ####
 #*********************************************************************************************************
-source("UCRP_Test_PlanData_Transform.R")
+source("UCRP_Data_PlanData_Transform.R")
 
 # Create data for each tier
 
@@ -229,7 +230,7 @@ bfactor.tm13 <- make_tierBfactor("tm13")
 #*********************************************************************************************************
 # 2. Demographics ####
 #*********************************************************************************************************
-source("UCRP_Test_Demographics_allTiers.R")
+source("UCRP_Model_Demographics_allTiers.R")
 pop <- get_Population_allTiers()
 gc()
 
@@ -238,7 +239,7 @@ gc()
 #*********************************************************************************************************
 # 3. Individual actuarial liabilities, normal costs and benenfits ####
 #*********************************************************************************************************
-source("UCRP_Test_IndivLiab.R")
+source("UCRP_Model_IndivLiab.R")
 gc()
 
 # liab <- get_indivLab(decrement.ucrp,
@@ -272,7 +273,7 @@ liab.tm13 <- get_indivLab(decrement.ucrp.tm13,
 #*********************************************************************************************************
 # 4. Actuarial liabilities and benefits for contingent annuitants and survivors ####
 #*********************************************************************************************************
-source("UCRP_Test_ContingentAnnuity.R")
+source("UCRP_Model_ContingentAnnuity.R")
 liab.ca.t76  <- get_contingentAnnuity(decrement.ucrp.t76)
 liab.ca.t13  <- get_contingentAnnuity(decrement.ucrp.t13)
 liab.ca.tm13 <- get_contingentAnnuity(decrement.ucrp.tm13)
@@ -281,7 +282,7 @@ liab.ca.tm13 <- get_contingentAnnuity(decrement.ucrp.tm13)
 #*********************************************************************************************************
 # 5. Aggregate actuarial liabilities, normal costs and benenfits ####
 #*********************************************************************************************************
-source("UCRP_Test_AggLiab.R")
+source("UCRP_Model_AggLiab.R")
 gc()
 
 AggLiab.t76 <- get_AggLiab(get(paste0("init_beneficiaries.", "t76")),
@@ -307,7 +308,7 @@ AggLiab.sumTiers <- get_AggLiab_sumTiers(AggLiab.t76, AggLiab.t13, AggLiab.tm13)
 #*********************************************************************************************************
 # 6.  Simulation ####
 #*********************************************************************************************************
-source("UCRP_Test_Sim.R")
+source("UCRP_Model_Sim.R")
 
 if(paramlist$simTiers == "separate"){
   penSim_results.t76  <- run_sim("t76",  AggLiab.t76)
@@ -318,10 +319,16 @@ if(paramlist$simTiers == "separate"){
 penSim_results.sumTiers <- run_sim("sumTiers", AggLiab.sumTiers)
 
 
-
 #*********************************************************************************************************
 # 7.1  Showing results: Joint simulation of all tiers ####
 #*********************************************************************************************************
+# Use full outputs include:
+  # penSim_results.sumTiers
+  # AggLiab.t76; AggLiab.t13; AggLiab.tm13
+# NEXT STEP: extract useful variables from AggLiab.XXX files, so we can still see liability dynamics of each tier
+#            when we simulate(do the loop) all tiers jointly. 
+
+
 var_display <- c("Tier", "sim", "year", "FR", "MA", "AL", 
                  #"AL.act", "AL.act.laca", "AL.act.v", "AL.act.LSC", "AL.la", "AL.ca", "AL.term", 
                  #"PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
@@ -334,11 +341,18 @@ kable(penSim_results.sumTiers %>% filter(sim == -1) %>% select(one_of(var_displa
 
 
 
+
+
 #*********************************************************************************************************
 # 7.1  Showing results: Separate simulations of each tier ####
 #*********************************************************************************************************
 # Currently for the purpose of checking model consistency. 
-# 
+# To make sense of separate simulation of each tier, we must allocate initial assets and amortization payments 
+# among the tiers. However, we currently lack information for doing this reasonably. 
+
+
+
+
 # var_display <- c("Tier", "sim", "year", "FR", "MA", "AL", 
 #                  #"AL.act", "AL.act.laca", "AL.act.v", "AL.act.LSC", "AL.la", "AL.ca", "AL.term", 
 #                  #"PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
@@ -374,107 +388,6 @@ kable(penSim_results.sumTiers %>% filter(sim == -1) %>% select(one_of(var_displa
 
 
 
-
-
-# #*********************************************************************************************************
-# # 8. Comparing model results with Segal open plan projections ####
-# #*********************************************************************************************************
-# 
-# # load Segal open plan projections
-# fileName <- "Data/SegalProj_Data_2015.xlsx"
-# 
-# results_sumTiers_SegalOpen <- read_excel(fileName, sheet = "Data", skip = 1) %>% filter(!is.na(year)) %>% 
-#                 mutate(year = year(year)) %>% 
-#                 right_join(penSim_results_sumTiers) %>% 
-#                 mutate(NC_PR.segal = 100 * NC_PR.segal,
-#                        d_AL = 100 * (AL/AL.segal - 1),
-#                        d_B  = 100 * (B/B.segal - 1),
-#                        d_NC = 100 * (NC/NC.segal - 1),
-#                        d_PR = 100 * (PR/PR.segal - 1),
-#                        d_NC_PR = 100 * (NC_PR/NC_PR.segal - 1)) %>% 
-#                 select(year, 
-#                        AL.segal, AL, d_AL, 
-#                        B.segal, B, d_B,
-#                        NC.segal, NC, d_NC, 
-#                        NC_PR.segal, NC_PR, d_NC_PR, 
-#                        PR.segal, PR, d_PR, 
-#                        everything())
-# 
-# kable(results_sumTiers_SegalOpen %>% filter(sim == -1) %>% select(year:d_PR, FR), digits = 2)
-# 
-# df_SegalOpen_long <- df_SegalOpen %>% gather(variable, value, -year)
-# 
-# 
-# save(results_sumTiers_SegalOpen, penSim_results.t76, penSim_results.t13, penSim_results.tm13, 
-#      file = "Data/Results_SegalOpen.RData")
-# write.xlsx2(results_sumTiers_SegalOpen %>% filter(sim == -1), file = "Data/Results_SegalOpen.xlsx")
-# 
-# 
-# 
-# 
-# 
-# ## Comparing AL
-# 
-# plot_comp <- function(v.segal, v, d_v, ylim1, ylim2 = c(-20, 20), df = df_SegalOpen_long){
-#   
-#  g1 <-  df_SegalOpen_long %>% filter(variable %in% c(v.segal, v)) %>% 
-#     ggplot(aes(x = year, y = value, color = variable)) + geom_point() + geom_line() + 
-#     coord_cartesian(ylim = ylim1 )
-#   
-#  g2 <-   df_SegalOpen_long %>% filter(variable %in% c(d_v)) %>% 
-#     ggplot(aes(x = year, y = value)) + geom_point() + geom_line()+ 
-#     scale_y_continuous(breaks = seq(-100, 100, 5)) + 
-#     coord_cartesian(ylim = ylim2 )
-# 
-#  return(list(g1 = g1, g2 = g2))
-#  
-# }
-# 
-# plot_comp("AL.segal", "AL", "d_AL", c(0, 2e8))
-# plot_comp("B.segal",  "B",  "d_B", c(0, 1.2e7))
-# plot_comp("PR.segal", "PR",  "d_PR", c(0, 3e7))
-# plot_comp("NC.segal", "NC",  "d_NC", c(0, 5e6))
-# 
-# 
-# 
-# #*********************************************************************************************************
-# # 9. Comparing model results with Segal closed plan projections ####
-# #*********************************************************************************************************
-# 
-# fileName <- "Data/SegalProj_PaymentProjection_2015_ClosedGroup.xlsx"
-# results_sumTiers_ActivesOnly_SegalClosed <- read_excel(fileName, sheet = "Data", skip = 2) %>% filter(!is.na(year)) %>%
-#                   mutate_each(funs(./1000), -year) %>% 
-#                   right_join(penSim_results_sumTiers) %>% 
-#                   mutate(d_B = 100 * (B  / B.actives.segal - 1)) %>% 
-#                   select(year, B.actives.segal, B, d_B, everything())
-# 
-# 
-# kable(results_sumTiers_ActivesOnly_SegalClosed[,1:10] %>% filter(sim == -1), digits = 2)
-# 
-# save(results_sumTiers_ActivesOnly_SegalClosed, penSim_results.t76, penSim_results.t13, penSim_results.tm13,
-#      file = "Data/Results_ActivesOnly_SegalClosed.RData")
-# 
-# 
-# write.xlsx2(results_sumTiers_ActivesOnly_SegalClosed %>% filter(sim == -1), file = "Data/Results_ActivesOnly_SegalClosed.xlsx")
-# 
-# 
-# 
-# 
-
-
-
-
-#*********************************************************************************************************
-# Detecitve work: term rates ####
-#*********************************************************************************************************
-# The AL of actives becomes even higher when higher term rates are used. 
-
-# detective.t13 <- penSim_results
-# save(detective.t13, file= "detective.t13.RData")
-# 
-# load("detective.t13.RData")
-# detective.t13 %>% filter(sim == -1) %>% select(Tier,year, FR, MA, AL, AL.act,AL.act.laca, AL.act.v,AL.act.LSC, AL.la, AL.ca, AL.term, AL, PVFB.laca, PVFB.LSC, PVFB.v, PVFB, 
-#                         B, B.la, B.ca, B.LSC,B.v, nactives, nterms, PR, NC_PR) %>% data.frame
 
 
 

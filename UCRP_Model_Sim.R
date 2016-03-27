@@ -146,7 +146,7 @@ run_sim <- function(      .Tier_select,
   
   SC_amort0 <- rbind(SC_amort.init, SC_amort0)
   # The amortization basis of year j should be placed in row nrow.initAmort + j - 1. 
- 
+  
   
   #*************************************************************************************************************
   #                                       Simuation  ####
@@ -162,7 +162,7 @@ run_sim <- function(      .Tier_select,
   penSim0$AL.ca    <- .AggLiab$ca[, "liab.ca.sum"]
   penSim0$AL.term  <- .AggLiab$term[, "ALx.v.sum"]
   penSim0$AL.LSC   <- .AggLiab$LSC[, "ALx.LSC.sum"]
-
+  
   penSim0$AL      <- with(penSim0, AL.act + AL.la + AL.ca +  AL.term + AL.LSC)
   
   
@@ -213,7 +213,7 @@ run_sim <- function(      .Tier_select,
     source("Functions.R")
     
     for (j in 1:nyear){
-
+      
       # j <- 1
       # AL(j) 
       
@@ -270,6 +270,7 @@ run_sim <- function(      .Tier_select,
       #                        closed = sum(SC_amort[, j]),
       #                        open   = amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)[1])
       
+      
       #*************************************************************************************************************
       #                                       UCRP Amortization method  ####
       #*************************************************************************************************************
@@ -295,13 +296,19 @@ run_sim <- function(      .Tier_select,
       
       
       # Amortize LG(j)
-       # The amortization basis for year 1 and all years before are provided in SC_amort. 
-       # Thus amortization payment streams are calculated starting from year 2. 
-      if(j > 1){ 
+      # When useAVamort = TRUE:
+      # The amortization basis for year 1 and all years before are provided in SC_amort. 
+      # Thus amortization payment streams are calculated starting from year 2.(row nrow.initAmort + 1) 
+      # When useAVamort = FALSE:
+      # The amortization basis for year 1 is the initial UAAL. 
+      # Thus amortization payment streams are calculated starting from year 1(row nrow.initAmort).
       
-      if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
-      
-      if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(nrow.initAmort + (j-2)),] <- 0
+      #if(j > 1){ 
+      if(j > ifelse(useAVamort, 1, 0)){ 
+        
+        if(amort_type == "closed") SC_amort[nrow.initAmort + j - 1, j:(j + m - 1)] <- amort_LG(penSim$Amort_basis[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
+        
+        if(penSim$Switch_amort[j] %in% c("Surplus0", "UAAL0")) SC_amort[1:(nrow.initAmort + (j-2)),] <- 0
       }
       
       # Supplemental cost in j
