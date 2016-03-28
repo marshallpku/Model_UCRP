@@ -1,10 +1,15 @@
 # This script constructs tables of the retirement rates for the UCRP model. 
 
 
+# Plan information file
+file_planInfo <- "Data/PlanInfo-UCRP.xlsx"
+
+
 #*********************************************************************************************************
 #                      ## Produce mortality tables ####
 #*********************************************************************************************************
 load("./Data/UCRP.RP2014.RData")
+
 
 # pre-retirement table 
 mortality.pre <- mortality_RP2014 %>% filter(type %in% c("qxm.pre.M", "qxm.pre.F")) %>% ungroup %>% 
@@ -28,7 +33,7 @@ mortality.disb <- mortality_RP2014 %>% filter(type %in% c("qxm.d.M", "qxm.d.F"))
 #                      ## Retirement rates.  ####
 #*********************************************************************************************************
 
-retrates <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Ret_dec", skip = 2) %>% filter(!is.na(age))
+retrates <- read_excel(file_planInfo, sheet = "Ret_dec", skip = 2) %>% filter(!is.na(age))
 
 # The following rules need to be applied to the retirement rate when merged with the demographic data. 
 #  - These rates apply for those with ten to twenty years of service. For ages under 65, 70% of these rates will be used for those with less than ten years of 
@@ -41,7 +46,7 @@ retrates <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Ret_dec", skip = 2) %
 #                      ## Lump Sum Cashout rates.  ####
 #*********************************************************************************************************
 
-LSCrates_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Ret_cashout", skip = 2) %>% filter(!is.na(yos)) %>% 
+LSCrates_raw <- read_excel(file_planInfo, sheet = "Ret_cashout", skip = 2) %>% filter(!is.na(yos)) %>% 
                 mutate(yos.match = gsub("\\D+", "", yos) %>% substr(1, 2) %>% as.numeric)
 
 
@@ -61,7 +66,7 @@ LSCrates <- data.frame(yos = 0:55) %>%
 #                      ## Termination rates  ####
 #*********************************************************************************************************
 
-termrates_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Term_dec", skip = 2) %>% filter(!is.na(yos)) %>% 
+termrates_raw <- read_excel(file_planInfo, sheet = "Term_dec", skip = 2) %>% filter(!is.na(yos)) %>% 
                  rename(yos.match = yos)
 
 termrates <- data.frame(yos = 0:55) %>% 
@@ -74,7 +79,7 @@ termrates <- data.frame(yos = 0:55) %>%
 #                      ## Disability Incidence rates  ####
 #*********************************************************************************************************
 
-disbrates_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Disb_dec", skip = 2) %>% filter(!is.na(age.lower))
+disbrates_raw <- read_excel(file_planInfo, sheet = "Disb_dec", skip = 2) %>% filter(!is.na(age.lower))
 
 disbrates <- data.frame(age = 20:75) %>% 
              mutate(age.lower = floor(age*0.2)/0.2, 
@@ -87,7 +92,7 @@ disbrates <- data.frame(age = 20:75) %>%
 #                      ## benefit factors  ####
 #*********************************************************************************************************
 
-bfactor_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Ret_bfactor", skip = 3) %>% filter(!is.na(age)) %>% 
+bfactor_raw <- read_excel(file_planInfo, sheet = "Ret_bfactor", skip = 3) %>% filter(!is.na(age)) %>% 
                mutate(age.match = gsub("\\D+", "", age) %>% substr(1, 2) %>% as.numeric)
 
 bfactor <- data.frame(age = 50:75) %>% 
@@ -104,7 +109,7 @@ bfactor <- data.frame(age = 50:75) %>%
 infl <- 0.03
 raise <- 0.005
 
-salgrowth_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "SalaryGrowth", skip = 2) %>% filter(!is.na(yos)) %>% 
+salgrowth_raw <- read_excel(file_planInfo, sheet = "SalaryGrowth", skip = 2) %>% filter(!is.na(yos)) %>% 
   mutate(yos.match = gsub("\\D+", "", yos) %>% substr(1, 2) %>% as.numeric)
 
 
@@ -121,14 +126,29 @@ salgrowth <- data.frame(yos = 0:55) %>%
 #                      ## Initial Amortization Basis  ####
 #*********************************************************************************************************
 
-init_amort_raw <- read_excel("Data/PlanInfo-UCRP.xlsx", sheet = "Init_amort", skip = 0)%>% filter(!is.na(Type)) 
+init_amort_raw <- read_excel(file_planInfo, sheet = "Init_amort", skip = 0)%>% filter(!is.na(Type)) 
 names(init_amort_raw) <-  c("Type", "year.est", "m.init", "amount.init", "amount.annual", "year.remaining", "Balance")
 
 init_amort_raw %<>% mutate(year.est = year(year.est)) %>% filter(Type != "Total")
 
 
-save(mortality.pre, mortality.post, mortality.disb, retrates, LSCrates, termrates, disbrates, bfactor, salgrowth, init_amort_raw, 
+
+
+#*********************************************************************************************************
+#                      ## External fund   ####
+#*********************************************************************************************************
+extFund <- read_excel(file_planInfo, sheet = "External_Fund", skip = 0)%>% filter(!is.na(year))
+
+
+
+
+
+
+save(mortality.pre, mortality.post, mortality.disb, retrates, LSCrates, termrates, disbrates, bfactor, salgrowth, init_amort_raw,
+     extFund,
      file  = "Data/UCRP.PlanInfo.RData")
+
+
 
 
 

@@ -5,7 +5,14 @@
 #*********************************************************************************************************
 # 1.(DONE) Allow the initial UAAL to be treated as loss/gain in the intial year. 
 # 2. Specify all the data modeification in the run control file. 
+# 3. Try calculating amortization basis using market value based UAAL.(code already in Model.Sim. )
 
+
+#*********************************************************************************************************
+# Notes on UCRP features ####
+#*********************************************************************************************************
+# STIP borrowing.
+  # STIP borrowing is directly added to total contribution (C). It reduces the gap between contribution and ADC.
 
 
 rm(list = ls())
@@ -57,8 +64,8 @@ paramlist <- list(
   runname = "UCRP",
   #Tier_select = "t76",
   simTiers = "joint",
-  useAVamort  = FALSE, 
-  useExtFund  = FALSE,
+  useAVamort  = F, 
+  useExtFund  = F,
   
   Grouping    = "fillin",
   
@@ -145,9 +152,9 @@ devMode <- FALSE
 #*********************************************************************************************************
 
 
-paramlist$simTiers <- "joint"  # "joint"(defult) or "separate"  
+paramlist$simTiers <- "joint"  # "joint"(defult) or "separate"
 source("UCRP_0_Master_allTiers.R")
-  
+
  
  
 
@@ -164,7 +171,7 @@ source("UCRP_0_Master_allTiers.R")
 
 # paramlist$Tier_select <- "t76"
 # source("UCRP_0_Master_singleTier.R")
-
+# 
 
 
 

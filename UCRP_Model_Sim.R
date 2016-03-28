@@ -8,6 +8,7 @@ run_sim <- function(      .Tier_select,
                           .AggLiab,
                           .i.r = i.r,
                           .init_amort_raw = init_amort_raw, # amount.annual, year.remaining 
+                          .extFund = extFund, 
                           .paramlist = paramlist,
                           .Global_paramlist = Global_paramlist){
 
@@ -115,7 +116,7 @@ run_sim <- function(      .Tier_select,
            nactives  = 0,
            nretirees = 0,
            nterms    = 0)
-  penSim0 <- as.list(penSim0)
+  # penSim0 <- as.list(penSim0)
   
   
   
@@ -123,10 +124,18 @@ run_sim <- function(      .Tier_select,
   s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector  # a vector containing the porportion of 
   
   
+  #*************************************************************************************************************
+  #                                   Introducing external fund   #### 
+  #*************************************************************************************************************  
   
+  extFund$extFund <- rowSums(select(extFund, -year)) # total external fund
+  
+  penSim0 %<>% left_join(extFund) %>% 
+               mutate(extFund = na2zero(extFund))
+
   
   #*************************************************************************************************************
-  #                                     Defining variables in simulation ####
+  #                                  Setting up initial amortization payments ####
   #*************************************************************************************************************  
   # matrix representation of amortization: better visualization but larger size
   SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
@@ -147,9 +156,10 @@ run_sim <- function(      .Tier_select,
   SC_amort0 <- rbind(SC_amort.init, SC_amort0)
   # The amortization basis of year j should be placed in row nrow.initAmort + j - 1. 
   
+ 
   
   #*************************************************************************************************************
-  #                                       Simuation  ####
+  #                                 Defining variables in simulation  ####
   #*************************************************************************************************************
   
   # AL(j)
@@ -196,7 +206,15 @@ run_sim <- function(      .Tier_select,
   penSim0$n.ca.R0S1 <- .AggLiab$ca[, "n.R0S1"]
   penSim0$nterms    <- .AggLiab$term[, "nterms"]
   penSim0$n.LSC     <- .AggLiab$LSC[, "n.LSC"]
+
   
+  penSim0 <- as.list(penSim0) # Faster to extract elements from lists than frame data frames.
+  
+  
+  #*************************************************************************************************************
+  #                                       Simuation  ####
+  #*************************************************************************************************************
+    
   cl <- makeCluster(ncore) 
   registerDoParallel(cl)
   
@@ -228,6 +246,7 @@ run_sim <- function(      .Tier_select,
       penSim$EAA[j] <- switch(init_EAA,
                               AL = EAA_0,                       # Use preset value 
                               MA = penSim$MA[j])                # Assume inital EAA equals inital market value.
+      
       penSim$AA[j]  <- switch(smooth_method,
                               method1 =  with(penSim, MA[j]),   # we may want to allow for a preset initial AA.
                               method2 =  with(penSim, (1 - w) * EAA[j] + w * MA[j])
@@ -245,7 +264,8 @@ run_sim <- function(      .Tier_select,
       
       
       # UAAL(j)
-      penSim$UAAL[j] <- with(penSim, AL[j] - AA[j]) 
+      penSim$UAAL[j]    <- with(penSim, AL[j] - AA[j])
+      penSim$UAAL.MA[j] <- with(penSim, AL[j] - MA[j])
       
       
       # LG(j)
@@ -259,8 +279,12 @@ run_sim <- function(      .Tier_select,
         penSim$EUAAL[j] <- with(penSim, (UAAL[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
         penSim$LG[j]    <- with(penSim,  UAAL[j] - EUAAL[j])
         penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
-      }   
       
+        # penSim$EUAAL.MA[j] <- with(penSim, (UAAL.MA[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
+        # penSim$LG[j]    <- with(penSim,  UAAL.MA[j] - EUAAL.MA[j])
+        # penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
+        
+      }   
       
       # # Amortize LG(j)
       # if(amort_type == "closed") SC_amort[j, j:(j + m - 1)] <- amort_LG(penSim$AM[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)  
@@ -367,7 +391,7 @@ run_sim <- function(      .Tier_select,
       
       
       # C(j)
-      penSim$C[j] <- with(penSim, EEC[j] + ERC[j])
+      penSim$C[j] <- with(penSim, EEC[j] + ERC[j] + extFund[j])
       
       # C(j) - ADC(j)
       penSim$C_ADC[j] <- with(penSim, C[j] - ADC[j])
@@ -387,7 +411,6 @@ run_sim <- function(      .Tier_select,
       
       # I.dif(j) = I.r(j) - I.e(j)
       penSim$I.dif[j] <- with(penSim, I.r[j] - I.e[j])
-      
       
     }
     

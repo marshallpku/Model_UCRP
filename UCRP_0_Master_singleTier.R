@@ -36,7 +36,10 @@ source("UCRP_Data_Decrements.R")   # for all tiers
 
 
 ## Exclude the initial amortization basis when testing the program.
-if(!paramlist$useAVamort)  init_amort_raw %<>% mutate(amount.annual = 0) 
+if(!paramlist$useAVamort) init_amort_raw %<>% mutate(amount.annual = 0) 
+
+## Exclude the external fund. (currently only STIP borrowing)
+if(!paramlist$useExtFund) extFund %<>% mutate_each(funs(. * 0), -year)
 
 
 #*********************************************************************************************************
@@ -72,7 +75,7 @@ decrement.ucrp %<>% rename_("pxT" = paste0("pxT.",          paramlist$Tier_selec
 
 bfactor %<>% mutate(Tier = paramlist$Tier_select,
                     bfactor = ifelse(Tier == "t13", bf.13, bf.non13)) %>% 
-  select(age, bfactor)
+             select(age, bfactor)
 
 
 

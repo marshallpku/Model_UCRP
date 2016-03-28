@@ -39,6 +39,9 @@ source("UCRP_Data_Decrements.R")   # for all tiers; range_age, range_ea age_rang
  if(!paramlist$useAVamort)  init_amort_raw %<>% mutate(amount.annual = 0) # CAUTION: For consistency check only; will make initial UAAL not amortized. 
 
 
+## Exclude the external fund. (currently only STIP borrowing)
+ if(!paramlist$useExtFund) extFund %<>% mutate_each(funs(. * 0), -year)
+
 
 ## Matching Segal cash flow
 
