@@ -361,7 +361,7 @@ run_sim <- function(      .Tier_select,
         
         if(EEC_fixed) {penSim$ADC.ER[j] <- with(penSim, ADC[j] - EEC[j]) # EEC is fixed
         # EEC is not fixed
-        # 1. when ADC > EEC. Employees pay fixed EEC and employer pays the rest
+          # 1. when ADC > EEC. Employees pay fixed EEC and employer pays the rest
         } else if(with(penSim, ADC[j] > EEC[j])) {
           penSim$ADC.ER[j] <- with(penSim, ADC[j] - EEC[j]) 
           # 2. when 0 < ADC < EEC. Employees pay the entire ADC and employer pays 0. 
