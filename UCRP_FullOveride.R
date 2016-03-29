@@ -311,6 +311,9 @@ penSim_results %>% filter(sim == 6) %>% kable(digits = 3)
 
 
 results_ADC <- penSim_results
+# save(results_ADC.cap, file = "Results_fullOverride/results_ADC.cap.RData")
+# save(results_ADC, file = "Results_fullOverride/results_ADC.RData")
+
 
 penSim_results %>% group_by(year) %>% summarize(FR.MA = median(FR.MA))
 
@@ -318,21 +321,53 @@ penSim_results %>% group_by(year) %>% summarize(FR.MA = median(FR.MA))
 
 #SC_amort
 
-
 ## Matching Segal Projection under constant return of 7.25%.
  # Potential issues:
  # 1. Model ERC is higher than Segal ERC in the last couple of years, which implies there are differences in amort scheme between the model calculation and Segal projection. 
  # 2. Loss/gain are not zero, even when investment return is set equal to discount rate 7.25%. Imply difference in the calculation of UAAL and/or EUAAL?  
 
 
-# quantiles
+
+# Two funding policies 
+load("Results_fullOverride/results_ADC.cap.RData")
+load("Results_fullOverride/results_ADC.RData")
+
+get_qts <- function(df){ 
+   df %>% group_by(year) %>% 
+          summarize(q90 = quantile(FR.MA, 0.90),
+                    q75 = quantile(FR.MA, 0.75),
+                    q50   = median(FR.MA),
+                    q25 = quantile(FR.MA, 0.25),
+                    q10 = quantile(FR.MA, 0.10))
+}
+
+get_FR40less <- function(df){
+ df %>% group_by(sim) %>% 
+        mutate(FR40 = FR.MA <= 40) %>%
+        summarise(FR40 = any(FR40)) %>% 
+        summarise(FR40 = 100 * sum(FR40)/n())
+}
+
+get_FR95more <- function(df){
+  df %>% mutate(FR95 = FR.MA >= 95) %>%
+         group_by(year) %>% 
+         summarise(FR40 = 100 * sum(FR95)/n())
+}
 
 
+# quantiles of FR
+results_ADC.cap %>% get_qts
+results_ADC     %>% get_qts
 
 
+# probability of FR below 40%
+results_ADC.cap %>% get_FR40less # 24.6%
+results_ADC %>% get_FR40less     # 0.5%
 
 
-
+# probability of 95% or better funding as of a given year
+results_ADC.cap %>% get_FR95more
+results_ADC     %>% get_FR95more
 
 
 
