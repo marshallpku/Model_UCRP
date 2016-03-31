@@ -1,91 +1,3 @@
-# This script conducts the simulation using Segal open plan projection as inputs. 
-
-# Funding policies can be experimented with full override model:
- # 1. Plan sponsor pays with a cap of 14% payroll.(supposedly used in Segal open plan projection; try to match Segal values.)
- # 2. Plan sponsor pays full ADC + STIP
-     # NC:   payroll * NC rate
-     # SC:   initial SC from AV 2015; new SC from model calculation
-     # STIP: Segal projection
- # 3. Plan sponsor follows statutory/administrative rules to determine actual contributions.(eg. cap on ERC)
-
-# Notes
- # Note the initial amort payments should include all segments. In order to model non-lab segment only, 
-   # we reduce the initial amort payment to match the Sega ERC rate and funded ratio. Currently the factor is 95%.
- # Currently loss/gain are calculated using market asset value based UAAL.  
-
-
-#### Loading Packages ####
-#********************************************************************************
-
-rm(list = ls())
-gc()
-
-library(knitr)
-library(data.table)
-library(gdata) # read.xls
-library(plyr)
-library(dplyr)
-options(dplyr.print_min = 100) # default is 10
-options(dplyr.print_max = 100) # default is 20
-library(ggplot2)
-library(magrittr)
-library(tidyr) # gather, spread
-library(foreach)
-library(doParallel)
-library(microbenchmark)
-library(readxl)
-library(stringr)
-library("readxl")
-library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
-library(xlsx)
-library("btools")
-
-source("Functions.R")
-
- 
-
-
-
-#### Model Parameters ####
-#********************************************************************************
-
-# Simulation parameters
-nsim    <- 1000 
-nyear   <- 30      #nrow(df_SegalOpen_raw) 
-ncore   <- 6 
-
-# contribution Policy:
-ConPolicy  <- "ADC"
-PR_pct_cap <- 0.14
-
-nonNegC   <- TRUE
-EEC_fixed <- FALSE
-
-
-# Return assumptions and discount rate
-i = 0.0725
-ir.mean <- i + 0.12^2/2
-ir.sd   <- 0.12
-
-
-# Amortization parameters
-m = 20 # used in Segal projection
-m.UAAL0 = 20
-m.UAAL1 = 20
-m.surplus0 = 30
-m.surplus1 = 15
-m.max <- max(m, m.UAAL0, m.UAAL1, m.surplus0, m.surplus1)
-
-salgrowth_amort = 0
-amort_method    = "cd"
-
-
-
-
-# Modification factors
- # reduction factor for initial amort payment
-f.initAmort <- 0.95
-
 
 
 
@@ -124,6 +36,15 @@ df_SC_amort.init <- data.frame(year = (1:ncol(SC_amort.init))+2014, SC_init = co
   
 
 
+#####   Asset Smoothing  ####
+#********************************************************************************
+# a vector containing the porportion of unexpected investment loss/gain exluded from the calculation of AA.
+s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector   
+
+
+
+
+
 #### Loading data Segal open plan projection 
 #********************************************************************************
 fileName_SegalProj <- "Data/UCRP_FullOverride_SegalProj2015.xlsx"
@@ -141,6 +62,9 @@ df_SegalOpen_raw <- read_excel(fileName_SegalProj, sheet = "Data", skip = 1) %>%
 
 penSim0 <- df_SegalOpen_raw %>% 
            select(MA.Segal = MA.Segal,
+                  AA.Segal = AA.Segal,
+                  init.smoothing = init.smoothing,
+                  
                   C.Segal,
                   ERC.Segal,
                   
@@ -154,13 +78,15 @@ penSim0 <- df_SegalOpen_raw %>%
                   extFund = STIP.Segal) %>% 
            mutate(i = i,
                   MA = 0,
+                  AA = 0,
                   UAAL.MA  = 0,
                   EUAAL.MA = 0,
-                  Amort.basis = 0,
+                  Amort_basis = 0,
                   LG = 0,
                   ERC = 0,
                   C = 0,
-                  I.r = 0) %>% 
+                  I.r = 0,
+                  init.smoothing = init.smoothing * f.initSmooth) %>% 
            as.list
 
 
@@ -197,27 +123,44 @@ source("Functions.R")
 for (j in 1:nyear){
   #j = 1
   
-  ## MA
-  if(j == 1) penSim$MA[j] <- penSim$MA.Segal[j] else
-             penSim$MA[j] <- with(penSim, MA[j - 1] + I.r[j - 1] + C[j - 1] - B[j - 1])
+  ## MA and AA 
+  if(j == 1){
+    # Initial MA and AA: both equal to Segal values
+    penSim$MA[j] <- penSim$MA.Segal[j]
+    penSim$AA[j] <- penSim$AA.Segal[j]            
+    
+  } else{
+    # MA dynamics
+    penSim$MA[j] <- with(penSim, MA[j - 1] + I.r[j - 1] + C[j - 1] - B[j - 1])
+    
+    # AA dynamics
+     # Alos adding UCRP initial smoothing (calculated as the difference between MA and AA in Segal projection)
+    penSim$AA[j] <- with(penSim, MA[j] - init.smoothing[j] - sum(s.vector[max(s.year + 2 - j, 1):s.year] * I.dif[(j - min(j, s.year + 1) + 1):(j - 1)]))
+    
+  }  
   
+
   ## UAAL
-   # penSim$UAAL.AA[j] <- with(penSim, AL[j] - AA[j])
+  penSim$UAAL.AA[j] <- with(penSim, AL[j] - AA[j])
   penSim$UAAL.MA[j] <- with(penSim, AL[j] - MA[j])
+  
   
   ## LG
    # Note that what is amortized at time t is the sum of 1) actuarial loss/gain(LG) during t -1, and 2) shortfall in paying ADC(C_ADC) at (t-1)
   if (j == 1){
-    penSim$EUAAL.MA[j] <- 0
-    penSim$LG[j] <- with(penSim,  UAAL.MA[j])        # This is the intial underfunding, rather than actuarial loss/gain if the plan is established at period 1. 
+    #penSim$EUAAL.MA[j] <- 0
+    penSim$EUAAL.AA[j] <- 0
+    penSim$LG[j] <- with(penSim,  UAAL.AA[j])     # This is the intial underfunding, rather than actuarial loss/gain if the plan is established at period 1. 
     penSim$Amort_basis[j] <- with(penSim, LG[j])  # This will not be used for UCRP since the amortization scheme for year 1 is provided by SC_amort.(from AV2015)
     
   } else {
-    penSim$EUAAL.MA[j]     <- with(penSim, (UAAL.MA[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
-    penSim$LG[j]           <- with(penSim,  UAAL.MA[j]- EUAAL.MA[j])
+    #penSim$EUAAL.MA[j]     <- with(penSim, (UAAL.MA[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
+    penSim$EUAAL.AA[j]     <- with(penSim, (UAAL.AA[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
+    penSim$LG[j]           <- with(penSim,  UAAL.AA[j]- EUAAL.AA[j])
     penSim$Amort_basis[j]  <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
   }
   
+ 
 
   ## SC
   if(j > 1){  #(j > ifelse(useAVamort, 1, 0))
@@ -231,17 +174,20 @@ for (j in 1:nyear){
   # penSim$ADC.ER[j] <- with(penSim, ifelse(ADC[j] > EEC[j], ADC[j] - EEC[j], 0)) # Currently fixed EEC in any cases, even ADC < EEC.
   # 
   if(nonNegC){
+    # EEC is fixed
     penSim$ADC[j]    <- with(penSim, max(0, NC[j] + SC[j])) 
     penSim$ADC.ER[j] <- with(penSim, ifelse(ADC[j] > EEC[j], ADC[j] - EEC[j], 0)) 
     
-    # Adjustment of EEC
+    # # EEC is not fixed: Adjustment of EEC ADC < EEC
     if(!EEC_fixed) penSim$EEC[j] <- with(penSim, ifelse(ADC[j] > EEC[j], EEC[j], ADC[j])) # penSim$EEC[j] <- with(penSim, EEC[j]) else
     
   } else {
     # Allow for negative ADC and C  
     penSim$ADC[j]    <- with(penSim, NC[j] + SC[j]) 
     
-    if(EEC_fixed) {penSim$ADC.ER[j] <- with(penSim, ADC[j] - EEC[j]) # EEC is fixed
+    # EEC is fixed
+    if(EEC_fixed) {penSim$ADC.ER[j] <- with(penSim, ADC[j] - EEC[j]) 
+    
     # EEC is not fixed
     # 1. when ADC > EEC. Employees pay fixed EEC and employer pays the rest
     } else if(with(penSim, ADC[j] > EEC[j])) {
@@ -266,6 +212,8 @@ for (j in 1:nyear){
                           Fixed   = with(penSim, PR_pct_fixed * PR[j])                # Fixed percent of payroll
   ) 
   
+  if(ERC.lb_EEC) penSim$ERC[j] <- with(penSim, max(ERC[j], EEC[j]))
+  
   
   ## C
   #penSim$C[j] = penSim$C.Segal[j] 
@@ -281,93 +229,112 @@ for (j in 1:nyear){
   penSim$Ib[j] <- with(penSim,  B[j]  * i[j])
   penSim$Ic[j] <- with(penSim,  C[j]  * i[j])
   
-  ## I.r 
+  ## I.r:   Actual investment income
    # It is assumed that all contributions and benefit payments are made at the beginning of year.  
   penSim$I.r[j] = with(penSim, i.r[j] * (MA[j] + C[j] - B[j]))
-}
+
+  
+  # I.e(j): Expected investment income
+  penSim$I.e[j] <- with(penSim, i[j] *(MA[j] + C[j] - B[j]))
+
+  
+    
+  # I.dif(j) = I.r(j) - I.e(j): used in asset smoothing 
+  penSim$I.dif[j] <- with(penSim, I.r[j] - I.e[j])
+  }
 
 penSim %<>% as.data.frame 
 }
 
 stopCluster(cl)
 
-
 penSim_results <- bind_rows(penSim_results) %>%
                   mutate(year = rep(2015:2044, nsim+1),
                          sim  = rep(0:nsim, each = nyear),
                          d_MA = 100*(MA/MA.Segal - 1),
+                         d_AA = 100*(AA/AA.Segal - 1),
                          d_C   = 100*(C/C.Segal - 1),
                          d_ERC = 100*(ERC/(ERC.Segal- extFund) - 1),
                          
                          ERC_PR = 100 * (ERC)/PR,
                          ERC_PR.Segal = 100 * (ERC.Segal - extFund)/PR,
                          
+                         EEC_PR = 100 * EEC/PR,
+                         
                          FR.MA       = 100 * MA/AL,
                          FR.MA.Segal = 100 * MA.Segal/AL,
-                         d_FR.MA     = FR.MA - FR.MA.Segal) %>% 
-           select(sim, year, AL, MA.Segal, MA, d_MA, FR.MA.Segal, FR.MA, d_FR.MA, C.Segal, C, d_C, ERC.Segal, ERC, d_ERC, EEC, ERC_PR.Segal, ERC_PR) #, LG, C_ADC) 
+                         d_FR.MA     = FR.MA - FR.MA.Segal)
 
-penSim_results %>% filter(sim == 6) %>% kable(digits = 3)
+var.display <- c("sim", "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
+
+penSim_results %>% filter(sim == 0) %>% select(one_of(var.display)) %>% kable(digits = 3)
 
 
 results_ADC <- penSim_results
 # save(results_ADC.cap, file = "Results_fullOverride/results_ADC.cap.RData")
 # save(results_ADC, file = "Results_fullOverride/results_ADC.RData")
 
+# 
+# penSim_results %>% group_by(year) %>% summarize(FR.MA = median(FR.MA))
+# 
 
-penSim_results %>% group_by(year) %>% summarize(FR.MA = median(FR.MA))
 
 
 
-#SC_amort
+
 
 ## Matching Segal Projection under constant return of 7.25%.
  # Potential issues:
- # 1. Model ERC is higher than Segal ERC in the last couple of years, which implies there are differences in amort scheme between the model calculation and Segal projection. 
+ # 1. Model ERC is slightly lower than Segal ERC in the last couple of years, which implies there are differences in amort scheme between the model calculation and Segal projection. 
  # 2. Loss/gain are not zero, even when investment return is set equal to discount rate 7.25%. Imply difference in the calculation of UAAL and/or EUAAL?  
+ # 3. In Segal projection, contribuitons and benefit payments may not earn full interest since they are not made at the begining of year. For contributions, it is shown in AV2015 p25 that
+      # the assumed interest rate applied to contributions is half of the discount rate when calculating expected UAAL. The Segal projection should be doing the same thing for contributions.
+      # For benenfit payment, it is not sure whether partial interest rate is applied, but I suspect so.  
 
 
 
-# Two funding policies 
-load("Results_fullOverride/results_ADC.cap.RData")
-load("Results_fullOverride/results_ADC.RData")
 
-get_qts <- function(df){ 
-   df %>% group_by(year) %>% 
-          summarize(q90 = quantile(FR.MA, 0.90),
-                    q75 = quantile(FR.MA, 0.75),
-                    q50   = median(FR.MA),
-                    q25 = quantile(FR.MA, 0.25),
-                    q10 = quantile(FR.MA, 0.10))
-}
-
-get_FR40less <- function(df){
- df %>% group_by(sim) %>% 
-        mutate(FR40 = FR.MA <= 40) %>%
-        summarise(FR40 = any(FR40)) %>% 
-        summarise(FR40 = 100 * sum(FR40)/n())
-}
-
-get_FR95more <- function(df){
-  df %>% mutate(FR95 = FR.MA >= 95) %>%
-         group_by(year) %>% 
-         summarise(FR40 = 100 * sum(FR95)/n())
-}
-
-
-# quantiles of FR
-results_ADC.cap %>% get_qts
-results_ADC     %>% get_qts
-
-
-# probability of FR below 40%
-results_ADC.cap %>% get_FR40less # 24.6%
-results_ADC %>% get_FR40less     # 0.5%
-
-
-# probability of 95% or better funding as of a given year
-results_ADC.cap %>% get_FR95more
-results_ADC     %>% get_FR95more
+# 
+# # Two funding policies 
+# load("Results_fullOverride/results_ADC.cap.RData")
+# load("Results_fullOverride/results_ADC.RData")
+# 
+# get_qts <- function(df){ 
+#    df %>% group_by(year) %>% 
+#           summarize(q90 = quantile(FR.MA, 0.90),
+#                     q75 = quantile(FR.MA, 0.75),
+#                     q50   = median(FR.MA),
+#                     q25 = quantile(FR.MA, 0.25),
+#                     q10 = quantile(FR.MA, 0.10))
+# }
+# 
+# get_FR40less <- function(df){
+#  df %>% group_by(sim) %>% 
+#         mutate(FR40 = FR.MA <= 40) %>%
+#         summarise(FR40 = any(FR40)) %>% 
+#         summarise(FR40 = 100 * sum(FR40)/n())
+# }
+# 
+# get_FR95more <- function(df){
+#   df %>% mutate(FR95 = FR.MA >= 95) %>%
+#          group_by(year) %>% 
+#          summarise(FR40 = 100 * sum(FR95)/n())
+# }
+# 
+# 
+# # quantiles of FR
+# results_ADC.cap %>% get_qts
+# results_ADC     %>% get_qts
+# 
+# 
+# # probability of FR below 40%
+# results_ADC.cap %>% get_FR40less # 24.6%
+# results_ADC %>% get_FR40less     # 0.5%
+# 
+# 
+# # probability of 95% or better funding as of a given year
+# results_ADC.cap %>% get_FR95more
+# results_ADC     %>% get_FR95more
 
 
 

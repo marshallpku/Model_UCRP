@@ -120,7 +120,7 @@ run_sim <- function(      .Tier_select,
   
   
   
-  # Vector used in asset amortization
+  # Vector used in asset smoothing
   s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector  # a vector containing the porportion of 
   
   
@@ -259,6 +259,7 @@ run_sim <- function(      .Tier_select,
                                 method2 = with(penSim, (1 - w) * EAA[j] + w * MA[j]) 
         )
       }
+      
       
       # do we need do consider interest when using asset smoothing method1? 
       
@@ -409,7 +410,7 @@ run_sim <- function(      .Tier_select,
       # I.r(j)
       penSim$I.r[j] <- with(penSim, i.r[j] *( MA[j] + C[j] - B[j])) # C[j] should be multiplied by i.r if assuming contribution is made at year end. 
       
-      # I.dif(j) = I.r(j) - I.e(j)
+      # I.dif(j) = I.r(j) - I.e(j):  used in asset smoothing 
       penSim$I.dif[j] <- with(penSim, I.r[j] - I.e[j])
       
     }
