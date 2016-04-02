@@ -709,6 +709,18 @@ get_metrics_maxChg <- function(runs,  year.max, data = results_all){
 
 
 
+maxChgWithin <- function(y, fn, ...){
+  # max/min change within a single interval.
+  zoo::rollapply(y, rev(seq_along(y)), function(x) fn(x - x[1], ...), fill = NA, align = "left") %>% fn(., ...)
+  #y <- outer(x, x, "-")
+  #y[lower.tri(y)] %>% fn(., ...)  
+}
+
+roll_maxChg <- function(x, fun, width,  ... ){
+  # For a given vector x, calculate the max/min change WITHIN each interval of the width "width" 
+  zoo::rollapply(x, width, maxChgWithin, fn = fun, ...,  fill = NA, align = "right")
+}
+
 
 
 

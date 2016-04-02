@@ -28,6 +28,7 @@ library(dplyr)
 options(dplyr.print_min = 100) # default is 10
 options(dplyr.print_max = 100) # default is 20
 library(ggplot2)
+library(gridExtra)
 library(magrittr)
 library(tidyr) # gather, spread
 library(foreach)
@@ -39,6 +40,7 @@ library("readxl")
 library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
 library(xlsx)
 library("btools")
+library(zoo)
 
 source("Functions.R")
 
@@ -47,8 +49,11 @@ source("Functions.R")
 #### Model Parameters ####
 #********************************************************************************
 
+#
+#
 # paramlist <- list(
 #   # Simulation parameters
+#   runName = ""
 #   nsim    = 2000, 
 #   nyear   = 30,      #nrow(df_SegalOpen_raw) 
 #   ncore   = 6, 
@@ -120,7 +125,7 @@ save(penSim_results, file = paste0(folder_save, "results_", runName, ".RData"))
 
 }
 
-paste0(folder_save, "runName", ".RData")
+# paste0(folder_save, "runName", ".RData")
 
 
 

@@ -1,0 +1,375 @@
+---
+title: "UCRP Full Override Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(knitr)
+library(data.table)
+library(gdata) # read.xls
+library(plyr)
+library(dplyr)
+options(dplyr.print_min = 100) # default is 10
+options(dplyr.print_max = 100) # default is 20
+library(ggplot2)
+library(gridExtra)
+library(magrittr)
+library(tidyr) # gather, spread
+library(foreach)
+library(doParallel)
+library(microbenchmark)
+library(readxl)
+library(stringr)
+library("readxl")
+library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
+library(xlsx)
+library("btools")
+
+source("Functions.R")
+```
+
+
+```{r, echo = FALSE, include=F}
+folderName <- "FullOverride/Results/"
+load_lresults <- function(runname){
+  fn <- paste0(folderName, "lresults_", runname, ".RData")
+  load(fn, envir = globalenv())}
+  
+```
+
+
+```{r, echo = FALSE}
+load_lresults("C.fixed_r7.25")
+load_lresults("C.Cap_r7.25")
+load_lresults("C.ADC_r7.25")
+
+load_lresults("C.fixed_r5.25")
+load_lresults("C.fixed_r9.25")
+load_lresults("C.ADC_r5.25")
+load_lresults("C.ADC_r9.25")
+
+```
+
+
+
+# Opening slide
+
+Model description:
+
+- Actuarial liabilities, benefit payments, normal costs, employee contributions are drawn directly from Segal open plan projection.
+- The model calculates UC contributions and plan asset values under stochastic investment return scenarios and various contribution policies.  
+- Important model settings:
+    - UC contributions are no less than employee contributions (AV2015)
+    - 20-year level dollar closed amortization.(amort basis occurred prior to 2015 are drawn from AV2015)
+    - 5-year asset smoothing
+
+
+
+
+# 1. Deterministic run with constant return of 7.25%; Segal projected contribution
+
+
+
+## Finance Table ($million)
+```{r, echo = FALSE}
+lresults_C.fixed_r7.25$tbl.det %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  select(-runname, -AA, -netxcf_PR) %>% 
+  mutate_each(funs(./1e6), AL, MA, B, C, EEC, ERC, extFund, netxcf) %>% 
+  kable(digits = 1)
+```
+
+
+```{r, echo = FALSE,  fig.width= 12}
+g1 <- lresults_C.fixed_r7.25$g.det.ERC
+g2 <- lresults_C.fixed_r7.25$g.det.ERC_PR
+g3 <- lresults_C.fixed_r7.25$g.det.FR
+
+ml <- marrangeGrob(list(g1, g2, g3), 
+                   nrow=1, ncol=3, top = NULL)
+ml 
+```
+
+
+
+<!-- ## Contribution policy: Paying ADC with a cap of 14% payroll -->
+<!-- ```{r, echo = FALSE} -->
+<!-- lresults_C.ADC_r7.25$tbl.det %>% -->
+<!--   select(-runname) %>% -->
+<!--   kable(digits = 2) -->
+<!-- ``` -->
+
+<!-- ```{r, echo = FALSE,  fig.width= 12} -->
+<!-- g1 <- lresults_C.ADC_r7.25$g.det.ERC -->
+<!-- g2 <- lresults_C.ADC_r7.25$g.det.ERC_PR -->
+<!-- g3 <- lresults_C.ADC_r7.25$g.det.FR -->
+
+<!-- ml <- marrangeGrob(list(g1, g2, g3),  -->
+<!--                    nrow=1, ncol=3, top = NULL) -->
+<!-- ml  -->
+<!-- ``` -->
+
+
+
+# 2. Stochastic return with 7.25% mean long term compound return, Segal projected contribution
+* Contribution Policy: use contributions from Segal projection 
+* In each simulation, returns are drawn from a normal distribution with mean 7.97% and standard deviation 12%, which implies an average long-term compound (geometric) return of 7.25%. The 25th and 75th percentiles of this return distributin are -0.12% and 16.1% respectively.
+
+
+## Distribution of 30-year compound annual return over all simulations
+```{r, echo = FALSE, fig.width= 8, warning=FALSE, message= FALSE}
+lresults_C.fixed_r7.25$g.distReturn
+```
+
+
+## Funded ratios over 30 years for selected individual simulations
+* Two simulations with compound annual return at year 30 close to 7.25%. (Blue lines)
+* Two simulations with compound annual returns at 25th percentile (Red) and 75th percentile (Green) respectively over all simulations. 
+
+```{r, echo = FALSE, fig.width= 12}
+lresults_C.fixed_r7.25$g.ind.FR
+```
+
+## Probability of funded ratio falling below 40% and rising above 95%
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.fixed_r7.25$g.stch.FR40
+s2 <- lresults_C.fixed_r7.25$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Median UC contribution (including STIP) over all simulations
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.fixed_r7.25$g.stch.ERCwSTIPmed
+s2 <- lresults_C.fixed_r7.25$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.fixed_r7.25$g.stch.CvADCmed
+s2 <- lresults_C.fixed_r7.25$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+# 3. Stochastic return with 7.25% mean long term compound return, total contribution cannot be less than ADC
+
+* Contribution policy: 
+    - Employer contributions from Segal projection.
+    - Employer contributions are no less than employee contributions.(The minimum total contribution is 2*employee contribution)
+    - Employee contributions + employer contributions + STIP = ADC, unless ADC < 2*employee contribution. 
+
+* In each simulation, returns are drawn from a normal distribution with mean 7.97% and standard deviation 12%, which implies an average long-term compound (geometric) return of 7.25%. The 25th and 75th percentiles of this return distribution are -0.12% and 16.1% respectively.
+ 
+
+
+## Funded ratios over 30 years for selected individual simulations
+* Two simulations with compound annual return close to 7.25%.(Blue lines)
+* Two simulations with compound annual returns at 25th percentile(Red) and 75th percentile(Green) respectively over all simulations 
+
+```{r, echo = FALSE, fig.width= 12}
+lresults_C.ADC_r7.25$g.ind.FR
+```
+
+## Probability of funded ratio falling below 40% or rising above 95%
+```{r, echo = FALSE, fig.width= 12}
+
+
+s1 <- lresults_C.ADC_r7.25$g.stch.FR40
+s2 <- lresults_C.ADC_r7.25$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.ADC_r7.25$g.stch.ERCwSTIPmed
+s2 <- lresults_C.ADC_r7.25$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to ADC
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.ADC_r7.25$g.stch.CvADCmed
+s2 <- lresults_C.ADC_r7.25$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results
+```{r, echo=FALSE}
+
+lresults_C.ADC_r7.25$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+# 4. Stochastic return with higher and lower mean compound returns, Segal projected contributions
+
+* Contribution policy: the same as in section 2.
+* Three model runs (2000 individual runs in each) with following return distributions:
+    * Left:   mean=5.97%, sd=12% (mean long-term compound return 5.25%)
+    * Middle: mean=7.97%, sd=12% (mean long-term compound return 7.25%)
+    * Right:  mean=9.97%, sd=12% (mean long-term compound return 9.25%)
+
+Note: For model with mean return 5.97%, the probabilities of funded ratio falling below 40% in selected years after 2030 are 34.24%(2035), 45.85%(2040), 54.65%(2044).
+
+
+## Probability of funded ratio falling below 40%
+```{r, echo = FALSE, fig.width= 12}
+
+p1 <- lresults_C.fixed_r5.25$g.stch.FR40
+p2 <- lresults_C.fixed_r7.25$g.stch.FR40
+p3 <- lresults_C.fixed_r9.25$g.stch.FR40
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+
+# lresults_C.fixed_r5.25$tbl.riskMeasure
+
+
+```
+
+
+```{r, echo = FALSE, fig.width = 6, fig.height = 8}
+lresults_C.fixed_r5.25$g.stch.FR40full
+```
+
+
+
+## Probability of funded ratio rising above 95%
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.fixed_r5.25$g.stch.FR95
+p2 <- lresults_C.fixed_r7.25$g.stch.FR95
+p3 <- lresults_C.fixed_r9.25$g.stch.FR95
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+
+```
+
+## Median UC contribution (including STIP) rate over all simulations
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.fixed_r5.25$g.stch.ERCwSTIP_PRmed
+p2 <- lresults_C.fixed_r7.25$g.stch.ERCwSTIP_PRmed
+p3 <- lresults_C.fixed_r9.25$g.stch.ERCwSTIP_PRmed
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+```
+
+
+
+
+# 5. Stochastic return with higher and lower mean compound returns, total contributions no less than ADC
+* Contribution policy: the same as in section 3.
+* Three model runs (2000 individual runs in each) with following return distributions:
+    * Left:   mean=5.97%, sd=12% (mean long-term compound return 5.25%)
+    * Middle: mean=7.97%, sd=12% (mean long-term compound return 7.25%)
+    * Right:  mean=9.97%, sd=12% (mean long-term compound return 9.25%)
+
+
+## Probability of funded ratio falling below 40%
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.ADC_r5.25$g.stch.FR40
+p2 <- lresults_C.ADC_r7.25$g.stch.FR40
+p3 <- lresults_C.ADC_r9.25$g.stch.FR40
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+
+```
+
+## Probability of funded ratio rising above 95%
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.ADC_r5.25$g.stch.FR95
+p2 <- lresults_C.ADC_r7.25$g.stch.FR95
+p3 <- lresults_C.ADC_r9.25$g.stch.FR95
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+
+```
+
+## Median UC contribution (including STIP) rate over all simulations
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.ADC_r5.25$g.stch.ERCwSTIP_PRmed
+p2 <- lresults_C.ADC_r7.25$g.stch.ERCwSTIP_PRmed
+p3 <- lresults_C.ADC_r9.25$g.stch.ERCwSTIP_PRmed
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+```
+
+
+
+# Appendix 
+
+## Return volatility in selected individual simulations
+* Two simulations with compound annual return close to 7.25%.(Blue lines)
+* Two simulations with compound annual returns at 25th percentile(Red) and 75th percentile(Green) respectively over all simulations  
+```{r, echo = FALSE, fig.width= 12, warning=FALSE}
+lresults_C.fixed_r7.25$g.ind.rollgeoReturn
+```
+
+
+
+
+
+
+

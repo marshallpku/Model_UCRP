@@ -67,6 +67,7 @@ penSim0 <- df_SegalOpen_raw %>%
                   
                   C.Segal,
                   ERC.Segal,
+                   
                   
                   AL = AL.Segal,
                   NC = NC.Segal,
@@ -75,7 +76,8 @@ penSim0 <- df_SegalOpen_raw %>%
                   UAAL.AA = UAAL.AA.Segal,
                   B = B.Segal,
                   PR = PR.Segal,
-                  extFund = STIP.Segal) %>% 
+                  extFund = STIP.Segal
+                  ) %>% 
            mutate(i = i,
                   MA = 0,
                   AA = 0,
@@ -86,7 +88,8 @@ penSim0 <- df_SegalOpen_raw %>%
                   ERC = 0,
                   C = 0,
                   I.r = 0,
-                  init.smoothing = init.smoothing * f.initSmooth) %>% 
+                  init.smoothing = init.smoothing * f.initSmooth,
+                  ERC.Segal.noSTIP = ERC.Segal - extFund) %>% 
            as.list
 
 
@@ -206,18 +209,30 @@ for (j in 1:nyear){
   
 
   ## ERC
+  
+  # UCRP specific contribution policy "ADC":
+   # SegalCon: the overrding parameter. If TRUE, just use Segal ERC - STIP as ERC
+   # STIP: when SegalCon is FALSE, STIP makes up shortfall between ERC+EEC and ADC, up to the value of STIP.  
+
   penSim$ERC[j] <- switch(ConPolicy,
-                          ADC     = with(penSim, ADC.ER[j]),                          # Full ADC
+                          ADC     = with(penSim, max(0, ADC.ER[j] - extFund[j])),     # Full ADC
                           ADC_cap = with(penSim, min(ADC.ER[j], PR_pct_cap * PR[j])), # ADC with cap. Cap is a percent of payroll 
                           Fixed   = with(penSim, PR_pct_fixed * PR[j])                # Fixed percent of payroll
   ) 
   
   if(ERC.lb_EEC) penSim$ERC[j] <- with(penSim, max(ERC[j], EEC[j]))
   
+  if(SegalCon) penSim$ERC[j] = with(penSim, ERC.Segal.noSTIP[j])
   
   ## C
-  #penSim$C[j] = penSim$C.Segal[j] 
-  penSim$C[j] = with(penSim, EEC[j] + ERC[j] + extFund[j])
+  #penSim$C[j] = penSim$C.Segal[j]
+  
+  if(SegalCon) penSim$C[j] = with(penSim, EEC[j] + ERC[j] + extFund[j]) 
+  
+  else {penSim$C[j] = with(penSim, EEC[j] + ERC[j] + min(max(0, ADC[j] - (EEC[j] + ERC[j])), extFund[j]))
+  }
+  
+  
   
   
   # C(j) - ADC(j)
@@ -249,28 +264,43 @@ penSim %<>% as.data.frame
 stopCluster(cl)
 
 penSim_results <- bind_rows(penSim_results) %>%
-                  mutate(year = rep(2015:2044, nsim+1),
+                  mutate(runname = runname,
+                         year = rep(2015:2044, nsim+1),
                          sim  = rep(0:nsim, each = nyear),
                          d_MA = 100*(MA/MA.Segal - 1),
                          d_AA = 100*(AA/AA.Segal - 1),
                          d_C   = 100*(C/C.Segal - 1),
                          d_ERC = 100*(ERC/(ERC.Segal- extFund) - 1),
                          
-                         ERC_PR = 100 * (ERC)/PR,
-                         ERC_PR.Segal = 100 * (ERC.Segal - extFund)/PR,
+                         ERCwSTIP = ERC + extFund,
                          
+                         ERC_PR = 100 * (ERC)/PR,
+                         ERCwSTIP_PR = 100 * ERCwSTIP / PR,
+                         ERC_PR.Segal = 100 * (ERC.Segal - extFund)/PR,
                          EEC_PR = 100 * EEC/PR,
+                         
+                         C_PR = 100 * C / PR,
+                         ADC_PR = 100 * ADC / PR, 
                          
                          FR.MA       = 100 * MA/AL,
                          FR.MA.Segal = 100 * MA.Segal/AL,
-                         d_FR.MA     = FR.MA - FR.MA.Segal)
+                         d_FR.MA     = FR.MA - FR.MA.Segal,
+                         
+                         netxcf = C - B,
+                         netxcf_MA = 100 * netxcf / MA,
+                         netxcf_PR = 100 * netxcf / PR,
+                         apratio   = MA/PR)
 
-var.display <- c("sim", "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
+# var.display <- c("sim", "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
+# 
+# penSim_results %>% filter(sim == 0) %>% select(one_of(var.display)) %>% kable(digits = 3)
+# 
+# results_ADC <- penSim_results
+# 
 
-penSim_results %>% filter(sim == 0) %>% select(one_of(var.display)) %>% kable(digits = 3)
 
 
-results_ADC <- penSim_results
+
 # save(results_ADC.cap, file = "Results_fullOverride/results_ADC.cap.RData")
 # save(results_ADC, file = "Results_fullOverride/results_ADC.RData")
 
@@ -293,7 +323,6 @@ results_ADC <- penSim_results
 
 
 
-
 # 
 # # Two funding policies 
 # load("Results_fullOverride/results_ADC.cap.RData")
@@ -308,6 +337,8 @@ results_ADC <- penSim_results
 #                     q10 = quantile(FR.MA, 0.10))
 # }
 # 
+
+
 # get_FR40less <- function(df){
 #  df %>% group_by(sim) %>% 
 #         mutate(FR40 = FR.MA <= 40) %>%
@@ -318,7 +349,7 @@ results_ADC <- penSim_results
 # get_FR95more <- function(df){
 #   df %>% mutate(FR95 = FR.MA >= 95) %>%
 #          group_by(year) %>% 
-#          summarise(FR40 = 100 * sum(FR95)/n())
+#          summarise(FR95 = 100 * sum(FR95)/n())
 # }
 # 
 # 
