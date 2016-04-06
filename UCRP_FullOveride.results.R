@@ -349,8 +349,32 @@ g.stch.C_PRmed <- tbl.riskMeasure %>% select(year, C_PR.med) %>%
 #### measure of contribution volatility ####
 #**********************************************************
 
-# # 1.max 5-year change 
-# 
+# What presures the political system?
+# 1. ERC rate rises unexpectedly in a relatively short period of time. This threats budget planning.
+# 2. ERC rate rises to a very high level, even through a relatively long period of time, that is unaffordable to the plan sponsor. 
+#    This threats the affordability and may cause benefit cuts, tax increase, and crowding out expenditure on other public services.   
+
+# Questions we may want to ask plan sponsor/policymakers:
+ # How big is the rise in ERC rate in a short period time that can threat budget planning?
+ # How big is the ERC rate that can threat the affordability?
+
+
+# General measure of volatility
+ # - standard devation of year-to-year change in
+
+# Measures of sharp rise of ERC rate
+ # - max 5-year change in ERC rate in each simulation, median over all simulations
+ # - max 10-year change in ERC rate in each simulation, median over all simulations
+ # - max deviation from 5/10 year moving average. For ERC rate and ERC
+ # - probability(over all simulations) of ERC rate rising by a% in 5/10 years, through year x  
+
+
+# Measure of 
+ # - probability of ERC exceeding 2*NC in any of the years through year x
+ # - probability of ERC rate exceeding a% in any of the years through year x
+
+
+
 # 
 # penSim_results
 # 
