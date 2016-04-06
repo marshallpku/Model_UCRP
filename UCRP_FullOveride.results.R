@@ -21,21 +21,22 @@
    # t:  table for prob FR<40%, FR>95, and 5-year max change in ERC
 
 
-#runname <- "C.ADC_r7.25"
-folderName <- "FullOverride/Results/"
-runname.list <- runList$runname
-
 
 make_lresults <- function(runname, folderName){
 
+runname <- "C.ADC_r7.25"
+folderName <- "FullOverride/Results/"
 fileName <- paste0(folderName,"results_", runname, ".RData") 
 load(fileName)
+
+results.stch <- penSim_results %>% filter(sim != 0)
+results.det <- penSim_results %>% filter(sim == 0) # %>% select(year, sim, ERC, ERC_PR, FR.MA)
+
 
 
 
 #### Deterministic Run ####
 #**********************************************************
-results.det <- penSim_results %>% filter(sim == 0) # %>% select(year, sim, ERC, ERC_PR, FR.MA)
 
 
 # table for deterministic run 
@@ -72,7 +73,7 @@ get_lineplot <- function(df, x, y){
 
 g.det.ERC <- results.det %>% mutate(ERC.UC = (ERCwSTIP)/1e6) %>% 
         get_lineplot("year", "ERC.UC") + 
-        labs(title = "UC employer contribution \n ) ", x = "Year", y = "Contribution ($million)")
+        labs(title = "UC employer contribution\n  ", x = "Year", y = "Contribution ($million)")
 # can add ADC to the plot
                         
                 
@@ -86,17 +87,38 @@ g.det.FR <- (results.det %>% get_lineplot("year", "FR.MA")) +
                 coord_cartesian(ylim = c(70, 110)) + 
                 labs(title = "Funded ratio \nbased on market asset value", x = "Year", y = "Percent")
 
+
+g.det.CvADCmed <- results.det %>% select(year,C, ADC) %>% gather(var, value, -year) %>% 
+  ggplot(aes(x = year, y = value/1e6, color = var)) + theme_bw() + 
+  geom_point() + geom_line() + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c("red","darkblue"), name = "", 
+                     label = c("ADC", "Contribution")) + 
+  labs(title = "Total contribution (including STIP) and ADC",
+       x = "Year", y = "$million")
+
+
+g.det.CvADC_PRmed <- results.det %>% select(year, C_PR, ADC_PR) %>% gather(var, value, -year) %>% 
+  ggplot(aes(x = year, y = value, color = var)) + theme_bw() + 
+  geom_point() + geom_line() + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) +
+  scale_color_manual(values = c("red","darkblue"), name = "", 
+                     label = c("ADC", "Contribution")) + 
+  labs(title = "Total contribution rate (including STIP) and ADC as % payroll",
+       x = "Year", y = "Percentage of payroll")
+
+
+
 g.det.ERC
 g.det.ERC_PR
 g.det.FR
-
 
 
 #### Stochastic Runs: individual runs ####
 #***********************************************************************
 
 
-results.stch <- penSim_results %>% filter(sim != 0)
+
 DC <- results.stch$i[1]
 FR.MA.year1 <- results.stch$FR.MA[1]
 
@@ -176,15 +198,22 @@ g.ind.ERC <-  results_indiv %>%
 
 # Rolling compound return
 
+
+hlineNotes <- unique(round(100*df_indiv_selcet$geoReturn,2))
+
+
 results_indiv %<>% group_by(sim) %>%  
   mutate(rollgeoReturn = zoo::rollapply(i.r, width = 5, get_geoReturn, fill = NA, align = "right")) 
 
 g.ind.rollgeoReturn <-  results_indiv %>% 
   ggplot(aes(x = year, y = rollgeoReturn*100, color = factor(sim), label = plot.label)) + theme_bw() + 
   geom_line(linetype = 1) + geom_point() + 
+  geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
   scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
-                     label = plot.label, name = "Compound return of \nindividual sim") +
+                     label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "5-year rolling compound annual returns of \nselected individual simulations",
        x = "Year", y = "Percent")
 
@@ -193,7 +222,7 @@ g.ind.rollgeoReturn
 
 ## Stochastic Runs: Risk measures ####
 #***********************************************************************
-riskMeasures1 <- results.stch %>%   
+riskMeasures <- results.stch %>%   
   mutate(FR40less = FR.MA <= 40,
          FR95more = FR.MA >= 95
          ) %>%
@@ -210,23 +239,6 @@ riskMeasures1 <- results.stch %>%
             C.med      = median(C),
             C_PR.med   = median(C_PR)
             )
-
-# results.stch %>%
-#   group_by(sim) %>%
-#   mutate(max5yChg = roll_maxChg(ERC_PR, max, 5)) %>%
-#   group_by(year) %>%
-#   summarise(max5yChg.med = max(max5yChg))
-
-riskMeasures2 <- results.stch %>%  
-  group_by(sim) %>% 
-  mutate(ERC_PR.5yChg = ERC_PR - lag(ERC_PR, 5) ) %>% 
-  group_by(year) %>% 
-  summarise(ERC_PR.5yChg = median(ERC_PR.5yChg))
-
-
-tbl.riskMeasure <- left_join(riskMeasures1, riskMeasures2)
-tbl.riskMeasure
-
 
 
 g.stch.FR95 <- tbl.riskMeasure %>% 
@@ -304,7 +316,7 @@ g.stch.CvADCmed <- tbl.riskMeasure %>% select(year,C.med, ADC.med) %>% gather(va
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c("red","darkblue"), name = "", 
                      label = c("ADC", "Contribution")) + 
-  labs(title = "Median total contribution (including STIP) and \n Median ADC (Median over all simulations)",
+  labs(title = "Median total contribution (including STIP) and \n Median ADC (Medians over all simulations)",
        x = "Year", y = "$million")
 
 
@@ -314,28 +326,75 @@ g.stch.CvADC_PRmed <- tbl.riskMeasure %>% select(year, C_PR.med, ADC_PR.med) %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) +
   scale_color_manual(values = c("red","darkblue"), name = "", 
                      label = c("ADC", "Contribution")) + 
-  labs(title = "Median total contribution rate (including STIP) and \n Median ADC as % payroll (Median over all simulations)",
+  labs(title = "Median total contribution rate (including STIP) and \n Median ADC as % payroll (Medians over all simulations)",
        x = "Year", y = "Percentage of payroll")
 
 
-g.stch.CvADCmed 
-g.stch.CvADC_PRmed
+g.stch.Cmed <- tbl.riskMeasure %>% select(year,C.med) %>% 
+  ggplot(aes(x = year, y = C.med/1e6)) + theme_bw() + 
+  geom_point() + geom_line() + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  labs(title = "Median total contribution (including STIP) \n(Medians over all simulations)",
+       x = "Year", y = "$million")
+
+
+g.stch.C_PRmed <- tbl.riskMeasure %>% select(year, C_PR.med) %>% 
+  ggplot(aes(x = year, y = C_PR.med)) + theme_bw() + 
+  geom_point() + geom_line() + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) +
+  labs(title = "Median total contribution rate (including STIP) \n(Medians over all simulations)",
+       x = "Year", y = "Percentage of payroll")
+
+
+#### measure of contribution volatility ####
+#**********************************************************
+
+# # 1.max 5-year change 
+# 
+# 
+# penSim_results
+# 
+# 
+# # results.stch %>%
+# #   group_by(sim) %>%
+# #   mutate(max5yChg = roll_maxChg(ERC_PR, max, 5)) %>%
+# #   group_by(year) %>%
+# #   summarise(max5yChg.med = max(max5yChg))
+# 
+# riskMeasures2 <- results.stch %>%  
+#   group_by(sim) %>% 
+#   mutate(ERC_PR.5yChg = ERC_PR - lag(ERC_PR, 5) ) %>% 
+#   group_by(year) %>% 
+#   summarise(ERC_PR.5yChg = median(ERC_PR.5yChg))
 
 
 
 
 
-g.stch.FR95
-g.stch.FR40
-g.stch.FRmed
-g.stch.ERC_PRmed
-g.stch.ERCchg
+
+
+
+# g.stch.CvADCmed 
+# g.stch.CvADC_PRmed
+# 
+# g.stch.Cmed
+# g.stch.C_PRmed
+# 
+# g.stch.FR95
+# g.stch.FR40
+# g.stch.FRmed
+# g.stch.ERC_PRmed
+# g.stch.ERCchg
 
 assign(paste0("lresults_", runname), 
             list(tbl.det = tbl.det,
                  g.det.ERC = g.det.ERC,
                  g.det.ERC_PR = g.det.ERC_PR,
                  g.det.FR = g.det.FR,
+                 g.det.CvADCmed = g.det.CvADCmed,
+                 g.det.CvADC_PRmed =  g.det.CvADC_PRmed,
+                 g.stch.Cmed =  g.stch.Cmed,
+                 g.stch.C_PRmed = g.stch.C_PRmed,
                  
                  g.ind.FR  = g.ind.FR,
                  g.ind.ERC = g.ind.FR,
@@ -359,7 +418,42 @@ do.call(save, list(paste0("lresults_", runname), file=paste0(folderName, "lresul
 }
 
 
+# run the "Model Parameters" section in FullOVerride_RunControl file to get runList
+runname.list <- runList$runname
 for(runname in runname.list) make_lresults(runname, folderName)
+
+
+
+
+# 
+# runname <- "C.ADC_r7.25"
+# folderName <- "FullOverride/Results/"
+# runname.list <- runList$runname
+# 
+# fileName <- paste0(folderName,"results_", runname, ".RData") 
+# load(fileName)
+#   
+# r1 <- penSim_results
+# r2 <- penSim_results 
+# 
+# 
+# r1 %>% group_by(year) %>% summarise(SC_q25 = quantile(SC - SC_init, 0.75)/1e6,
+#                                     SC_q50 = quantile(SC - SC_init, 0.5)/1e6)
+# 
+# 
+# r2 %>% group_by(year) %>% summarise(SC_q25 = quantile(SC - SC_init, 0.75)/1e6,
+#                                     SC_q50 = quantile(SC - SC_init, 0.5)/1e6)
+# 
+# 
+# 
+# 
+
+
+
+
+
+
+
 
 
 

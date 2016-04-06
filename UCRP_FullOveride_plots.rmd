@@ -49,6 +49,8 @@ load_lresults("C.fixed_r5.25")
 load_lresults("C.fixed_r9.25")
 load_lresults("C.ADC_r5.25")
 load_lresults("C.ADC_r9.25")
+load_lresults("C.Cap_r5.25")
+load_lresults("C.Cap_r9.25")
 
 ```
 
@@ -78,7 +80,7 @@ lresults_C.fixed_r7.25$tbl.det %>%
   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
   select(-runname, -AA, -netxcf_PR) %>% 
   mutate_each(funs(./1e6), AL, MA, B, C, EEC, ERC, extFund, netxcf) %>% 
-  kable(digits = 1)
+  kable(digits = 2)
 ```
 
 
@@ -91,6 +93,24 @@ ml <- marrangeGrob(list(g1, g2, g3),
                    nrow=1, ncol=3, top = NULL)
 ml 
 ```
+
+
+```{r, echo = FALSE,  fig.width= 12}
+g1 <- lresults_C.fixed_r7.25$g.det.CvADCmed
+g2 <- lresults_C.fixed_r7.25$g.det.CvADC_PRmed
+
+ml <- marrangeGrob(list(g1, g2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+
+```
+
+
+```
+
+
+
 
 
 
@@ -115,7 +135,7 @@ ml
 
 # 2. Stochastic return with 7.25% mean long term compound return, Segal projected contribution
 * Contribution Policy: use contributions from Segal projection 
-* In each simulation, returns are drawn from a normal distribution with mean 7.97% and standard deviation 12%, which implies an average long-term compound (geometric) return of 7.25%. The 25th and 75th percentiles of this return distributin are -0.12% and 16.1% respectively.
+* In each simulation, returns are drawn from a normal distribution with mean 7.97% and standard deviation 12%, which implies an average long-term compound (geometric) return of 7.25%. The 25th and 75th percentiles of this return distribution are -0.12% and 16.1% respectively.
 
 
 ## Distribution of 30-year compound annual return over all simulations
@@ -157,6 +177,19 @@ ml
 ```
 
 
+## Total Contribution
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.fixed_r7.25$g.stch.Cmed
+s2 <- lresults_C.fixed_r7.25$g.stch.C_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
 ## Total Contribution compared to  ADC
 ```{r, echo = FALSE, fig.width= 12}
 
@@ -168,6 +201,17 @@ ml <- marrangeGrob(list(s1, s2),
 ml
 
 ```
+
+
+## Table of summary results
+```{r, echo=FALSE}
+
+lresults_C.fixed_r7.25$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
 
 
 
@@ -357,6 +401,60 @@ ml
 ```
 
 
+# 6. Stochastic return with higher and lower mean compound returns, total contributions no less than ADC
+* Contribution policy: policy in section 5 + 14% cap on ERC rate.
+* Three model runs (2000 individual runs in each) with following return distributions:
+    * Left:   mean=5.97%, sd=12% (mean long-term compound return 5.25%)
+    * Middle: mean=7.97%, sd=12% (mean long-term compound return 7.25%)
+    * Right:  mean=9.97%, sd=12% (mean long-term compound return 9.25%)
+
+Note: For model with mean return 5.97%, the probabilities of funded ratio falling below 40% in selected years after 2030 are 34.55%(2035), 47.05%(2040), 54.75%(2044).
+s
+## Probability of funded ratio falling below 40%
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.Cap_r5.25$g.stch.FR40
+p2 <- lresults_C.Cap_r7.25$g.stch.FR40
+p3 <- lresults_C.Cap_r9.25$g.stch.FR40
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+lresults_C.Cap_r5.25$tbl.riskMeasure
+
+
+
+```
+
+## Probability of funded ratio rising above 95%
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.Cap_r5.25$g.stch.FR95
+p2 <- lresults_C.Cap_r7.25$g.stch.FR95
+p3 <- lresults_C.Cap_r9.25$g.stch.FR95
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+
+```
+
+## Median UC contribution (including STIP) rate over all simulations
+```{r, echo = FALSE, fig.width= 14}
+
+p1 <- lresults_C.Cap_r5.25$g.stch.ERCwSTIP_PRmed
+p2 <- lresults_C.Cap_r7.25$g.stch.ERCwSTIP_PRmed
+p3 <- lresults_C.Cap_r9.25$g.stch.ERCwSTIP_PRmed
+
+ml <- marrangeGrob(list(p1, p2, p3), 
+                   nrow=1, ncol=3, top = NULL)
+ml
+
+```
+
+
 
 # Appendix 
 
@@ -367,6 +465,77 @@ ml
 lresults_C.fixed_r7.25$g.ind.rollgeoReturn
 ```
 
+
+
+
+# Appendix2. Stochastic return with 7.25% mean long term compound return, total contribution cannot be less than ADC
+
+* Contribution policy: 
+    - Employer contributions from Segal projection.
+    - Employer contributions are no less than employee contributions.(The minimum total contribution is 2*employee contribution)
+    - ERC cap: 14% of payroll
+
+* In each simulation, returns are drawn from a normal distribution with mean 7.97% and standard deviation 12%, which implies an average long-term compound (geometric) return of 7.25%. The 25th and 75th percentiles of this return distribution are -0.12% and 16.1% respectively.
+ 
+
+
+## Funded ratios over 30 years for selected individual simulations
+* Two simulations with compound annual return close to 7.25%.(Blue lines)
+* Two simulations with compound annual returns at 25th percentile(Red) and 75th percentile(Green) respectively over all simulations 
+
+```{r, echo = FALSE, fig.width= 12}
+lresults_C.Cap_r7.25$g.ind.FR
+```
+
+## Probability of funded ratio falling below 40% or rising above 95%
+```{r, echo = FALSE, fig.width= 12}
+
+
+s1 <- lresults_C.Cap_r7.25$g.stch.FR40
+s2 <- lresults_C.Cap_r7.25$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.Cap_r7.25$g.stch.ERCwSTIPmed
+s2 <- lresults_C.Cap_r7.25$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to ADC
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_C.Cap_r7.25$g.stch.CvADCmed
+s2 <- lresults_C.Cap_r7.25$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results
+```{r, echo=FALSE}
+
+lresults_C.Cap_r7.25$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
 
 
 

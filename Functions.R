@@ -337,12 +337,19 @@ get_quantiles <- function( runName,     # character
                            year.max = 100,
                            qts = c(0.1, 0.25, 0.5, 0.75, 0.9)){
   
-  #   runName = c("R4F1")     # character
-  #   varName = "FR"     # character
-  #   data = results_all
-  #   year.max = 100
-  #   qts = c(0.1, 0.25, 0.5, 0.75, 0.9)
-  #   
+    # runName = c("R4F1")     # character
+    # varName = "FR"     # character
+    # data = results_all
+    # year.max = 100
+    # qts = c(0.1, 0.25, 0.5, 0.75, 0.9)
+
+  
+    # runName = "C.ADC_r7.25"     # character
+    # varName = "FR.MA"     # character
+    # data = penSim_results
+    # year.max = 100
+    # qts = c(0.1, 0.25, 0.5, 0.75, 0.9)
+    # 
   
   df <- data %>% filter(runname %in% runName, sim >= 1) %>%  
     select_("runname",  "sim","year", varName) %>% spread_("year", varName)
@@ -352,11 +359,13 @@ get_quantiles <- function( runName,     # character
     
     df_q %<>% mutate(Quantile = rownames(df_q)) %>% gather(year, Value, -Quantile) %>%
       
-      mutate(year = f2n(year),
+      mutate(#year = f2n(year),
              Quantile = factor(Quantile)) %>% filter(year <= year.max)
     
     df_q %<>% spread(Quantile, Value)
   }
+  
+
   
   df <- ldply(split(df, df$runname), fn, .id = "runname")
   
