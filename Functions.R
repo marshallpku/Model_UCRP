@@ -366,14 +366,40 @@ get_quantiles <- function( runName,     # character
   }
   
 
-  
   df <- ldply(split(df, df$runname), fn, .id = "runname")
-  
-  df$runname <- factor(df$runname, levels = runName)
   
   return(df)
   
 }
+
+
+# get_quantiles2 <- function(varName,     # character
+#                            data,
+#                            qts = c(0.1, 0.25, 0.5, 0.75, 0.9)){
+# 
+# 
+#   varName = "maxChg5y"     # character
+#   data    = maxChg5y
+#   qts = c(0.1, 0.25, 0.5, 0.75, 0.9)
+#   
+# 
+#   
+#   df <- select_(data, "sim", , varName) %>% spread_("year", varName)
+#   
+#   fn <- function(df){ 
+#     df_q <- sapply(select(df, -sim), function(x) quantile(x, qts, na.rm = TRUE)) %>% as.data.frame
+#     
+#     df_q %<>% mutate(Quantile = rownames(df_q)) %>% gather(year, Value, -Quantile) %>%
+#       
+#     mutate(#year = f2n(year),
+#            Quantile = factor(Quantile)) %>% filter(year <= year.max)
+#     
+#     df_q %<>% spread(Quantile, Value)
+#   }
+#   
+#   df <- fn(df)
+# }
+
 
 
 

@@ -24,7 +24,7 @@
 
 make_lresults <- function(runname, folderName){
 
-runname <- "C.ADC_r7.25"
+# runname <- "C.ADC_r7.25"
 folderName <- "FullOverride/Results/"
 fileName <- paste0(folderName,"results_", runname, ".RData") 
 load(fileName)
@@ -346,52 +346,6 @@ g.stch.C_PRmed <- tbl.riskMeasure %>% select(year, C_PR.med) %>%
        x = "Year", y = "Percentage of payroll")
 
 
-#### measure of contribution volatility ####
-#**********************************************************
-
-# What presures the political system?
-# 1. ERC rate rises unexpectedly in a relatively short period of time. This threats budget planning.
-# 2. ERC rate rises to a very high level, even through a relatively long period of time, that is unaffordable to the plan sponsor. 
-#    This threats the affordability and may cause benefit cuts, tax increase, and crowding out expenditure on other public services.   
-
-# Questions we may want to ask plan sponsor/policymakers:
- # How big is the rise in ERC rate in a short period time that can threat budget planning?
- # How big is the ERC rate that can threat the affordability?
-
-
-# General measure of volatility
- # - standard devation of year-to-year change in
-
-# Measures of sharp rise of ERC rate
- # - max 5-year change in ERC rate in each simulation, median over all simulations
- # - max 10-year change in ERC rate in each simulation, median over all simulations
- # - max deviation from 5/10 year moving average. For ERC rate and ERC
- # - probability(over all simulations) of ERC rate rising by a% in 5/10 years, through year x  
-
-
-# Measure of 
- # - probability of ERC exceeding 2*NC in any of the years through year x
- # - probability of ERC rate exceeding a% in any of the years through year x
-
-
-
-# 
-# penSim_results
-# 
-# 
-# # results.stch %>%
-# #   group_by(sim) %>%
-# #   mutate(max5yChg = roll_maxChg(ERC_PR, max, 5)) %>%
-# #   group_by(year) %>%
-# #   summarise(max5yChg.med = max(max5yChg))
-# 
-# riskMeasures2 <- results.stch %>%  
-#   group_by(sim) %>% 
-#   mutate(ERC_PR.5yChg = ERC_PR - lag(ERC_PR, 5) ) %>% 
-#   group_by(year) %>% 
-#   summarise(ERC_PR.5yChg = median(ERC_PR.5yChg))
-
-
 
 
 
@@ -444,7 +398,12 @@ do.call(save, list(paste0("lresults_", runname), file=paste0(folderName, "lresul
 
 # run the "Model Parameters" section in FullOVerride_RunControl file to get runList
 runname.list <- runList$runname
+folderName <- "FullOverride/Results/"
 for(runname in runname.list) make_lresults(runname, folderName)
+
+
+
+
 
 
 
