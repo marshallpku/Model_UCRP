@@ -5,8 +5,9 @@
 #*********************************************************************************************************
 # 1.(DONE) Allow the initial UAAL to be treated as loss/gain in the intial year. 
 # 2. Specify all the data modeification in the run control file. 
-# 3. Try calculating amortization basis using market value based UAAL.(code already in Model.Sim. )
-
+# 3. (Not necessary)Try calculating amortization basis using market value based UAAL.(code already in Model.Sim.)
+# 4. Incorporate initial asset smoothing.
+# 5. Add STIP
 
 #*********************************************************************************************************
 # Notes on UCRP features ####
@@ -78,7 +79,7 @@ paramlist <- list(
   
   infl = 0.03,
   prod = 0.01,
-  s.year = 10,
+  s.year = 5,
   
   m.UAAL0 = 20,
   m.UAAL1 = 20,
