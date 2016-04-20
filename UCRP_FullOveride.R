@@ -106,18 +106,17 @@ if(return_type == "simple"){
 
 
 if (return_type == "internal"){
-# return_scenario <- "RS1"
+# return_scenario <- "RS4"
 # nsim = 5
 
-  returnScenarios %<>%  filter(scenario == return_scenario)
+  returnScenarios_local <- returnScenarios %>% filter(scenario == return_scenario)
 
   i.r <- cbind(
-    with(returnScenarios, create_returns(return_det, 0, period)),
-    replicate(nsim, with(returnScenarios, create_returns(r.mean, r.sd, period)))
+    with(returnScenarios_local, create_returns(return_det, 0, period)),
+    replicate(nsim, with(returnScenarios_local, create_returns(r.mean, r.sd, period)))
     )
   colnames(i.r) <- 0:nsim
 }
-
 
 
 # i.r <- rnorm(nyear, ir.mean, ir.sd)
@@ -309,9 +308,9 @@ penSim_results <- bind_rows(penSim_results) %>%
                          netxcf_PR = 100 * netxcf / PR,
                          apratio   = MA/PR)
 
-# var.display <- c("sim", "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
+var.display <- c("sim","i.r",  "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
 # 
-# penSim_results %>% filter(sim == 0) %>% select(one_of(var.display)) %>% kable(digits = 3)
+penSim_results %>% filter(sim == 2) %>% select(one_of(var.display)) %>% kable(digits = 3)
 # 
 # results_ADC <- penSim_results
 # 

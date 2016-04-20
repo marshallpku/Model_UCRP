@@ -43,7 +43,8 @@ replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mea
 
 #2. 
 
-r.mean <- c(0.05000, 0.05375, 0.05750, 0.06125, 0.06500, 0.06875, 0.07750)
+r.mean <- c(0.0500, 0.05375, 0.05750, 0.06125, 0.06500, 0.06875, 0.07750)
+#r.mean <- c(0.0550, 0.05875, 0.06250, 0.06625, 0.0700, 0.07375, 0.07750)
 r.sd   <- rep(0.1, 7)
 period <- c(1,1,1,1,1,1,24)
 replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mean
@@ -88,6 +89,7 @@ r.mean <- c(0.0775)
 r.sd   <- rep(0.1, 1)
 period <- c(30)
 replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mean
+
 
 
 
