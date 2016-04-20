@@ -326,6 +326,15 @@ trans_cont <- function(cont, run){
 
 
 
+create_returns <- function(r.mean, r.sd, period){
+  # Create return series with time varying mean, sd.
+  # Mean and sd in each period are given by "r.mean" and "r.sd". 
+  # Length of each period is given by "period". 
+  i.r <- unlist(mapply(rnorm, period, r.mean, r.sd))
+}
+
+
+
 
 #**********************************************
 #  4. Functions for analyzing results        ####

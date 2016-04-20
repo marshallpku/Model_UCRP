@@ -107,6 +107,8 @@ runList <- read_excel(path_RunControl, sheet="params", skip = 0) %>% filter(!is.
            mutate(m.max = max(m, m.UAAL0, m.UAAL1, m.surplus0, m.surplus1))
 runList
 
+# Import return scenarios
+returnScenarios <- read_excel(path_RunControl, sheet="returns", skip = 0) %>% filter(!is.na(scenario))
 
 
 #### Run Models and Save  ####

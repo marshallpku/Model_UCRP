@@ -50,6 +50,9 @@ replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mea
 
 (1.05*1.05375*1.0575*1.06125*1.065*1.06875*1.0725^24)^(1/30)
 
+# stochastic: 6.91%~6.94
+# deterministic: 6.986%
+
 
 #3. 
 r.mean <- c(0.055, 0.065, 0.0775)
@@ -65,12 +68,20 @@ replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mea
 (1.062^30/(1.045^5*1.055^5))^(1/20)
 
 
+# stochastic: 6.69~6.72%
+# Deterministic: 6.66%
+
+
 #4. 
 r.mean <- c(0.06, 0.08)
 r.sd   <- rep(0.1, 2)
 period <- c(10,10)
 replicate(50000, create_returns(r.mean, r.sd, period) %>% get_geoReturn) %>% mean
 
+(1.055^10*1.075^10)^(1/20)
+
+# stochastic: 6.54%~6.55%
+# deterministic: 6.495%
 
 #5. 
 r.mean <- c(0.0775)

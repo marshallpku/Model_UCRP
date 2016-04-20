@@ -96,10 +96,28 @@ penSim0 <- df_SegalOpen_raw %>%
 #### Investment returns ####
 #********************************************************************************
 # i.r <- rep(0.0725, nyear)
-set.seed(1234)
-i.r <- matrix(rnorm(nyear*nsim, ir.mean, ir.sd), nyear, nsim)
-i.r <- cbind(rep(0.0725, nyear), i.r)
-colnames(i.r) <- 0:nsim
+
+if(return_type == "simple"){
+  set.seed(1234)
+  i.r <- matrix(rnorm(nyear*nsim, ir.mean, ir.sd), nyear, nsim)
+  i.r <- cbind(rep(ir.mean + ir.sd^2/2, nyear), i.r)
+  colnames(i.r) <- 0:nsim
+}
+
+
+if (return_type == "internal"){
+# return_scenario <- "RS1"
+# nsim = 5
+
+  returnScenarios %<>%  filter(scenario == return_scenario)
+
+  i.r <- cbind(
+    with(returnScenarios, create_returns(return_det, 0, period)),
+    replicate(nsim, with(returnScenarios, create_returns(r.mean, r.sd, period)))
+    )
+  colnames(i.r) <- 0:nsim
+}
+
 
 
 # i.r <- rnorm(nyear, ir.mean, ir.sd)
