@@ -1,9 +1,5 @@
 
 
-
-
-
-
 #### measure of contribution volatility ####
 #**********************************************************
 
@@ -34,8 +30,8 @@
 
 make_lContVol <- function(runname, folderName){
   
-# runname <- "C.ADC_r7.25"
-# folderName <- "FullOverride/Results/"
+#runname <- "RS1.Cap"
+#folderName <- "FullOverride/Results/"
 fileName <- paste0(folderName,"results_", runname, ".RData") 
 load(fileName)
 
@@ -45,19 +41,19 @@ results.stch <- penSim_results %>% filter(sim != 0)
 qts <- c(0.1, 0.25, 0.5, 0.75, 0.9)
 
 # 5/10 year max changes
-maxChg.ERC_PR <- results.stch %>% 
-  group_by(sim) %>%
-  mutate(maxChg5y   = roll_maxChg(ERC_PR, max, 5),
-         maxChg10y  = roll_maxChg(ERC_PR, max, 10)) %>% 
-         #maxChg5y2   = ERC_PR - lag(ERC_PR, 4),
-         #maxChg10y2  = ERC_PR - lag(ERC_PR, 9)) %>% 
-  summarise(maxChg5y  = max(maxChg5y, na.rm = TRUE),
-            maxChg10y = max(maxChg10y, na.rm = TRUE))
-            #maxChg5y2  = max(maxChg5y2, na.rm = TRUE),
-            #maxChg10y2 = max(maxChg10y2, na.rm = TRUE))
-
-
-maxChg.ERC_PR %>% sapply(quantile, probs = qts) %>% data.frame %>% select(-sim)
+# maxChg.ERC_PR <- results.stch %>% 
+#   group_by(sim) %>%
+#   mutate(maxChg5y   = roll_maxChg(ERC_PR, max, 5),
+#          maxChg10y  = roll_maxChg(ERC_PR, max, 10)) %>% 
+#          #maxChg5y2   = ERC_PR - lag(ERC_PR, 4),
+#          #maxChg10y2  = ERC_PR - lag(ERC_PR, 9)) %>% 
+#   summarise(maxChg5y  = max(maxChg5y, na.rm = TRUE),
+#             maxChg10y = max(maxChg10y, na.rm = TRUE)) %>% 
+#             #maxChg5y2  = max(maxChg5y2, na.rm = TRUE),
+#             #maxChg10y2 = max(maxChg10y2, na.rm = TRUE))
+#   mutate(runname = runname)
+# 
+# maxChg.ERC_PR %>% sapply(quantile, probs = qts) %>% data.frame %>% select(-sim)
 
 
 # max devation from 5/10 year moving average over 30 years,  
@@ -69,53 +65,155 @@ max.dMA.ERC_PR <- results.stch %>%
          dMA10y = ERC_PR - MA10y
   ) %>% 
   summarise(max.dMA5y  = max(dMA5y, na.rm = T),
-            max.dMA10y = max(dMA10y, na.rm = T))
+            max.dMA10y = max(dMA10y, na.rm = T)) %>% 
+  mutate(runname = runname)
 
 
-max.dMA.ERC_PR %>% sapply(quantile, probs = qts) %>% data.frame %>% select(-sim)
+# max.dMA.ERC_PR %>% sapply(quantile, probs = qts) %>% data.frame %>% select(-sim)
+
+
+## Probability of FR falling below 40% as of any given year. 
+
+# prob.FR40less.byYear <- results.stch %>%
+#   group_by(sim) %>%
+#   mutate(FR40less = FR.MA <= 40) %>%
+#   select(sim, year, FR40less)
+# 
+# 
+# fn <- function(y, df){
+#   df %>%
+#     group_by(sim) %>%
+#     filter(year <= y) %>%
+#     summarize_each(funs(any(., na.rm = T )), -sim, -year) %>%
+#     summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>%
+#     mutate(year = y) %>%
+#     unlist
+# }
+# 
+# prob_FR40less.rolling <- t(sapply(2015:2044, fn_sharprise, df = prob.FR40less.byYear)) %>%
+#   data.frame %>% select(year, everything()) %>%
+#   mutate(runname = runname)
+# prob_FR40less.rolling
+
+
+prob_FR40less.rolling <- results.stch %>% 
+  group_by(sim) %>% 
+  mutate(FR40less = cumany(FR.MA <= 40)) %>% 
+  select(sim, year, FR40less) %>% 
+  group_by(year) %>% 
+  summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
+  mutate(runname = runname)
+prob_FR40less.rolling
+
+
+## Probability of FR above 95% as of any given year. 
+prob_FR95more.rolling <- results.stch %>% 
+  group_by(sim) %>% 
+  mutate(FR95more = cumany(FR.MA >= 95)) %>% 
+  select(sim, year, FR95more) %>% 
+  group_by(year) %>% 
+  summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
+  mutate(runname = runname)
+prob_FR95more.rolling
+
 
 
 # - probability(over all simulations) of ERC rate rising by over 50%/100% in 5/10 years, through year 30 
 #   Notes:
 #    - suffix "2": In any 5/10 year period, calculate pct change in ERC rate between year 1 and year 5/10.
 
-prob_chgPct <- results.stch %>% 
-  group_by(sim) %>% 
-  mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 5) - 1),
-         Chg50pct5y2   = Chg5y2.pct >= 50,
-         Chg100pct5y2  = Chg5y2.pct >= 100) %>% 
-  summarise(Chg50pct5y2  = any(Chg50pct5y2, na.rm = T),
-            Chg100pct5y2 = any(Chg100pct5y2, na.rm = T)) %>% 
-  summarise(Chg50pct5y2  = 100 * sum(Chg50pct5y2)/n(),
-            Chg100pct5y2 = 100 * sum(Chg100pct5y2)/n())
+# prob.ERCsharpRisePct.byYear <- results.stch %>% 
+#   group_by(sim) %>% 
+#   mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 4) - 1),
+#          Chg50pct5y2   = Chg5y2.pct >= 50,
+#          Chg100pct5y2  = Chg5y2.pct >= 100) %>% 
+#   select(sim, year, Chg50pct5y2, Chg100pct5y2)
+# 
+# prob_ERCsharpRisePct.rolling <- t(sapply(2015:2044, fn, df = prob.ERCsharpRisePct.byYear)) %>% 
+#                                 data.frame %>% select(year, everything()) %>% 
+#                                 mutate(runname = runname)
+# 
+# 
 
+prob_ERCsharpRisePct.rolling <- 
+results.stch %>% 
+  group_by(sim) %>% 
+  mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 4) - 1),
+         Chg5y2.pct    = na2zero(Chg5y2.pct),
+         Chg50pct5y2   = cumany(Chg5y2.pct >= 50),
+         Chg100pct5y2  = cumany(Chg5y2.pct >= 100)) %>% 
+         select(sim, year, Chg50pct5y2, Chg100pct5y2) %>% 
+         group_by(year) %>% 
+         summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
+  mutate(runname = runname)
+prob_ERCsharpRisePct.rolling 
+  
+
+
+
+
+
+# Probability of ERC rate rising by 10% of payroll in a 5-year time period. 
+
+# prob.ERCsharpRisePts.byYear <- results.stch %>% 
+#   group_by(sim) %>% 
+#   mutate(ChgPts5y2 =  ERCwSTIP_PR - lag(ERCwSTIP_PR, 4),  # year1-5 change in pct points 
+#          Chg6Pts5y2    = ChgPts5y2 >= 6, 
+#          Chg10Pts5y2   = ChgPts5y2 >= 10,
+#          Chg15Pts5y2   = ChgPts5y2 >= 15) %>% 
+#   select(sim, year, Chg6Pts5y2, Chg10Pts5y2, Chg15Pts5y2)
+# 
+# prob_ERCsharpRisePts.rolling <- t(sapply(2015:2044, fn, df = prob.ERCsharpRisePts.byYear)) %>% 
+#                                 data.frame %>% select(year, everything()) %>% 
+#                                 mutate(runname = runname)
+# prob_ERCsharpRisePts.rolling
+
+
+prob_ERCsharpRisePts.rolling <- 
+results.stch %>% 
+  group_by(sim) %>% 
+  mutate(ChgPts5y2 =  ERCwSTIP_PR - lag(ERCwSTIP_PR, 4),  # year1-5 change in pct points 
+         ChgPts5y2 = na2zero(ChgPts5y2),
+         Chg6Pts5y2    = cumany(ChgPts5y2 >= 6), 
+         Chg10Pts5y2   = cumany(ChgPts5y2 >= 10),
+         Chg15Pts5y2   = cumany(ChgPts5y2 >= 15)) %>% 
+  select(sim, year, Chg6Pts5y2, Chg10Pts5y2, Chg15Pts5y2) %>% 
+  group_by(year) %>% 
+  summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
+  mutate(runname = runname)
+prob_ERCsharpRisePts.rolling
 
 
 # Measure of high ERC/ERC rate level
 # - probability of ERC exceeding 2*NC in any of the years through year x
 # - probability of ERC rate exceeding a% in any of the years through year x
 
-df_highERC <- results.stch %>% 
+# df_highERC <- results.stch %>% 
+#   group_by(sim) %>% 
+#   mutate(ERC_2NC  = ERC >= 2 * NC,
+#          ERC_PR30 = ERC_PR >= 30,
+#          ADC_3NC  = ADC >= 3* NC,
+#          ADC_PR50 = 100*ADC/PR >= 50) %>% 
+#   select(sim, year, ERC_2NC, ERC_PR30, ADC_3NC, ADC_PR50)
+# 
+# prob_highERC <- t(sapply(2015:2044, fn, df = df_highERC)) %>% 
+#                 data.frame %>% select(year, everything()) %>% 
+#                 mutate(runname = runname)
+# prob_highERC
+
+
+
+prob_highERC <- results.stch %>% 
   group_by(sim) %>% 
-  mutate(ERC_2NC  = ERC >= 2 * NC,
-         ERC_PR30 = ERC_PR >= 30,
-         ADC_3NC  = ADC >= 3* NC,
-         ADC_PR50 = 100*ADC/PR >= 50) %>% 
-  select(sim, year, ERC_2NC, ERC_PR30, ADC_3NC, ADC_PR50)
-
-
-
-fn <- function(y){
-  df_highERC %>% group_by(sim) %>% 
-    filter(year <= y ) %>% 
-    summarise_each(funs(any), -sim, - year) %>% 
-    summarise_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
-    mutate(year = y)
-}
-
-
-prob_highERC <- t(sapply(2015:2044, fn)) %>% data.frame %>% select(year, everything())
-
+  mutate(ERC_2NC  = cumany(ERC >= 2 * NC),
+         ERC_PR30 = cumany(ERC_PR >= 30),
+         ADC_3NC  = cumany(ADC >= 3* NC),
+         ADC_PR50 = cumany(100*ADC/PR >= 50)) %>% 
+  select(sim, year, ERC_2NC, ERC_PR30, ADC_3NC, ADC_PR50) %>%
+  group_by(year) %>% 
+  summarize_each(funs(100 * sum(., na.rm = T)/n()), -sim) %>% 
+  mutate(runname = runname)
+prob_highERC
 
 
 # maxChg.ERC_PR
@@ -126,10 +224,13 @@ prob_highERC <- t(sapply(2015:2044, fn)) %>% data.frame %>% select(year, everyth
 
 
 assign(paste0("lContVol_", runname), 
-       list(maxChg.ERC_PR  = maxChg.ERC_PR,  
-            maxChg.ERC_PR  = maxChg.ERC_PR,   
+       list( 
+            #maxChg.ERC_PR  = maxChg.ERC_PR,   
             max.dMA.ERC_PR = max.dMA.ERC_PR,  
-            prob_chgPct    = prob_chgPct,  
+            prob_FR40less.rolling = prob_FR40less.rolling,
+            prob_FR95more.rolling = prob_FR95more.rolling,
+            prob_ERCsharpRisePct.rolling = prob_ERCsharpRisePct.rolling,
+            prob_ERCsharpRisePts.rolling = prob_ERCsharpRisePts.rolling,
             prob_highERC   = prob_highERC)
 )
 
@@ -143,77 +244,6 @@ folderName <- "FullOverride/Results/"
 for(runname in runname.list) make_lContVol(runname, folderName)
 
 
-
-load_lContVol <- function(runname){
-  fn <- paste0(folderName, "lContVol_", runname, ".RData")
-  load(fn, envir = globalenv())}
-
-
-
-load_lContVol("C.ADC_r7.25")
-load_lContVol("C.Cap_r7.25")
-load_lContVol("C.ADC_r5.25")
-load_lContVol("C.Cap_r5.25")
-
-
-
-lContVol_C.Cap_r7.25$maxChg.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-lContVol_C.ADC_r7.25$maxChg.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-
-lContVol_C.Cap_r5.25$maxChg.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-lContVol_C.ADC_r5.25$maxChg.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-
-
-
-lContVol_C.Cap_r7.25$max.dMA.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-lContVol_C.ADC_r7.25$max.dMA.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-
-lContVol_C.Cap_r5.25$max.dMA.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-lContVol_C.ADC_r5.25$max.dMA.ERC_PR %>% sapply(quantile, probs = qts)  %>% data.frame %>% select(-sim) %>% kable(digit = 2)
-
-
-
-lContVol_C.Cap_r7.25$prob_chgPct %>% kable(digit = 2)
-lContVol_C.ADC_r7.25$prob_chgPct %>% kable(digit = 2)
-
-lContVol_C.Cap_r5.25$prob_chgPct %>% kable(digit = 2)
-lContVol_C.ADC_r5.25$prob_chgPct %>% kable(digit = 2)
-  
-
-
-lContVol_C.Cap_r7.25$prob_highERC %>% kable(digit = 2)
-lContVol_C.ADC_r7.25$prob_highERC %>% kable(digit = 2)
-
-lContVol_C.Cap_r5.25$prob_highERC %>% kable(digit = 2)
-lContVol_C.ADC_r5.25$prob_highERC %>% kable(digit = 2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# runname <- "C.ADC_r9.25"
-# folderName <- "FullOverride/Results/"
-# load(paste0(folderName,"results_", runname, ".RData") )
-# 
-# get_quantiles(unique(penSim_results$runname), "FR.MA", data = penSim_results, year.max = Inf)
-# 
-# df_geoReturn <- penSim_results %>% filter(sim != 0) %>% group_by(sim) %>% 
-#   summarise(geoReturn = get_geoReturn(i.r))
-# 
-# df_geoReturn$geoReturn %>% quantile(c(0, 0.1, 0.25， 0.5))
-# # Even with mean return = 9.97%, the worst 10% simulations have 30-year compound returns less than 6.5%. which is 
-# # insufficient to bring them to full funding.  
 
 
 

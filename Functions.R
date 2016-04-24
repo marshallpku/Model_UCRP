@@ -335,6 +335,19 @@ create_returns <- function(r.mean, r.sd, period){
 
 
 
+# rolling window return
+
+get_rollingReturns <- function(returnSeries, rolling_type = c("moving", "expanding"), window){
+  # calculate moving window or expanding win dow geometric mean return for a return series. 
+  window_width <- switch(rolling_type,
+                         moving = window,
+                         expanding = seq_along(returnSeries))
+  
+  rollingReturn <- zoo::rollapply(returnSeries, width = window_width, get_geoReturn, fill = NA, align = "right")
+  return(rollingReturn)
+}
+
+
 
 #**********************************************
 #  4. Functions for analyzing results        ####

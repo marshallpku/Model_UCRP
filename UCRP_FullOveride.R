@@ -311,6 +311,7 @@ penSim_results <- bind_rows(penSim_results) %>%
 var.display <- c("sim","i.r",  "year", "AL", "MA.Segal", "MA", "d_MA", "AA.Segal", "AA", "d_AA", "FR.MA.Segal", "FR.MA", "d_FR.MA", "C.Segal", "C", "ERC.Segal", "ERC", "d_ERC", "ERC_PR.Segal", "ERC_PR") # , LG, C_ADC)"
 # 
 penSim_results %>% filter(sim == 2) %>% select(one_of(var.display)) %>% kable(digits = 3)
+
 # 
 # results_ADC <- penSim_results
 # 

@@ -24,14 +24,13 @@
 
 make_lresults <- function(runname, folderName){
 
-# runname <- "C.ADC_r7.25"
-folderName <- "FullOverride/Results/"
+#runname <- "RS1.Cap"
+#folderName <- "FullOverride/Results/"
 fileName <- paste0(folderName,"results_", runname, ".RData") 
 load(fileName)
 
 results.stch <- penSim_results %>% filter(sim != 0)
-results.det <- penSim_results %>% filter(sim == 0) # %>% select(year, sim, ERC, ERC_PR, FR.MA)
-
+results.det  <- penSim_results %>% filter(sim == 0) # %>% select(year, sim, ERC, ERC_PR, FR.MA)
 
 
 
@@ -41,7 +40,8 @@ results.det <- penSim_results %>% filter(sim == 0) # %>% select(year, sim, ERC, 
 
 # table for deterministic run 
 make_tbl.det <- function(df_results){
- var.tbl.det <- c("runname","year", "AL", "MA", "AA", "B", "C", "EEC", "ERC", "extFund", "netxcf", "FR.MA", "ERC_PR", "netxcf_MA", "netxcf_PR", "apratio") 
+ var.tbl.det <- c("runname","year", "AL", "MA", "AA", "B", "C", "EEC", "ERC", "extFund", "netxcf", "FR.MA", 
+                  "ERC_PR", "ERCwSTIP", "ERCwSTIP_PR", "netxcf_MA", "netxcf_PR", "apratio") 
 
   df_results %<>% mutate(netxcf = C - B,
                          netxcf_MA = 100 * netxcf / MA,
@@ -129,14 +129,13 @@ FR.MA.year1 <- results.stch$FR.MA[1]
 g.distReturn <- results.stch %>% group_by(sim) %>% 
    summarize(geoReturn = get_geoReturn(i.r)) %>% 
    ggplot(aes(100*geoReturn)) + theme_bw() + 
-   geom_histogram(color = "black", fill = "blue") + 
+   geom_histogram(color = "black", fill = "blue", binwidth = 0.5, boundary = 0) + 
    geom_vline(xintercept = DC * 100, color = "red") + 
-   scale_x_continuous(breaks = seq(0,20,2.5))+
+   scale_x_continuous(breaks = seq(0,20,1))+
    labs(title = "Distribution of 30-year compound annual return over 2000 simulations",
         x = "%")
 
-
-
+g.distReturn
 
 
 # FR% and ERC% in 4 indiv runs
@@ -165,7 +164,6 @@ results_indiv <- results.stch %>% filter(sim %in% df_indiv_selcet$sim) %>%
                  left_join(df_indiv_selcet %>% select(sim, order.ir, geoReturn)) %>% 
                  mutate(plot.label = paste0(round(100*geoReturn, digits = 2), "%"))
 
-
 results_indiv$plot.label
 df_indiv_selcet
 
@@ -180,33 +178,37 @@ g.ind.FR <- results_indiv %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_y_continuous(breaks = c(seq(0, 500, 10))) + 
   scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
-                     label = plot.label, name = "Compound return of \nindividual sim") +
+                     label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "Funded ratio of selected individual simulations",
              x = "Year", y = "Funded ratio (%, based on market value asset)")
   
 
 
-g.ind.ERC <-  results_indiv %>% 
-  ggplot(aes(x = year, y = ERC_PR, color = factor(sim), label = plot.label)) + theme_bw() + 
+g.ind.ERCwSTIP <-  results_indiv %>% 
+  ggplot(aes(x = year, y = ERCwSTIP_PR, color = factor(order.ir), label = plot.label)) + theme_bw() + 
   geom_line(linetype = 1) + geom_point() + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
-                     label = plot.label, name = "Compound return of \nindividual sim") +
-  labs(title = "Employer contribution rate (excluding STIP) of \nselected individual simulations",
+                     label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
+  labs(title = "Employer contribution rate (including STIP) of \nselected individual simulations",
        x = "Year", y = "Contribution as % of payroll")
 
+#g.ind.FR
+#g.ind.ERCwSTIP
 
 # Rolling compound return
 
+roundedReturn <- round(100*df_indiv_selcet$geoReturn,2)
 
-hlineNotes <- unique(round(100*df_indiv_selcet$geoReturn,2))
+hlineNotes <- c(min(roundedReturn), DC*100, max(roundedReturn))
 
 
 results_indiv %<>% group_by(sim) %>%  
-  mutate(rollgeoReturn = zoo::rollapply(i.r, width = 5, get_geoReturn, fill = NA, align = "right")) 
+  mutate(rollgeoReturn   = get_rollingReturns(i.r, "moving", window = 5),
+         expandgeoReturn = get_rollingReturns(i.r, "expanding")) 
 
-g.ind.rollgeoReturn <-  results_indiv %>% 
-  ggplot(aes(x = year, y = rollgeoReturn*100, color = factor(sim), label = plot.label)) + theme_bw() + 
+g.ind.expandgeoReturn <-  results_indiv %>% 
+  ggplot(aes(x = year, y = expandgeoReturn*100, color = factor(order.ir))) + theme_bw() + 
   geom_line(linetype = 1) + geom_point() + 
   geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
@@ -214,15 +216,29 @@ g.ind.rollgeoReturn <-  results_indiv %>%
   annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
   scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
-  labs(title = "5-year rolling compound annual returns of \nselected individual simulations",
+  labs(title = "Rolling geometric returns up to a given year for \nselected individual simulations",
        x = "Year", y = "Percent")
 
-g.ind.rollgeoReturn
+
+g.ind.annualReturn <-  results_indiv %>% 
+  ggplot(aes(x = year, y = i.r*100, color = factor(order.ir))) + theme_bw() + 
+  geom_line(linetype = 1) + geom_point() + 
+  geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
+  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+                     label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
+  labs(title = " Annual returns of \nselected individual simulations",
+       x = "Year", y = "Percent")
+
+g.ind.expandgeoReturn
+g.ind.annualReturn
 
 
 ## Stochastic Runs: Risk measures ####
 #***********************************************************************
-riskMeasures <- results.stch %>%   
+tbl.riskMeasure <- results.stch %>%   
   mutate(FR40less = FR.MA <= 40,
          FR95more = FR.MA >= 95
          ) %>%
@@ -230,15 +246,20 @@ riskMeasures <- results.stch %>%
   summarise(FR95more   = 100 * sum(FR95more)/n(),
             FR40less   = 100 * sum(FR40less)/n(),
             FR.q25     = quantile(FR.MA, 0.25),
+            FR.q75     = quantile(FR.MA, 0.75),
             FR.med     = median(FR.MA),
             ERC_PR.med = median(ERC_PR),
             ERCwSTIP.med = median(ERCwSTIP),
             ERCwSTIP_PR.med = median(ERCwSTIP_PR),
+            ERCwSTIP_PR.q25 = quantile(ERCwSTIP_PR, 0.25),
+            ERCwSTIP_PR.q75 = quantile(ERCwSTIP_PR, 0.75),
             ADC.med    = median(ADC),
             ADC_PR.med = median(ADC_PR),
             C.med      = median(C),
             C_PR.med   = median(C_PR)
-            )
+            ) %>% 
+  mutate(runname = runname) %>% 
+  select(runname, everything())
 
 
 g.stch.FR95 <- tbl.riskMeasure %>% 
@@ -375,9 +396,10 @@ assign(paste0("lresults_", runname),
                  g.stch.C_PRmed = g.stch.C_PRmed,
                  
                  g.ind.FR  = g.ind.FR,
-                 g.ind.ERC = g.ind.FR,
+                 g.ind.ERCwSTIP = g.ind.ERCwSTIP,
                  g.distReturn = g.distReturn,
-                 g.ind.rollgeoReturn = g.ind.rollgeoReturn,
+                 g.ind.expandgeoReturn = g.ind.expandgeoReturn,
+                 g.ind.annualReturn    = g.ind.annualReturn,
                  
                  tbl.riskMeasure = tbl.riskMeasure,
                  g.stch.FR95     =  g.stch.FR95,

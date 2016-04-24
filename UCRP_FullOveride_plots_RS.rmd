@@ -1,0 +1,654 @@
+---
+title: "UCRP Full Override Model"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(knitr)
+library(data.table)
+library(gdata) # read.xls
+library(plyr)
+library(dplyr)
+options(dplyr.print_min = 100) # default is 10
+options(dplyr.print_max = 100) # default is 20
+library(ggplot2)
+library(gridExtra)
+library(magrittr)
+library(tidyr) # gather, spread
+library(foreach)
+library(doParallel)
+library(microbenchmark)
+library(readxl)
+library(stringr)
+library("readxl")
+library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had to install Java 64-bit on Windows 10 64-bit to load properly
+library(xlsx)
+library("btools")
+
+source("Functions.R")
+```
+
+
+```{r, echo = FALSE, include=F}
+folderName <- "FullOverride/Results/"
+load_lresults <- function(runname){
+  fn <- paste0(folderName, "lresults_", runname, ".RData")
+  load(fn, envir = globalenv())}
+  
+```
+
+
+```{r, echo = FALSE}
+load_lresults("RS1.Cap")
+load_lresults("RS2.Cap")
+load_lresults("RS3.Cap")
+load_lresults("RS4.Cap")
+load_lresults("RS5.Cap")
+
+load_lresults("RS1.ADC")
+load_lresults("RS2.ADC")
+load_lresults("RS3.ADC")
+load_lresults("RS4.ADC")
+load_lresults("RS5.ADC")
+
+```
+
+
+# 1. Scenario 1, UC contribution policy with and without ERC cap. 
+For the next 10 years an annual return of  4.5%, then 6.5%  for each of the next 5 years, and then 7.5%.
+
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.Cap$g.stch.FR40
+s2 <- lresults_RS1.Cap$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.ADC$g.stch.FR40
+s2 <- lresults_RS1.ADC$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+
+
+## Median UC contribution (including STIP) over all simulations, with ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.Cap$g.stch.ERCwSTIPmed
+s2 <- lresults_RS1.Cap$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations, without ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.ADC$g.stch.ERCwSTIPmed
+s2 <- lresults_RS1.ADC$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+## Total Contribution compared to  ADC, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.Cap$g.stch.CvADCmed
+s2 <- lresults_RS1.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.Cap$g.stch.CvADCmed
+s2 <- lresults_RS1.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS1.ADC$g.stch.CvADCmed
+s2 <- lresults_RS1.ADC$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results, with ERC cap
+```{r, echo=FALSE}
+
+lresults_RS1.Cap$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+## Table of summary results, without ERC cap
+```{r, echo=FALSE}
+
+lresults_RS1.ADC$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+# 2. Scenario 2, UC contribution policy with and without ERC cap. 
+Expected return rising from 5% to 7.25% gradually over 7 years
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.Cap$g.stch.FR40
+s2 <- lresults_RS2.Cap$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.ADC$g.stch.FR40
+s2 <- lresults_RS2.ADC$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+
+
+## Median UC contribution (including STIP) over all simulations, with ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.Cap$g.stch.ERCwSTIPmed
+s2 <- lresults_RS2.Cap$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations, without ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.ADC$g.stch.ERCwSTIPmed
+s2 <- lresults_RS2.ADC$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+## Total Contribution compared to  ADC, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.Cap$g.stch.CvADCmed
+s2 <- lresults_RS2.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.Cap$g.stch.CvADCmed
+s2 <- lresults_RS2.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS2.ADC$g.stch.CvADCmed
+s2 <- lresults_RS2.ADC$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results, with ERC cap
+```{r, echo=FALSE}
+
+lresults_RS2.Cap$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+## Table of summary results, without ERC cap
+```{r, echo=FALSE}
+
+lresults_RS2.ADC$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+
+
+# 3. Scenario 3, UC contribution policy with and without ERC cap. 
+Scenario should have expected return of 5% for 5 years, then 6% for 5 years, then 7.25%
+
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.Cap$g.stch.FR40
+s2 <- lresults_RS3.Cap$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.ADC$g.stch.FR40
+s2 <- lresults_RS3.ADC$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+
+
+## Median UC contribution (including STIP) over all simulations, with ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.Cap$g.stch.ERCwSTIPmed
+s2 <- lresults_RS3.Cap$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations, without ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.ADC$g.stch.ERCwSTIPmed
+s2 <- lresults_RS3.ADC$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+## Total Contribution compared to  ADC, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.Cap$g.stch.CvADCmed
+s2 <- lresults_RS3.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.Cap$g.stch.CvADCmed
+s2 <- lresults_RS3.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS3.ADC$g.stch.CvADCmed
+s2 <- lresults_RS3.ADC$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results, with ERC cap
+```{r, echo=FALSE}
+
+lresults_RS3.Cap$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+## Table of summary results, without ERC cap
+```{r, echo=FALSE}
+
+lresults_RS3.ADC$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+# 4. Scenario 4, UC contribution policy with and without ERC cap. 
+Annualized return over the first 10 year period of 5.5% and then the next 10 years 7.5%
+
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.Cap$g.stch.FR40
+s2 <- lresults_RS4.Cap$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.ADC$g.stch.FR40
+s2 <- lresults_RS4.ADC$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+
+
+## Median UC contribution (including STIP) over all simulations, with ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.Cap$g.stch.ERCwSTIPmed
+s2 <- lresults_RS4.Cap$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations, without ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.ADC$g.stch.ERCwSTIPmed
+s2 <- lresults_RS4.ADC$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+## Total Contribution compared to  ADC, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.Cap$g.stch.CvADCmed
+s2 <- lresults_RS4.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.Cap$g.stch.CvADCmed
+s2 <- lresults_RS4.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS4.ADC$g.stch.CvADCmed
+s2 <- lresults_RS4.ADC$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results, with ERC cap
+```{r, echo=FALSE}
+
+lresults_RS4.Cap$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+## Table of summary results, without ERC cap
+```{r, echo=FALSE}
+
+lresults_RS4.ADC$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+
+# 5. Scenario 5, UC contribution policy with and without ERC cap. 
+Over a 30 year horizon, annualized return of 7.25%
+
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.Cap$g.stch.FR40
+s2 <- lresults_RS5.Cap$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+## Probability of funded ratio falling below 40% and rising above 95%, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.ADC$g.stch.FR40
+s2 <- lresults_RS5.ADC$g.stch.FR95
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+```
+
+
+
+
+## Median UC contribution (including STIP) over all simulations, with ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.Cap$g.stch.ERCwSTIPmed
+s2 <- lresults_RS5.Cap$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Median UC contribution (including STIP) over all simulations, without ECR cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.ADC$g.stch.ERCwSTIPmed
+s2 <- lresults_RS5.ADC$g.stch.ERCwSTIP_PRmed 
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+
+## Total Contribution compared to  ADC, with ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.Cap$g.stch.CvADCmed
+s2 <- lresults_RS5.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.Cap$g.stch.CvADCmed
+s2 <- lresults_RS5.Cap$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Total Contribution compared to  ADC, without ERC cap
+```{r, echo = FALSE, fig.width= 12}
+
+s1 <- lresults_RS5.ADC$g.stch.CvADCmed
+s2 <- lresults_RS5.ADC$g.stch.CvADC_PRmed
+
+ml <- marrangeGrob(list(s1, s2), 
+                   nrow=1, ncol=2, top = NULL)
+ml
+
+```
+
+
+## Table of summary results, with ERC cap
+```{r, echo=FALSE}
+
+lresults_RS5.Cap$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+## Table of summary results, without ERC cap
+```{r, echo=FALSE}
+
+lresults_RS5.ADC$tbl.riskMeasure %>% 
+  select(year, FR95more, FR40less, FR.q25, FR.med, ERCwSTIP_PR.med) %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  kable(digits = 3)
+```
+
+
+
+
+
+
+
