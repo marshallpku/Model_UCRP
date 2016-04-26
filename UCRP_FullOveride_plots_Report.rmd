@@ -72,6 +72,19 @@ Outputs_folder <- "FullOverride/Report_graphs/"
 
 
 
+```{r}
+
+lresults_RS1.Cap$tbl.det %>% 
+  filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+  select(-runname, -AA, -netxcf_PR) %>% 
+  mutate_each(funs(./1e6), AL, MA, B, C, EEC, ERC, extFund, netxcf) %>% 
+  kable(digits = 2)
+
+
+```
+
+
+
 ```{r, echo = FALSE, fig.width= 12}
 
 g1 <- lresults_RS1.Cap$g.distReturn
@@ -84,6 +97,9 @@ g.width <- 9
 ggsave(file = paste0(Outputs_folder, "DistReturn.png"), g1, height = g.height, width = g.width)
 
 ```
+
+
+
 
 
 
