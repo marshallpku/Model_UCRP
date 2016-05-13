@@ -349,6 +349,28 @@ get_rollingReturns <- function(returnSeries, rolling_type = c("moving", "expandi
 
 
 
+getcell <- function(file, sheet, cell) {
+  require(XLConnect)
+  value <- readWorksheetFromFile(file, sheet=sheet, header=FALSE, region=cell, colTypes="character")
+  return(as.character(value))
+}
+
+
+xlrange <- function(file, sheet, cell1, cell2) {
+  startcell <- getcell(file, sheet, cell1)
+  endcell   <- getcell(file, sheet, cell2)
+  range     <- paste0(startcell, ":", endcell)
+  return(range)
+}
+
+read_ExcelRange <- function(file, sheet, cellStart = "B2", cellEnd = "B3", ...){
+  require(XLConnect)
+  range <- xlrange(file, sheet, cellStart, cellEnd)
+  readWorksheetFromFile(file, sheet = sheet, header=TRUE, region=range, ...)
+}
+
+
+
 #**********************************************
 #  4. Functions for analyzing results        ####
 #**********************************************

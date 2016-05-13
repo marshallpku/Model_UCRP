@@ -104,8 +104,8 @@ paramlist <- list(
   pct.F.LSC = 0.6, # assumed proporotion of females, for the calculation of LSC amount 
   
   
-  pct.ca.F =  0.8, # proportion of females who opt for ca upon retirement
-  pct.ca.M =  0.6,
+  pct.ca.M =  0.8, # proportion of males who opt for ca upon retirement
+  pct.ca.F =  0.6,
   
   factor.ca = 0.25,
   

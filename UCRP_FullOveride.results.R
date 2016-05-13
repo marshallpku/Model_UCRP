@@ -319,12 +319,12 @@ g.stch.ERCwSTIP_PRmed <- tbl.riskMeasure %>%
        x = "Year", y = "Percentage of payroll")
 
 
-g.stch.ERCchg <- tbl.riskMeasure %>% 
-  get_lineplot("year", "ERC_PR.5yChg") + 
-  coord_cartesian(ylim = c(0,20))  + 
-  scale_y_continuous(breaks = seq(0,200, 5)) + 
-  labs(title = "5-year change in UC contributions rate (STIP excluded), \nmedian over all simulations",
-       x = "Year", y = "Percentage of payroll")
+# g.stch.ERCchg <- tbl.riskMeasure %>% 
+#   get_lineplot("year", "ERC_PR.5yChg") + 
+#   coord_cartesian(ylim = c(0,20))  + 
+#   scale_y_continuous(breaks = seq(0,200, 5)) + 
+#   labs(title = "5-year change in UC contributions rate (STIP excluded), \nmedian over all simulations",
+#        x = "Year", y = "Percentage of payroll")
 
 
 
@@ -409,7 +409,6 @@ assign(paste0("lresults_", runname),
                  g.stch.ERC_PRmed   =  g.stch.ERC_PRmed,
                  g.stch.ERCwSTIPmed = g.stch.ERCwSTIPmed,
                  g.stch.ERCwSTIP_PRmed = g.stch.ERCwSTIP_PRmed,
-                 g.stch.ERCchg   =  g.stch.ERCchg,
                  g.stch.CvADCmed = g.stch.CvADCmed,
                  g.stch.CvADC_PRmed =  g.stch.CvADC_PRmed))
 

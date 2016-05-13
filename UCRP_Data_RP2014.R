@@ -18,7 +18,7 @@
 #                      ## Import Data  ####
 #*********************************************************************************************************
 
-# Import morality data
+# Import mortality data
 data_raw_tot <- read_excel("Data/RP2014/research-2014-rp-mort-tab-rates-exposure.xlsx", sheet = "Total Dataset", skip = 3)[, c(1, 4, 8)] 
 data_raw_wc  <- read_excel("Data/RP2014/research-2014-rp-mort-tab-rates-exposure.xlsx", sheet = "White Collar", skip = 3)[, -4] # exclude an empty column
 

@@ -123,7 +123,7 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
 liab.active %<>%   
   mutate( gx.laca = ifelse(yos < r.yos, 0,  
                         ifelse(age > r.full, 1, ifelse(age %in% r.min:r.full, 1, 0))),         # eligibility rule 1
-          gx.laca = ifelse(start.year >= 1989, gx.laca, ifelse(age >= 62, 1, gx.laca)),              # eligibility rule 2
+          gx.laca = ifelse(start.year >= 1989, gx.laca, ifelse(age >= 62, 1, gx.laca)),       # eligibility rule 2
           gx.LSC  = gx.laca,
           #gx.laca = 0,
   Bx.laca  = gx.laca * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
