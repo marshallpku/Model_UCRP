@@ -207,6 +207,23 @@ results_indiv %<>% group_by(sim) %>%
   mutate(rollgeoReturn   = get_rollingReturns(i.r, "moving", window = 5),
          expandgeoReturn = get_rollingReturns(i.r, "expanding")) 
 
+
+
+g.ind.rollgeoReturn <-  results_indiv %>% 
+  ggplot(aes(x = year, y = rollgeoReturn*100, color = factor(order.ir))) + theme_bw() + 
+  geom_line(linetype = 1) + geom_point() + 
+  geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
+  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+                     label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
+  labs(title = "Rolling 5-year geometric returns for \nselected individual simulations",
+       x = "Year", y = "Percent")
+
+
+
+
 g.ind.expandgeoReturn <-  results_indiv %>% 
   ggplot(aes(x = year, y = expandgeoReturn*100, color = factor(order.ir))) + theme_bw() + 
   geom_line(linetype = 1) + geom_point() + 
@@ -398,6 +415,7 @@ assign(paste0("lresults_", runname),
                  g.ind.FR  = g.ind.FR,
                  g.ind.ERCwSTIP = g.ind.ERCwSTIP,
                  g.distReturn = g.distReturn,
+                 g.ind.rollgeoReturn  = g.ind.rollgeoReturn,
                  g.ind.expandgeoReturn = g.ind.expandgeoReturn,
                  g.ind.annualReturn    = g.ind.annualReturn,
                  

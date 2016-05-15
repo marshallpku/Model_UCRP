@@ -110,7 +110,7 @@ if (return_type == "internal"){
 # nsim = 5
 
   returnScenarios_local <- returnScenarios %>% filter(scenario == return_scenario)
-
+  set.seed(1234)
   i.r <- cbind(
     with(returnScenarios_local, create_returns(return_det, 0, period)),
     replicate(nsim, with(returnScenarios_local, create_returns(r.mean, r.sd, period)))

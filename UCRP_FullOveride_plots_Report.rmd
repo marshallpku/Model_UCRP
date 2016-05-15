@@ -102,8 +102,6 @@ ggsave(file = paste0(Outputs_folder, "DistReturn.png"), g1, height = g.height, w
 
 
 
-
-
 # Illustration of individual stochastic simulation
 
 ```{r, echo = FALSE, fig.width= 12}
@@ -112,11 +110,14 @@ g1 <- lresults_RS1.Cap$g.ind.annualReturn
 g2 <- lresults_RS1.Cap$g.ind.expandgeoReturn
 g3 <- lresults_RS1.Cap$g.ind.FR
 g4 <- lresults_RS1.Cap$g.ind.ERCwSTIP
+g5 <- lresults_RS1.Cap$g.ind.rollgeoReturn
 
 g1
 g2
 g3
 g4
+g5
+
 
 g.height <- 5.5
 g.width <- 11
@@ -125,7 +126,7 @@ ggsave(file = paste0(Outputs_folder, "indivRuns.annualReturn.png"), g1, height =
 ggsave(file = paste0(Outputs_folder, "indivRuns.rollingReturn.png"), g2, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "indivRuns.FRpath.png"), g3, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "indivRuns.ERCpath.png"), g4, height = g.height, width = g.width)
-
+ggsave(file = paste0(Outputs_folder, "indivRuns.rolling5yReturn.png"), g5, height = g.height, width = g.width)
 
 ```
 
@@ -291,7 +292,8 @@ tbl.comparePolicies_FR40rolling
 
 g3 <- tbl.comparePolicies_highERC %>% 
   ggplot(aes(x = year, y = ERC_PR30, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
-  geom_line() + geom_point() +
+  geom_line() + geom_point() + 
+  coord_cartesian(ylim = c(0, 40)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
@@ -301,7 +303,8 @@ g3 <- tbl.comparePolicies_highERC %>%
 
 g4 <- tbl.comparePolicies_ERCincrease %>% 
   ggplot(aes(x = year, y = Chg10Pts5y2, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
-  geom_line() + geom_point() +
+  geom_line() + geom_point() + 
+  coord_cartesian(ylim = c(0, 40)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
@@ -319,7 +322,7 @@ g5 <- tbl.comparePolicies %>%
              )) + theme_bw() + facet_grid(.~runname) + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 10)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c("darkblue","green", "red"),  name = "Contribution \nPolicies", 
                      label  = c("25th percentile", "median", "75th percentile")) + 
   labs(title = "Distribution of employer contribution across simulations under different funding policies",
        x = NULL, y = "Percent")
