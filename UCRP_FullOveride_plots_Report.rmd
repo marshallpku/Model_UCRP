@@ -47,6 +47,21 @@ get_lineplot <- function(df, x, y){
     scale_x_continuous(breaks = seq(2015, 2045, 5))
 }
 
+
+RIG.blue  <- "#003598"
+RIG.red   <- "#A50021"
+RIG.green <- "#009900"
+RIG.yellow <- "#FFFF66"
+RIG.purple <- "#9966FF"
+RIG.yellow.dark <- "#ffc829"
+
+RIG.theme <- theme(panel.grid.major.x = element_blank(),
+             panel.grid.minor.x = element_blank(),
+             panel.grid.minor.y = element_blank(),
+             panel.grid.major.y = element_line(size = 0.5, color = "gray80"))
+
+
+
   
 ```
 
@@ -56,7 +71,7 @@ get_lineplot <- function(df, x, y){
 
 folderName <- "FullOverride/Results/"
 
-runnames <- paste0(paste0("RS", 1:5), rep(c(".Cap", ".noCap", ".ADC"), each = 5))
+runnames <- paste0(paste0("RS", 1:7), rep(c(".Cap", ".noCap", ".ADC"), each = 7))
 
 files_lresults <- paste0("lresults_", runnames, ".RData")
 files_lContVol <- paste0("lContVol_", runnames, ".RData")
@@ -84,7 +99,7 @@ lresults_RS1.Cap$tbl.det %>%
 ```
 
 
-
+# Distribution of return
 ```{r, echo = FALSE, fig.width= 12}
 
 g1 <- lresults_RS1.Cap$g.distReturn
@@ -150,10 +165,12 @@ lresults_RS1.Cap$tbl.riskMeasure %>% select(year, FR40less) %>%
   geom_point() + geom_line() + 
   coord_cartesian(ylim = c(0,20)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
-  scale_color_manual(values = c("red","black"),  name = "", 
+  scale_color_manual(values = c(RIG.red,"black"),  name = "", 
                      label  = c("Stochastic run", "Deterministic run")) + 
   labs(title = "Probability of funded ratio below 40% \nin a given year",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
+  
 
 
 g1.1 <- 
@@ -164,10 +181,12 @@ lContVol_RS1.Cap$prob_FR40less.rolling %>% select(year, FR40less) %>%
   geom_point() + geom_line() + 
   coord_cartesian(ylim = c(0,20)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
-  scale_color_manual(values = c("red","black"),  name = "", 
+  scale_color_manual(values = c(RIG.red,"black"),  name = "", 
                      label  = c("Stochastic run", "Deterministic run")) + 
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
+
 g1.1
 lContVol_RS1.Cap$prob_FR40less.rolling
 
@@ -182,7 +201,8 @@ g2 <- lContVol_RS1.Cap$prob_ERCsharpRisePts.rolling %>%
   coord_cartesian(ylim = c(0,40)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
   labs(title = "Probability of employer contribution rising more than 10% of payroll \nin a 5-year period at any time prior to and including the given year",
-       x = NULL, y = "Probability(%)")
+       x = NULL, y = "Probability(%)") + 
+  RIG.theme
 
 
 g3 <- lContVol_RS1.Cap$prob_ERCsharpRisePts.rolling %>% 
@@ -190,7 +210,8 @@ g3 <- lContVol_RS1.Cap$prob_ERCsharpRisePts.rolling %>%
   coord_cartesian(ylim = c(0,40)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
   labs(title = "Probability of employer contribution rising more than 6% of payroll \nin a 5-year period at any time prior to and including the given year",
-       x = NULL, y = "Probability(%)")
+       x = NULL, y = "Probability(%)") + 
+  RIG.theme
 
 
 
@@ -231,10 +252,11 @@ g1 <- tbl.comparePolicies %>%
   ggplot(aes(x = year, y = FR40less, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
   labs(title = "Probability of funded ratio below 40% in a given year \n under different funding policies",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 
 # Graph for distribution of funded ratio
 g2 <- tbl.comparePolicies %>%
@@ -246,10 +268,15 @@ g2 <- tbl.comparePolicies %>%
              )) + theme_bw() + facet_grid(.~runname) + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 10)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("25th percentile", "median", "75th percentile")) + 
   labs(title = "Distribution of funded ratio across simulations under different funding policies",
-       x = NULL, y = "Percent")
+       x = NULL, y = "Percent") + 
+  theme(axis.text.x = element_text(size = 8)) + 
+  RIG.theme
+  
+
+g2
 
 tbl.comparePolicies
 
@@ -280,10 +307,11 @@ g1.1 <- tbl.comparePolicies_FR40rolling %>%
   ggplot(aes(x = year, y = FR40less, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \nunder different funding policies",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 g1.1
 
 tbl.comparePolicies_FR40rolling
@@ -295,10 +323,11 @@ g3 <- tbl.comparePolicies_highERC %>%
   geom_line() + geom_point() + 
   coord_cartesian(ylim = c(0, 40)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
   labs(title = "Probability of ERC above 30% of payroll \nat any time prior to and including the given year \nunder different funding policies",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 
 
 g4 <- tbl.comparePolicies_ERCincrease %>% 
@@ -306,10 +335,11 @@ g4 <- tbl.comparePolicies_ERCincrease %>%
   geom_line() + geom_point() + 
   coord_cartesian(ylim = c(0, 40)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "darkblue"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
   labs(title = "Probability of ERC rising by more than 10% of payroll \nat any time prior to and including the given year \nunder different funding policies",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 
 
 # Graph for distribution of ERC rate with STIP
@@ -322,10 +352,12 @@ g5 <- tbl.comparePolicies %>%
              )) + theme_bw() + facet_grid(.~runname) + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 10)) + 
-  scale_color_manual(values = c("darkblue","green", "red"),  name = "Contribution \nPolicies", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("25th percentile", "median", "75th percentile")) + 
   labs(title = "Distribution of employer contribution across simulations under different funding policies",
-       x = NULL, y = "Percent")
+       x = NULL, y = "Percent") +
+  theme(axis.text.x = element_text(size = 8)) + 
+  RIG.theme
 
 tbl.comparePolicies
 
@@ -335,16 +367,18 @@ g5
 
 hw.ratio <- 7/9
 
-g.width  <- 7
-g.height <- g.width*hw.ratio 
+g.width  <-  7
+g.height <-  g.width*hw.ratio 
+
+
 
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR40.png"), g1, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR40.rolling.png"), g1.1, height = g.height, width = g.width)
-ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR_dist.png"), g2, height = 4, width = 10)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR_dist.png"), g2, height = 4, width = 12)
 
-ggsave(file = paste0(Outputs_folder, "ComparePolicies.higERC.png"), g3, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.highERC.png"), g3, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERCIncrease.png"), g4, height = g.height, width = g.width)
-ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERC_dist.png"), g5, height = 4, width = 10)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERC_dist.png"), g5, height = 4, width = 12)
 
 ```
 
@@ -432,11 +466,12 @@ g1 <- tbl.compareRS %>%
   ggplot(aes(x = year, y = FR40less, color = factor(RS, levels = paste0("RS", 1:3)))) + theme_bw() + 
   geom_line() + geom_point() + facet_grid(. ~ policy) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "blue2"),  name = "",   #"Return \nScenarios",
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.36% compound return")) +
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \n under different return scenarios", x = NULL, y = "Probability (%)") +
-  theme(axis.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(color = guide_legend(keywidth = 3, keyheight = 1))
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
 
 g1
 
@@ -444,11 +479,12 @@ g1.1 <- tbl.compareRS_FR40rolling %>%
   ggplot(aes(x = year, y = FR40less, color = factor(RS, levels = paste0("RS", 1:3)))) + theme_bw() + 
   geom_line() + geom_point() + facet_grid(. ~ policy) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "blue2"),  name = "",   #"Return \nScenarios",
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.36% compound return")) +
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \nunder different return scenarios", x = NULL, y = "Probability (%)") +
-  theme(axis.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(color = guide_legend(keywidth = 3, keyheight = 1))
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
 
 g1.1
 
@@ -458,11 +494,12 @@ g2 <- tbl.compareRS_highERC %>%
   ggplot(aes(x = year, y = ERC_PR30, color = factor(RS, levels = paste0("RS", 1:3)))) + theme_bw() + 
   geom_line() + geom_point() + facet_grid(. ~ policy) +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "blue2"),  name = "",   #"Return \nScenarios",
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.36% compound return")) +
   labs(title = "Probability of ERC above 30% of payroll \nat any time prior to and including the given year \n under different return scenarios", x = NULL, y = "Probability (%)") +
-  theme(axis.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(color = guide_legend(keywidth = 3, keyheight = 1)) 
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
 g2
 
 
@@ -471,19 +508,166 @@ g3 <- tbl.compareRS_ERCincrease %>%
   ggplot(aes(x = year, y = Chg10Pts5y2, color = factor(RS, levels = paste0("RS", 1:3)))) + theme_bw() + 
   geom_line() + geom_point() + facet_grid(. ~ policy) +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","green", "blue2"),  name = "",   #"Return \nScenarios",
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.36% compound return")) +
   labs(title = "Probability of ERC rising by more than 10% of payroll \nat any time prior to and including the given year \nunder different return scenarios", x = NULL, y = "Probability (%)") +
-  theme(axis.text.x = element_text(size = 7), legend.position="bottom") +
-  guides(color = guide_legend(keywidth = 3, keyheight = 1)) 
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
+  RIG.theme
 g3
 
 
+g.height <- 4
+g.width <- 12
 
-ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.png"), g1, height = 5, width = 10)
-ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.rolling.png"), g1.1, height = 5, width = 10)
-ggsave(file = paste0(Outputs_folder, "CompareRS.higERC.png"), g2, height = 5, width = 10)
-ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.png"), g3, height = 5, width = 10)
+ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.png"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.rolling.png"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.highERC.png"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.png"), g3, height = g.height, width = g.width)
+
+
+
+# # Tables for comparing return scenarios 
+# 
+# tbl.compareRS_report1 <- tbl.compareRS %>% 
+#   select(runname, year, FR40less) %>% 
+#   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+#   spread(runname, FR40less)
+# tbl.compareRS_report1
+# 
+# 
+# tbl.compareRS_highERC.report1 <- tbl.compareRS_highERC %>% 
+#   select(runname, year, ERC_PR30) %>% 
+#   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+#   spread(runname, ERC_PR30)
+# tbl.compareRS_highERC.report1
+# 
+# 
+# tbl.compareRS_ERCincrease.report1 <- tbl.compareRS_ERCincrease %>% 
+#   select(runname, year, Chg10Pts5y2) %>% 
+#   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+#   spread(runname, Chg10Pts5y2)
+# tbl.compareRS_ERCincrease.report1
+# 
+# tbl.compareRS_FR40rolling.report1 <- tbl.compareRS_FR40rolling %>% 
+#   select(runname, year, FR40less) %>% 
+#   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
+#   spread(runname, FR40less)
+# tbl.compareRS_FR40rolling.report1
+# 
+# 
+# 
+# paste0(Outputs_folder, "CompareRS.FR40.png")
+# 
+# write.xlsx2(tbl.compareRS_report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "FR")
+# write.xlsx2(tbl.compareRS_FR40rolling.report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "FR.rolling", append = TRUE)
+# write.xlsx2(tbl.compareRS_highERC.report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "highERC", append = TRUE)
+# write.xlsx2(tbl.compareRS_ERCincrease.report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "ERCincrease", append = TRUE)
+# 
+
+```
+
+
+
+# Comparison of return scenarios: summary table
+
+```{r, echo = FALSE, fig.width= 12}
+
+# Funded ratio 
+tbl.compareRS <- bind_rows(
+  lresults_RS1.Cap$tbl.riskMeasure,
+  lresults_RS2.Cap$tbl.riskMeasure,
+  lresults_RS3.Cap$tbl.riskMeasure,
+  lresults_RS6.Cap$tbl.riskMeasure,
+  lresults_RS7.Cap$tbl.riskMeasure,
+  
+  lresults_RS1.noCap$tbl.riskMeasure,
+  lresults_RS2.noCap$tbl.riskMeasure,
+  lresults_RS3.noCap$tbl.riskMeasure,
+  lresults_RS6.noCap$tbl.riskMeasure,
+  lresults_RS7.noCap$tbl.riskMeasure,
+  
+  lresults_RS1.ADC$tbl.riskMeasure,
+  lresults_RS2.ADC$tbl.riskMeasure,
+  lresults_RS3.ADC$tbl.riskMeasure,
+  lresults_RS6.ADC$tbl.riskMeasure,
+  lresults_RS7.ADC$tbl.riskMeasure
+) %>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+
+tbl.compareRS_highERC <- bind_rows(
+  lContVol_RS1.Cap$prob_highERC,
+  lContVol_RS2.Cap$prob_highERC,
+  lContVol_RS3.Cap$prob_highERC,
+  lContVol_RS6.Cap$prob_highERC,
+  lContVol_RS7.Cap$prob_highERC,
+  
+  lContVol_RS1.noCap$prob_highERC,
+  lContVol_RS2.noCap$prob_highERC,
+  lContVol_RS3.noCap$prob_highERC,
+  lContVol_RS6.noCap$prob_highERC,
+  lContVol_RS7.noCap$prob_highERC,
+  
+  lContVol_RS1.ADC$prob_highERC,
+  lContVol_RS2.ADC$prob_highERC,
+  lContVol_RS3.ADC$prob_highERC,
+  lContVol_RS6.ADC$prob_highERC,
+  lContVol_RS7.ADC$prob_highERC
+  )%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+tbl.compareRS_ERCincrease <- bind_rows(
+  lContVol_RS1.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS2.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS3.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.Cap$prob_ERCsharpRisePts.rolling,
+  
+  lContVol_RS1.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS2.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS3.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.noCap$prob_ERCsharpRisePts.rolling,
+  
+  lContVol_RS1.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS2.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS3.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.ADC$prob_ERCsharpRisePts.rolling
+)%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+
+tbl.compareRS_FR40rolling <- bind_rows(
+  lContVol_RS1.Cap$prob_FR40less.rolling,
+  lContVol_RS2.Cap$prob_FR40less.rolling,
+  lContVol_RS3.Cap$prob_FR40less.rolling,
+  lContVol_RS6.Cap$prob_FR40less.rolling,
+  lContVol_RS7.Cap$prob_FR40less.rolling,
+  
+  lContVol_RS1.noCap$prob_FR40less.rolling,
+  lContVol_RS2.noCap$prob_FR40less.rolling,
+  lContVol_RS3.noCap$prob_FR40less.rolling,
+  lContVol_RS6.noCap$prob_FR40less.rolling,
+  lContVol_RS7.noCap$prob_FR40less.rolling,
+  
+  lContVol_RS1.ADC$prob_FR40less.rolling,
+  lContVol_RS2.ADC$prob_FR40less.rolling,
+  lContVol_RS3.ADC$prob_FR40less.rolling,
+  lContVol_RS6.ADC$prob_FR40less.rolling,
+  lContVol_RS7.ADC$prob_FR40less.rolling
+  )%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
 
 
 
@@ -492,28 +676,46 @@ ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.png"), g3, height = 
 tbl.compareRS_report1 <- tbl.compareRS %>% 
   select(runname, year, FR40less) %>% 
   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
-  spread(runname, FR40less)
+  spread(runname, FR40less) 
 tbl.compareRS_report1
 
 
 tbl.compareRS_highERC.report1 <- tbl.compareRS_highERC %>% 
   select(runname, year, ERC_PR30) %>% 
   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
-  spread(runname, ERC_PR30)
+  spread(runname, ERC_PR30) %>% 
+  mutate(measure = "highERC")
 tbl.compareRS_highERC.report1
 
 
 tbl.compareRS_ERCincrease.report1 <- tbl.compareRS_ERCincrease %>% 
   select(runname, year, Chg10Pts5y2) %>% 
   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
-  spread(runname, Chg10Pts5y2)
+  spread(runname, Chg10Pts5y2) %>% 
+  mutate(measure = "ERCincrease")
 tbl.compareRS_ERCincrease.report1
 
 tbl.compareRS_FR40rolling.report1 <- tbl.compareRS_FR40rolling %>% 
   select(runname, year, FR40less) %>% 
   filter(year %in% c(seq(2015, 2040, 5), 2044)) %>% 
-  spread(runname, FR40less)
+  spread(runname, FR40less) %>% 
+  mutate(measure = "FR40rolling")
 tbl.compareRS_FR40rolling.report1
+
+
+var.order <- 
+  paste(
+  paste0("RS", c(1:3, 7,6) ),
+  rep(c("Cap", "noCap", "ADC"), each = 5),
+  sep = ".")
+
+tbl.summaryReport <- 
+  bind_rows(tbl.compareRS_FR40rolling.report1,
+            tbl.compareRS_highERC.report1,
+            tbl.compareRS_ERCincrease.report1) %>% 
+  filter(year ==  2044) %>% 
+  select(measure, one_of(var.order))
+tbl.summaryReport
 
 
 
@@ -524,11 +726,14 @@ write.xlsx2(tbl.compareRS_FR40rolling.report1, paste0(Outputs_folder, "RS_tbl.xl
 write.xlsx2(tbl.compareRS_highERC.report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "highERC", append = TRUE)
 write.xlsx2(tbl.compareRS_ERCincrease.report1, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "ERCincrease", append = TRUE)
 
+write.xlsx2(tbl.summaryReport, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName = "SummaryReport", append = TRUE)
 
 ```
 
 
-# Comparison of return scenarios
+
+
+# Comparison of return scenarios, more scenarios
 
 ```{r, echo = FALSE, fig.width= 12}
 
@@ -690,7 +895,7 @@ g3
 
 ggsave(file = paste0(Outputs_folder, "CompareRS5.FR40.png"), g1, height = 5, width = 10)
 ggsave(file = paste0(Outputs_folder, "CompareRS5.FR40.rolling.png"), g1.1, height = 5, width = 10)
-ggsave(file = paste0(Outputs_folder, "CompareRS5.higERC.png"), g2, height = 5, width = 10)
+ggsave(file = paste0(Outputs_folder, "CompareRS5.highERC.png"), g2, height = 5, width = 10)
 ggsave(file = paste0(Outputs_folder, "CompareRS5.ERCIncrease.png"), g3, height = 5, width = 10)
 
 
@@ -711,7 +916,8 @@ g1 <- lresults_RS1.Cap$tbl.riskMeasure %>%
   coord_cartesian(ylim = c(0,100)) + 
   scale_y_continuous(breaks = seq(0,200, 10)) +
   labs(title = "Probability of funded ratio above 95% \nin a given year",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 lresults_RS1.Cap$tbl.riskMeasure
 
 g1
@@ -721,7 +927,8 @@ g2 <- lContVol_RS1.Cap$prob_FR95more.rolling %>%
   coord_cartesian(ylim = c(0,100)) + 
   scale_y_continuous(breaks = seq(0,200, 10)) +
   labs(title = "Probability of funded ratio above 95% \nat any time prior to and including the given year",
-       x = NULL, y = "Probability (%)")
+       x = NULL, y = "Probability (%)") + 
+  RIG.theme
 g1
 g2
 
@@ -734,6 +941,215 @@ ggsave(file = paste0(Outputs_folder, "FR95more.rolling.png"), g2, height = 7, wi
 
 
 ```
+
+
+
+# 2 Additional runs
+
+```{r}
+
+# Funded ratio 
+tbl.compareRS <- bind_rows(
+  lresults_RS1.Cap$tbl.riskMeasure,
+  lresults_RS6.Cap$tbl.riskMeasure,
+  lresults_RS7.Cap$tbl.riskMeasure,
+  
+  lresults_RS1.noCap$tbl.riskMeasure,
+  lresults_RS6.noCap$tbl.riskMeasure,
+  lresults_RS7.noCap$tbl.riskMeasure,
+  
+  lresults_RS1.ADC$tbl.riskMeasure,
+  lresults_RS6.ADC$tbl.riskMeasure,
+  lresults_RS7.ADC$tbl.riskMeasure
+) %>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+tbl.compareRS_highERC <- bind_rows(
+  lContVol_RS1.Cap$prob_highERC,
+  lContVol_RS6.Cap$prob_highERC,
+  lContVol_RS7.Cap$prob_highERC,
+  
+  lContVol_RS1.noCap$prob_highERC,
+  lContVol_RS6.noCap$prob_highERC,
+  lContVol_RS7.noCap$prob_highERC,
+  
+  lContVol_RS1.ADC$prob_highERC,
+  lContVol_RS6.ADC$prob_highERC,
+  lContVol_RS7.ADC$prob_highERC
+  )%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+tbl.compareRS_ERCincrease <- bind_rows(
+  lContVol_RS1.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.Cap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.Cap$prob_ERCsharpRisePts.rolling,
+  
+  lContVol_RS1.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.noCap$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.noCap$prob_ERCsharpRisePts.rolling,
+  
+  lContVol_RS1.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS6.ADC$prob_ERCsharpRisePts.rolling,
+  lContVol_RS7.ADC$prob_ERCsharpRisePts.rolling
+)%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+
+tbl.compareRS_FR40rolling <- bind_rows(
+  lContVol_RS1.Cap$prob_FR40less.rolling,
+  lContVol_RS6.Cap$prob_FR40less.rolling,
+  lContVol_RS7.Cap$prob_FR40less.rolling,
+  
+  lContVol_RS1.noCap$prob_FR40less.rolling,
+  lContVol_RS6.noCap$prob_FR40less.rolling,
+  lContVol_RS7.noCap$prob_FR40less.rolling,
+  
+  lContVol_RS1.ADC$prob_FR40less.rolling,
+  lContVol_RS6.ADC$prob_FR40less.rolling,
+  lContVol_RS7.ADC$prob_FR40less.rolling
+  )%>% 
+  mutate(RS = str_sub(runname, 1,3),
+         policy = str_sub(runname, 5),
+         policy = factor(policy, levels = c("Cap", "noCap", "ADC"), labels = c("with Cap", "without Cap", "ADC")))
+
+
+
+
+# Funded ratio Below 40%
+
+g.label <- c("Scenario1: \n7.25% compound return\n10% standard deviation", "Scenario4: \n7.25% compound return\n16% standard deviation", "Scenario5: \n6% compound return\n11% standard deviation")
+
+
+g1 <- tbl.compareRS %>% 
+  ggplot(aes(x = year, y = FR40less, color = factor(RS, levels = paste0("RS", c(1, 7, 6) )))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \n under different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
+
+g1
+
+g1.1 <- tbl.compareRS_FR40rolling %>% 
+  ggplot(aes(x = year, y = FR40less, color = factor(RS, levels = paste0("RS", c(1, 7, 6))))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \nunder different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
+
+g1.1
+
+
+# Prob of high ERC
+g2 <- tbl.compareRS_highERC %>% 
+  ggplot(aes(x = year, y = ERC_PR30, color = factor(RS, levels = paste0("RS", c(1, 7, 6) )))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) +
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Probability of ERC above 30% of payroll \nat any time prior to and including the given year \n under different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
+  RIG.theme
+g2
+
+
+# Prob of sharp ERC increases
+g3 <- tbl.compareRS_ERCincrease %>% 
+  ggplot(aes(x = year, y = Chg10Pts5y2, color = factor(RS, levels = paste0("RS", c(1, 7, 6) )))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) +
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Probability of ERC rising by more than 10% of payroll \nat any time prior to and including the given year \nunder different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
+  RIG.theme
+g3
+
+
+g1.1
+g2
+g3
+
+
+
+tbl.compareRS %>% filter(runname %in% c("RS1.Cap", "RS6.Cap", "RS7.Cap")) %>% 
+  select(runname, year, FR.q25, FR.med, FR.q75)
+
+
+g4 <- tbl.compareRS %>% 
+  ggplot(aes(x = year, y = FR.med, color = factor(RS, levels = paste0("RS", c(1, 7, 6) )))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) + 
+  geom_hline(yintercept = 100, linetype = 2) + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) +
+  scale_y_continuous(breaks = seq(0, 300, 20)) +
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Median funded ratio \n under different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
+  RIG.theme
+
+g4
+
+
+g5 <- tbl.compareRS %>% 
+  ggplot(aes(x = year, y = ERCwSTIP_PR.med, color = factor(RS, levels = paste0("RS", c(1, 7, 6) )))) + theme_bw() + 
+  geom_line() + geom_point() + facet_grid(. ~ policy) + 
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
+                     label  = g.label) +
+  labs(title = "Median employer contribution \n under different return scenarios and funding policies", x = NULL, y = "Probability (%)") +
+  theme(axis.text.x = element_text(size = 7), legend.position="right") +
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
+  RIG.theme
+
+g5
+
+
+g.height <- 4
+g.width <- 12
+
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR40.png"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR40.rolling.png"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.highERC.png"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.ERCIncrease.png"), g3, height = g.height, width = g.width)
+
+
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR.Med.png"), g4, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.ERC.Med.png"), g5, height = g.height, width = g.width)
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
 
 
 

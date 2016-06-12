@@ -24,8 +24,26 @@
 
 make_lresults <- function(runname, folderName){
 
-#runname <- "RS1.Cap"
-#folderName <- "FullOverride/Results/"
+  
+  runname <- "RS1.Cap"
+  folderName <- "FullOverride/Results/"
+  
+
+  RIG.blue  <- "#003598"
+  RIG.red   <- "#A50021"
+  RIG.green <- "#009900"
+  RIG.yellow <- "#FFFF66"
+  RIG.purple <- "#9966FF"
+  RIG.yellow.dark <- "#ffc829"
+  
+  RIG.theme <- theme(panel.grid.major.x = element_blank(),
+                     panel.grid.minor.x = element_blank(),
+                     panel.grid.minor.y = element_blank(),
+                     panel.grid.major.y = element_line(size = 0.5, color = "gray80"))
+  
+  
+  
+
 fileName <- paste0(folderName,"results_", runname, ".RData") 
 load(fileName)
 
@@ -129,11 +147,12 @@ FR.MA.year1 <- results.stch$FR.MA[1]
 g.distReturn <- results.stch %>% group_by(sim) %>% 
    summarize(geoReturn = get_geoReturn(i.r)) %>% 
    ggplot(aes(100*geoReturn)) + theme_bw() + 
-   geom_histogram(color = "black", fill = "blue", binwidth = 0.5, boundary = 0) + 
-   geom_vline(xintercept = DC * 100, color = "red") + 
+   geom_histogram(color = "black", fill = RIG.blue, binwidth = 0.5, boundary = 0) + 
+   geom_vline(xintercept = DC * 100, color = RIG.red) + 
    scale_x_continuous(breaks = seq(0,20,1))+
-   labs(title = "Distribution of 30-year compound annual return over 2000 simulations",
-        x = "%")
+   labs(title = "Distribution of 30-year compound annual return over 2,000 simulations",
+        x = "%") + 
+  RIG.theme
 
 g.distReturn
 
@@ -177,21 +196,23 @@ g.ind.FR <- results_indiv %>%
   geom_hline(yintercept = c(100, FR.MA.year1), linetype = 2, color = c("red", "black") ) +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_y_continuous(breaks = c(seq(0, 500, 10))) + 
-  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+  scale_color_manual(values = c(RIG.red,"dodgerblue", RIG.blue, RIG.green),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "Funded ratio of selected individual simulations",
-             x = "Year", y = "Funded ratio (%, based on market value asset)")
-  
+             x = "Year", y = "Funded ratio (%, based on market value asset)") + 
+  RIG.theme
+g.ind.FR  
 
 
 g.ind.ERCwSTIP <-  results_indiv %>% 
   ggplot(aes(x = year, y = ERCwSTIP_PR, color = factor(order.ir), label = plot.label)) + theme_bw() + 
   geom_line(linetype = 1) + geom_point() + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
-  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+  scale_color_manual(values = c(RIG.red,"dodgerblue", RIG.blue, RIG.green),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "Employer contribution rate (including STIP) of \nselected individual simulations",
-       x = "Year", y = "Contribution as % of payroll")
+       x = "Year", y = "Contribution as % of payroll") + 
+  RIG.theme
 
 #g.ind.FR
 #g.ind.ERCwSTIP
@@ -215,11 +236,12 @@ g.ind.rollgeoReturn <-  results_indiv %>%
   geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
-  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
-  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c(RIG.red, RIG.blue, RIG.green)) + 
+  scale_color_manual(values = c(RIG.red,"dodgerblue", RIG.blue, RIG.green),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "Rolling 5-year geometric returns for \nselected individual simulations",
-       x = "Year", y = "Percent")
+       x = "Year", y = "Percent") + 
+  RIG.theme
 
 
 
@@ -230,11 +252,12 @@ g.ind.expandgeoReturn <-  results_indiv %>%
   geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
-  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
-  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c(RIG.red, RIG.blue, RIG.green)) + 
+  scale_color_manual(values = c(RIG.red,"dodgerblue", RIG.blue, RIG.green),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = "Rolling geometric returns up to a given year for \nselected individual simulations",
-       x = "Year", y = "Percent")
+       x = "Year", y = "Percent") + 
+  RIG.theme
 
 
 g.ind.annualReturn <-  results_indiv %>% 
@@ -243,11 +266,12 @@ g.ind.annualReturn <-  results_indiv %>%
   geom_hline(yintercept = unique(round(100*df_indiv_selcet$geoReturn,2)), linetype = 3)+
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   # scale_y_continuous(breaks = c(seq(-20,30,5), unique(round(100*df_indiv_selcet$geoReturn,2)))) + 
-  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c("red","dodgerblue", "green3")) + 
-  scale_color_manual(values = c("red","deepskyblue","dodgerblue", "green3"),
+  annotate("text", label = hlineNotes, x = 2015 , y = hlineNotes, size = 4, colour = c(RIG.red, RIG.blue, RIG.green)) + 
+  scale_color_manual(values = c(RIG.red,"dodgerblue", RIG.blue, RIG.green),
                      label = plot.label, name = "Compound \nreturn of \nindiv. sim") +
   labs(title = " Annual returns of \nselected individual simulations",
-       x = "Year", y = "Percent")
+       x = "Year", y = "Percent") + 
+  RIG.theme
 
 g.ind.expandgeoReturn
 g.ind.annualReturn
