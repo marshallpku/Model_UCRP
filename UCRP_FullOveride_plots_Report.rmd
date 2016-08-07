@@ -333,7 +333,7 @@ g3 <- tbl.comparePolicies_highERC %>%
 g4 <- tbl.comparePolicies_ERCincrease %>% 
   ggplot(aes(x = year, y = Chg10Pts5y2, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
   geom_line() + geom_point() + 
-  coord_cartesian(ylim = c(0, 40)) + 
+  coord_cartesian(ylim = c(0, 50)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 

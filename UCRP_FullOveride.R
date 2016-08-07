@@ -13,6 +13,7 @@ init_amort_raw %<>% mutate(year.est = year(year.est)) %>% filter(Type != "Total"
                     mutate_each(funs(.*1000), -Type, -year.est, -m.init, -year.remaining)
 
 
+
 # matrix representation of amortization: better visualization but larger size
 SC_amort0 <- matrix(0, nyear + m.max, nyear + m.max)
 

@@ -124,7 +124,7 @@ prob_FR95more.rolling
 
 # prob.ERCsharpRisePct.byYear <- results.stch %>% 
 #   group_by(sim) %>% 
-#   mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 4) - 1),
+#   mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 5) - 1),
 #          Chg50pct5y2   = Chg5y2.pct >= 50,
 #          Chg100pct5y2  = Chg5y2.pct >= 100) %>% 
 #   select(sim, year, Chg50pct5y2, Chg100pct5y2)
@@ -138,7 +138,7 @@ prob_FR95more.rolling
 prob_ERCsharpRisePct.rolling <- 
 results.stch %>% 
   group_by(sim) %>% 
-  mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 4) - 1),
+  mutate(Chg5y2.pct    = 100 * (ERC_PR / lag(ERC_PR, 5) - 1),
          Chg5y2.pct    = na2zero(Chg5y2.pct),
          Chg50pct5y2   = cumany(Chg5y2.pct >= 50),
          Chg100pct5y2  = cumany(Chg5y2.pct >= 100)) %>% 
@@ -172,7 +172,7 @@ prob_ERCsharpRisePct.rolling
 prob_ERCsharpRisePts.rolling <- 
 results.stch %>% 
   group_by(sim) %>% 
-  mutate(ChgPts5y2 =  ERCwSTIP_PR - lag(ERCwSTIP_PR, 4),  # year1-5 change in pct points 
+  mutate(ChgPts5y2 =  ERCwSTIP_PR - lag(ERCwSTIP_PR, 5),  # year1-5 change in pct points 
          ChgPts5y2 = na2zero(ChgPts5y2),
          Chg6Pts5y2    = cumany(ChgPts5y2 >= 6), 
          Chg10Pts5y2   = cumany(ChgPts5y2 >= 10),
