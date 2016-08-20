@@ -163,7 +163,7 @@ lresults_RS1.Cap$tbl.riskMeasure %>% select(year, FR40less) %>%
   gather(variable, value, - year) %>% 
   ggplot(aes(x = year, y = value, color = variable)) + theme_bw() + 
   geom_point() + geom_line() + 
-  coord_cartesian(ylim = c(0,20)) + 
+  coord_cartesian(ylim = c(0,30)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
   scale_color_manual(values = c(RIG.red,"black"),  name = "", 
                      label  = c("Stochastic run", "Deterministic run")) + 
@@ -179,7 +179,7 @@ lContVol_RS1.Cap$prob_FR40less.rolling %>% select(year, FR40less) %>%
   gather(variable, value, - year) %>% 
   ggplot(aes(x = year, y = value, color = variable)) + theme_bw() + 
   geom_point() + geom_line() + 
-  coord_cartesian(ylim = c(0,20)) + 
+  coord_cartesian(ylim = c(0,30)) + 
   scale_y_continuous(breaks = seq(0,200, 5)) +
   scale_color_manual(values = c(RIG.red,"black"),  name = "", 
                      label  = c("Stochastic run", "Deterministic run")) + 
@@ -333,7 +333,7 @@ g3 <- tbl.comparePolicies_highERC %>%
 g4 <- tbl.comparePolicies_ERCincrease %>% 
   ggplot(aes(x = year, y = Chg10Pts5y2, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
   geom_line() + geom_point() + 
-  coord_cartesian(ylim = c(0, 50)) + 
+  coord_cartesian(ylim = c(0, 60)) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \nPolicies", 
                      label  = c("w/ Cap", "w/o Cap", "ADC")) + 
@@ -1023,7 +1023,7 @@ tbl.compareRS_FR40rolling <- bind_rows(
 
 # Funded ratio Below 40%
 
-g.label <- c("Scenario1: \n7.25% compound return\n10% standard deviation", "Scenario4: \n7.25% compound return\n16% standard deviation", "Scenario5: \n6% compound return\n11% standard deviation")
+g.label <- c("Scenario1: \n7.25% compound return\n12% standard deviation", "Scenario4: \n7.25% compound return\n16% standard deviation", "Scenario5: \n6% compound return\n11% standard deviation")
 
 
 g1 <- tbl.compareRS %>% 
