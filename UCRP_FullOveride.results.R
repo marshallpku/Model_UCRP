@@ -24,9 +24,8 @@
 
 make_lresults <- function(runname, folderName){
 
-  
-  runname <- "RS1.Cap"
-  folderName <- "FullOverride/Results/"
+  # runname <- "RS1.Cap"
+  # folderName <- "FullOverride/Results/"
   
 
   RIG.blue  <- "#003598"

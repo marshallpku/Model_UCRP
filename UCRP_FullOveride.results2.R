@@ -245,5 +245,23 @@ for(runname in runname.list) make_lContVol(runname, folderName)
 
 
 
+load("FullOverride/Results/results_RS1.ADC.RData")
+penSim_results %>% group_by(sim) %>% 
+  summarize(r.mean = get_geoReturn(i.r)) %>% 
+  summarize(r.mean = mean(r.mean))
+
+
+load("FullOverride/Results/results_RS2.ADC.RData")
+penSim_results %>% group_by(sim) %>% 
+  summarize(r.mean = get_geoReturn(i.r)) %>% 
+  summarize(r.mean = mean(r.mean))
+
+load("FullOverride/Results/results_RS3.ADC.RData")
+penSim_results %>% group_by(sim) %>% 
+  summarize(r.mean = get_geoReturn(i.r)) %>% 
+  summarize(r.mean = mean(r.mean))
+
+
+
 
 
