@@ -495,7 +495,7 @@ ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERC_dist.png"), g5, height
 
 
 
-# Comparison of return scenarios
+# Comparison of return scenarios: low return periods
 
 ```{r, echo = FALSE, fig.width= 12}
 
@@ -571,6 +571,9 @@ tbl.compareRS_FR40rolling <- bind_rows(
 
 
 
+fig.labels <- c("Scenario 2: \nAssumption achieved \nstochastic", "Scenario 3: \n6 years of low returns", "Scenario 4: \n15 years of low returns")
+
+
 # Funded ratio Below 40%
 
 g1 <- tbl.compareRS %>% 
@@ -578,7 +581,7 @@ g1 <- tbl.compareRS %>%
   geom_line() + geom_point() + facet_grid(. ~ policy) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
-                     label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.39% compound return")) +
+                     label  = fig.labels) +
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \n under different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
@@ -591,13 +594,21 @@ g1.1 <- tbl.compareRS_FR40rolling %>%
   geom_line() + geom_point() + facet_grid(. ~ policy) + 
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
-                     label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.39% compound return")) +
+                     label  = fig.labels) +
   labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \nunder different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
   RIG.theme
 
 g1.1
+
+# grid.newpage()
+# note0 <- 'Note: The lines for "w/o Cap" (green line) and "ADC" (blue line) are almost overlapped.'
+# g1.1 <- arrangeGrob(g1.1, bottom = textGrob(note, x = 0, hjust = -0.1, vjust=0.1, 
+#                                       gp = gpar(fontface = "plain", fontsize = 9)))
+# grid.draw(g1.1)
+
+
 
 
 # Prob of high ERC
@@ -606,7 +617,7 @@ g2 <- tbl.compareRS_highERC %>%
   geom_line() + geom_point() + facet_grid(. ~ policy) +
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
-                     label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.39% compound return")) +
+                     label  = fig.labels) +
   labs(title = "Probability of ERC above 30% of payroll \nat any time prior to and including the given year \n under different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
@@ -621,7 +632,7 @@ g3 <- tbl.compareRS_ERCincrease %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_y_continuous(breaks = seq(0, 100, 10)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
-                     label  = c("Scenario1: \n7.25% compound return", "Scenario2: \n6.9% compound return", "Scenario3: \n6.39% compound return")) +
+                     label  = fig.labels) +
   labs(title = "Probability of ERC rising by more than 10% of payroll \nin any 5-year period up to the given year \nunder different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
@@ -681,7 +692,7 @@ ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.png"), g3, height = 
 
 
 
-# Comparison of return scenarios: summary table
+# Comparison of return scenarios: low return periods, summary table
 
 ```{r, echo = FALSE, fig.width= 12}
 
@@ -845,7 +856,7 @@ write.xlsx2(tbl.summaryReport, paste0(Outputs_folder, "RS_tbl.xlsx"), sheetName 
 
 
 
-# Comparison of return scenarios, more scenarios
+# Comparison of return scenarios, more scenarios from UCRP
 
 ```{r, echo = FALSE, fig.width= 12}
 
@@ -1056,7 +1067,7 @@ ggsave(file = paste0(Outputs_folder, "FR95more.rolling.png"), g2, height = 7, wi
 
 
 
-# 2 Additional runs
+# Comparison of return scenarios: 2 alternative scenarios
 
 ```{r}
 
@@ -1135,7 +1146,12 @@ tbl.compareRS_FR40rolling <- bind_rows(
 
 # Funded ratio Below 40%
 
-g.label <- c("Scenario1: \n7.25% compound return\n12% standard deviation", "Scenario4: \n7.25% compound return\n16% standard deviation", "Scenario5: \n6% compound return\n11% standard deviation")
+# g.label <- c("Scenario1: \n7.25% compound return\n12% standard deviation", "Scenario4: \n7.25% compound return\n16% standard deviation", "Scenario5: \n6% compound return\n11% standard deviation")
+
+g.label <- c("Scenario 2: \nAssumption achieved: \nstochastic",
+             "Scenario 5: \nHigh volatility \nreflecting market forecasts", 
+             "Scenario 6: \nLow expected return \nbased on UCRP portfolio")
+
 
 
 g1 <- tbl.compareRS %>% 
