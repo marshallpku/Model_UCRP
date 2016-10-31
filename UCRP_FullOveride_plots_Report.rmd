@@ -110,13 +110,13 @@ lresults_RS1.Cap$tbl.det %>%
 ```{r, echo = FALSE, fig.width= 12}
 
 g1 <- lresults_RS1.Cap$g.distReturn
-
 g1
 
 g.height <- 5.5
 g.width <- 9
 
 ggsave(file = paste0(Outputs_folder, "DistReturn.png"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "DistReturn.pdf"), g1, height = g.height, width = g.width)
 
 
 # 
@@ -240,6 +240,15 @@ ggsave(file = paste0(Outputs_folder, "indivRuns.FRpath.png"), g3, height = g.hei
 ggsave(file = paste0(Outputs_folder, "indivRuns.ERCpath.png"), g4, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "indivRuns.rolling5yReturn.png"), g5, height = g.height, width = g.width)
 
+
+ggsave(file = paste0(Outputs_folder, "indivRuns.annualReturn.pdf"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "indivRuns.rollingReturn.pdf"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "indivRuns.FRpath.pdf"), g3, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "indivRuns.ERCpath.pdf"), g4, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "indivRuns.rolling5yReturn.pdf"), g5, height = g.height, width = g.width)
+
+
+
 ```
 
 
@@ -326,6 +335,12 @@ ggsave(file = paste0(Outputs_folder, "sumStchResults.FR40.png"), g1, height = g.
 ggsave(file = paste0(Outputs_folder, "sumStchResults.FR40.rolling.png"), g1.1, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "sumStchResults.ERCIncrease.png"), g2, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "sumStchResults.ERCIncrease6pts.png"), g3, height = g.height, width = g.width)
+
+ggsave(file = paste0(Outputs_folder, "sumStchResults.FR40.pdf"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "sumStchResults.FR40.rolling.pdf"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "sumStchResults.ERCIncrease.pdf"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "sumStchResults.ERCIncrease6pts.pdf"), g3, height = g.height, width = g.width)
+
 
 ```
 
@@ -490,6 +505,17 @@ ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR_dist.png"), g2, height 
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.highERC.png"), g3, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERCIncrease.png"), g4, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERC_dist.png"), g5, height = 4, width = 12)
+
+
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR40.pdf"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR40.rolling.pdf"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.FR_dist.pdf"), g2, height = 4, width = 12)
+
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.highERC.pdf"), g3, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERCIncrease.pdf"), g4, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "ComparePolicies.ERC_dist.pdf"), g5, height = 4, width = 12)
+
+
 
 ```
 
@@ -669,6 +695,10 @@ ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.rolling.png"), g1.1, height
 ggsave(file = paste0(Outputs_folder, "CompareRS.highERC.png"), g2, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.png"), g3, height = g.height, width = g.width)
 
+ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.pdf"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.FR40.rolling.pdf"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.highERC.pdf"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS.ERCIncrease.pdf"), g3, height = g.height, width = g.width)
 
 
 # # Tables for comparing return scenarios 
@@ -1082,6 +1112,8 @@ lContVol_RS1.Cap$prob_FR95more.rolling
 ggsave(file = paste0(Outputs_folder, "FR95more.png"), g1, height = 7, width = 9)
 ggsave(file = paste0(Outputs_folder, "FR95more.rolling.png"), g2, height = 7, width = 9)
 
+ggsave(file = paste0(Outputs_folder, "FR95more.pdf"), g1, height = 7, width = 9)
+ggsave(file = paste0(Outputs_folder, "FR95more.rolling.pdf"), g2, height = 7, width = 9)
 
 
 ```
@@ -1312,9 +1344,17 @@ ggsave(file = paste0(Outputs_folder, "CompareRS2.FR40.rolling.png"), g1.1, heigh
 ggsave(file = paste0(Outputs_folder, "CompareRS2.highERC.png"), g2, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "CompareRS2.ERCIncrease.png"), g3, height = g.height, width = g.width)
 
-
 ggsave(file = paste0(Outputs_folder, "CompareRS2.FR.Med.png"), g4, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "CompareRS2.ERC.Med.png"), g5, height = g.height, width = g.width)
+
+
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR40.pdf"), g1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR40.rolling.pdf"), g1.1, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.highERC.pdf"), g2, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.ERCIncrease.pdf"), g3, height = g.height, width = g.width)
+
+ggsave(file = paste0(Outputs_folder, "CompareRS2.FR.Med.pdf"), g4, height = g.height, width = g.width)
+ggsave(file = paste0(Outputs_folder, "CompareRS2.ERC.Med.pdf"), g5, height = g.height, width = g.width)
 
 
 
