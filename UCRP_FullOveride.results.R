@@ -441,6 +441,7 @@ assign(paste0("lresults_", runname),
                  g.ind.rollgeoReturn  = g.ind.rollgeoReturn,
                  g.ind.expandgeoReturn = g.ind.expandgeoReturn,
                  g.ind.annualReturn    = g.ind.annualReturn,
+                 df.indiv = results_indiv,
                  
                  tbl.riskMeasure = tbl.riskMeasure,
                  g.stch.FR95     =  g.stch.FR95,

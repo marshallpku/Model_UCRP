@@ -11,6 +11,7 @@ library(data.table)
 library(gdata) # read.xls
 library(plyr)
 library(dplyr)
+library(tidyverse)
 options(dplyr.print_min = 100) # default is 10
 options(dplyr.print_max = 100) # default is 20
 library(ggplot2)
@@ -87,8 +88,6 @@ load_multiFiles(paste0(folderName, files_lContVol))
 
 Outputs_folder <- "FullOverride/Report_graphs/"
 
-  
-  
 
 ```
 
@@ -109,8 +108,9 @@ lresults_RS1.Cap$tbl.det %>%
 # Distribution of return
 ```{r, echo = FALSE, fig.width= 12}
 
-g1 <- lresults_RS1.Cap$g.distReturn
-g1
+g1 <- lresults_RS1.Cap$g.distReturn  + 
+  ylab(label = "Simulation count")
+g1 
 
 g.height <- 5.5
 g.width <- 9
@@ -230,6 +230,13 @@ g3
 g4
 g5
 
+g1$data %>% select(year, i.r, runname, sim, geoReturn) %>% ungroup %>% 
+  filter(geoReturn == max(geoReturn), i.r <= 0)
+
+x <- g3$data %>% select(year, i.r, runname, sim, geoReturn, FR.MA) %>% ungroup 
+#%>% filter(year == 2044)
+
+
 
 g.height <- 5.5
 g.width <- 11
@@ -246,6 +253,8 @@ ggsave(file = paste0(Outputs_folder, "indivRuns.rollingReturn.pdf"), g2, height 
 ggsave(file = paste0(Outputs_folder, "indivRuns.FRpath.pdf"), g3, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "indivRuns.ERCpath.pdf"), g4, height = g.height, width = g.width)
 ggsave(file = paste0(Outputs_folder, "indivRuns.rolling5yReturn.pdf"), g5, height = g.height, width = g.width)
+
+
 
 
 
@@ -384,9 +393,9 @@ g2 <- tbl.comparePolicies %>%
              )) + theme_bw() + facet_grid(.~runname) + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 10)) + 
-  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \napproaches", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = NULL, 
                      label  = c("25th percentile", "median", "75th percentile")) + 
-  labs(title = "Distribution of funded ratio across simulations under different funding approaches",
+  labs(title = "Distribution of funded ratios across simulations under different funding approaches",
        x = NULL, y = "Percent") + 
   theme(axis.text.x = element_text(size = 8)) + 
   RIG.theme
@@ -478,12 +487,21 @@ g5 <- tbl.comparePolicies %>%
              )) + theme_bw() + facet_grid(.~runname) + 
   geom_line() + geom_point() +
   scale_x_continuous(breaks = seq(2015, 2045, 10)) + 
-  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \napproaches", 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = NULL, 
                      label  = c("25th percentile", "median", "75th percentile")) + 
-  labs(title = "Distribution of employer contribution across simulations under different funding approaches",
+  labs(title = "Distribution of employer contribution rates across simulations under different funding approaches",
        x = NULL, y = "Percent") +
   theme(axis.text.x = element_text(size = 8)) + 
   RIG.theme
+
+
+grid.newpage()
+note <- 'Note: In the leftmost panel (funding approach "with Cap"), the 75th percentile line (blue) and the median line (green) are overlapped.'
+g5 <- arrangeGrob(g5, bottom = textGrob(note, x = 0, hjust = -0.08, vjust=0.1, 
+                                      gp = gpar(fontface = "plain", fontsize = 9)))
+grid.draw(g5)
+
+
 
 tbl.comparePolicies
 
@@ -1084,24 +1102,36 @@ ggsave(file = paste0(Outputs_folder, "CompareRS5.ERCIncrease.png"), g3, height =
 # Appendices
 ```{r}
 
+# Funded ratio 
+tbl.comparePolicies <- bind_rows(
+  lresults_RS1.Cap$tbl.riskMeasure,
+  lresults_RS1.noCap$tbl.riskMeasure,
+  lresults_RS1.ADC$tbl.riskMeasure
+)
+tbl.comparePolicies
 
-g1 <- lresults_RS1.Cap$tbl.riskMeasure %>% 
-  get_lineplot("year", "FR95more") + 
+
+g1 <- tbl.comparePolicies %>% 
+  ggplot(aes(x = year, y = FR95more, color = factor(runname, levels = c("RS1.Cap", "RS1.noCap", "RS1.ADC")))) + theme_bw() + 
+  geom_line() + geom_point() +
   coord_cartesian(ylim = c(0,100)) + 
-  scale_y_continuous(breaks = seq(0,200, 10)) +
-  labs(title = "Probability of funded ratio above 95% \nin a given year",
+  scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
+  scale_y_continuous(breaks = seq(0, 200, 10)) + 
+  scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "Contribution \napproaches", 
+                     label  = c("w/ Cap", "w/o Cap", "ADC")) + 
+  labs(title = "Probability of funded ratio above 95% in a given year \n under different funding approaches",
        x = NULL, y = "Probability (%)") + 
   RIG.theme
-lresults_RS1.Cap$tbl.riskMeasure
 
-g1
+g1$data %>% select(runname, FR95more, year)
 
-g2 <- lContVol_RS1.Cap$prob_FR95more.rolling %>% 
-  get_lineplot("year", "FR95more") + 
-  coord_cartesian(ylim = c(0,100)) + 
+
+g2 <- lContVol_RS1.Cap$prob_FR95more.rolling %>%
+  get_lineplot("year", "FR95more") +
+  coord_cartesian(ylim = c(0,100)) +
   scale_y_continuous(breaks = seq(0,200, 10)) +
   labs(title = "Probability of funded ratio above 95% \nat any time prior to and including the given year",
-       x = NULL, y = "Probability (%)") + 
+       x = NULL, y = "Probability (%)") +
   RIG.theme
 g1
 g2
@@ -1220,7 +1250,7 @@ g1 <- tbl.compareRS %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = g.label) +
-  labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \n under different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
+  labs(title = "Probability of funded ratios below 40% \nat any time prior to and including the given year \n under different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
   RIG.theme
@@ -1233,7 +1263,7 @@ g1.1 <- tbl.compareRS_FR40rolling %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = g.label) +
-  labs(title = "Probability of funded ratio below 40% \nat any time prior to and including the given year \nunder different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
+  labs(title = "Probability of funded ratios below 40% \nat any time prior to and including the given year \nunder different return scenarios and funding approaches", x = NULL, y = "Probability (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
   RIG.theme
@@ -1305,7 +1335,7 @@ g4 <- tbl.compareRS %>%
   scale_y_continuous(breaks = seq(0, 300, 20)) +
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = g.label) +
-  labs(title = "Median funded ratio \n under different return scenarios and funding approaches", x = NULL, y = "Funded ratio (%)") +
+  labs(title = "Median funded ratios \n under different return scenarios and funding approaches", x = NULL, y = "Funded ratio (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) +
   RIG.theme
@@ -1323,7 +1353,7 @@ g5 <- tbl.compareRS %>%
   scale_x_continuous(breaks = seq(2015, 2045, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.green, RIG.blue),  name = "",   #"Return \nScenarios",
                      label  = g.label) +
-  labs(title = "Median employer contribution \n under different return scenarios and funding approaches", x = NULL, y = "Employer contribution rate (%)") +
+  labs(title = "Median employer contribution rates \n under different return scenarios and funding approaches", x = NULL, y = "Employer contribution rate (%)") +
   theme(axis.text.x = element_text(size = 7), legend.position="right") +
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3)) + 
   RIG.theme
